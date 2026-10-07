@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile for admin tutors and students",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "student"] },
+        "fullName": { "type": "string" },
+        "nickname": { "type": "string" },
+        "email": { "type": "string" },
+        "grade": { "type": "string" },
+        "school": { "type": "string" },
+        "targetExam": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "role", "fullName", "nickname", "email"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "A course subject such as Chem A-Level or Junior Math",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "description": { "type": "string" },
+        "gradeLevel": { "type": "string" }
+      },
+      "required": ["id", "name", "code"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "Recorded teaching session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "lessonDate": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "contentDetail": { "type": "string" },
+        "score": { "type": "number" },
+        "scoreScale": { "type": "string" }
+      },
+      "required": ["id", "studentId", "subjectId", "lessonDate"]
+    },
+    "Homework": {
+      "title": "Homework",
+      "description": "Assignment for students",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "status": { "type": "string" },
+        "maxScore": { "type": "number" }
+      },
+      "required": ["id", "courseId", "title", "dueDate"]
+    },
+    "CourseMaterial": {
+      "title": "CourseMaterial",
+      "description": "PDF or cheat sheet material for a course",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "fileType": { "type": "string" },
+        "fileSize": { "type": "string" },
+        "downloadCount": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "courseId", "title", "category"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles collection"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Course catalog collection"
+    },
+    "/lessons/{lessonId}": {
+      "schema": "Lesson",
+      "description": "Recorded lesson history"
+    },
+    "/homeworks/{homeworkId}": {
+      "schema": "Homework",
+      "description": "Homework assignments"
+    },
+    "/materials/{materialId}": {
+      "schema": "CourseMaterial",
+      "description": "Study materials and PDFs"
+    }
+  }
+}

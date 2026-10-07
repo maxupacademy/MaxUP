@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'tanadod555@gmail.com' ||
+        request.auth.token.email == '6531034333@student.chula.ac.th' ||
+        request.auth.token.email == 'max@maxup-tutor.com' ||
+        request.auth.token.admin == true
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Users collection (real profiles)
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if true; // Allows sign up & profile creation
+    }
+
+    // Courses & Syllabus
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Lessons collection
+    match /lessons/{lessonId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Homework collection
+    match /homeworks/{homeworkId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Materials collection
+    match /materials/{materialId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Progress collection
+    match /progress/{progressId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Catch-all
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

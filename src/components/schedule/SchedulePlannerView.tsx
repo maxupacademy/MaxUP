@@ -239,7 +239,7 @@ export const SchedulePlannerView: React.FC = () => {
   };
 
   const toggleChapterSelect = (chapter: { id: string; name: string; subtopics: { id: string; name: string }[] }) => {
-    const subIds = chapter.subtopics.map((s) => s.id);
+    const subIds = (chapter.subtopics || []).map((s) => s.id);
     const allSelected = subIds.length > 0 && subIds.every((id) => formSelectedSubtopicIds.includes(id));
 
     if (allSelected) {
@@ -335,7 +335,7 @@ export const SchedulePlannerView: React.FC = () => {
         startTime: plan.startTime,
         endTime: plan.endTime,
         durationMinutes: Math.round(plan.durationHours * 60),
-        subtopicIds: plan.plannedSubtopicIds,
+        subtopicIds: plan.plannedSubtopicIds || [],
         contentDetail: plan.plannedContentDescription || plan.title,
         score: 5,
         scoreScale: '1-5',
@@ -1380,10 +1380,10 @@ export const SchedulePlannerView: React.FC = () => {
                   ) : (
                     (() => {
                       const query = syllabusSearch.trim().toLowerCase();
-                      const matchedTopics = selectedCourse.topics.filter((top) => {
+                      const matchedTopics = (selectedCourse.topics || []).filter((top) => {
                         if (!query) return true;
                         const topMatches = top.name.toLowerCase().includes(query);
-                        const subMatches = top.subtopics.some(
+                        const subMatches = (top.subtopics || []).some(
                           (sub) =>
                             sub.name.toLowerCase().includes(query) ||
                             sub.description?.toLowerCase().includes(query) ||
@@ -1402,14 +1402,14 @@ export const SchedulePlannerView: React.FC = () => {
 
                       return matchedTopics.map((top) => {
                         const subtopics = query
-                          ? top.subtopics.filter(
+                          ? (top.subtopics || []).filter(
                               (sub) =>
                                 top.name.toLowerCase().includes(query) ||
                                 sub.name.toLowerCase().includes(query) ||
                                 sub.description?.toLowerCase().includes(query) ||
                                 sub.keyPoints?.some((kp) => kp.toLowerCase().includes(query))
                             )
-                          : top.subtopics;
+                          : top.subtopics || [];
 
                         const allSubsSelected =
                           subtopics.length > 0 &&

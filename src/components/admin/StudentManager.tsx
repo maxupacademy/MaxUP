@@ -28,7 +28,8 @@ export const StudentManager: React.FC = () => {
   const [targetExam, setTargetExam] = useState('A-Level 68');
   const [targetFaculty, setTargetFaculty] = useState('');
 
-  const totalSubtopics = activeSubject.topics.reduce((acc, t) => acc + t.subtopics.length, 0);
+  const totalSubtopics =
+    activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
 
   const handleOpenAdd = () => {
     setFullName('');

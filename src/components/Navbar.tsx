@@ -154,7 +154,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     currentUserRole === 'admin' ? 'bg-blue-900' : 'bg-amber-600'
                   }`}
                 >
-                  {currentUserRole === 'admin' ? 'ครู' : currentUser?.nickname.slice(0, 2) || 'ST'}
+                  {currentUserRole === 'admin'
+                    ? 'ครู'
+                    : currentUser?.nickname
+                    ? currentUser.nickname.slice(0, 2)
+                    : 'ST'}
                 </div>
               )}
               <div className="hidden sm:block text-left text-xs leading-none">

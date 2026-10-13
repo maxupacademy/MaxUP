@@ -91,7 +91,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         ).toFixed(0)
       : '0';
 
-  const totalSubtopics = activeSubject.topics.reduce((acc, t) => acc + t.subtopics.length, 0);
+  const totalSubtopics =
+    activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
   const completedCount = activeStudentProgress.filter(
     (p) => p.status === 'completed' || p.status === 'mastered'
   ).length;
@@ -697,12 +698,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
 
                         {/* Covered Subtopics */}
-                        {les.subtopicIds.length > 0 && (
+                        {(les.subtopicIds || []).length > 0 && (
                           <div className="flex flex-wrap items-center gap-1 text-xs">
-                            {les.subtopicIds.map((subId) => {
+                            {(les.subtopicIds || []).map((subId) => {
                               let subName = subId;
-                              activeSubject.topics.forEach((t) => {
-                                const found = t.subtopics.find((s) => s.id === subId);
+                              activeSubject?.topics?.forEach((t) => {
+                                const found = (t.subtopics || []).find((s) => s.id === subId);
                                 if (found) subName = found.name;
                               });
                               return (
@@ -993,12 +994,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             </div>
 
             <div className="max-h-80 overflow-y-auto space-y-2 divide-y divide-slate-100 text-xs">
-              {activeSubject.topics.map((top) => {
-                const completedInTopic = top.subtopics.filter((sub) => {
+              {(activeSubject?.topics || []).map((top) => {
+                const subs = top.subtopics || [];
+                const completedInTopic = subs.filter((sub) => {
                   const p = activeStudentProgress.find((item) => item.subtopicId === sub.id);
                   return p && (p.status === 'completed' || p.status === 'mastered');
                 }).length;
-                const isFullyDone = completedInTopic === top.subtopics.length && top.subtopics.length > 0;
+                const isFullyDone = completedInTopic === subs.length && subs.length > 0;
 
                 return (
                   <div key={top.id} className="pt-2">
@@ -1011,12 +1013,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           isFullyDone ? 'text-emerald-600 font-semibold' : 'text-slate-400'
                         }`}
                       >
-                        {completedInTopic}/{top.subtopics.length}
+                        {completedInTopic}/{subs.length}
                       </span>
                     </div>
 
                     <div className="pl-2 mt-1 space-y-1">
-                      {top.subtopics.map((sub) => {
+                      {subs.map((sub) => {
                         const prog = activeStudentProgress.find((p) => p.subtopicId === sub.id);
                         const isDone = prog && (prog.status === 'completed' || prog.status === 'mastered');
                         const isLv2 = sub.level === 2;

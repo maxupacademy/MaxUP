@@ -18,6 +18,7 @@ import { LoginView } from './components/auth/LoginView';
 import { MaxUpLogo } from './components/brand/MaxUpLogo';
 import { Lesson } from './types';
 import { BookOpen, Calendar, Shield, GraduationCap, CheckCircle } from 'lucide-react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const MainContent: React.FC = () => {
   const {
@@ -138,8 +139,10 @@ const MainContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

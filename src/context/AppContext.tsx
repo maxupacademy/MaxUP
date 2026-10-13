@@ -37,6 +37,30 @@ import {
   getDocs,
 } from 'firebase/firestore';
 
+const safeSetDoc = (docRef: any, data: any) => {
+  try {
+    const sanitized = JSON.parse(
+      JSON.stringify(data, (_, value) => (value === undefined ? null : value))
+    );
+    return setDoc(docRef, sanitized).catch((err) => {
+      console.warn('Firestore offline note:', err);
+    });
+  } catch (err) {
+    console.warn('Firestore serialize note:', err);
+    return Promise.resolve();
+  }
+};
+
+const safeDeleteDoc = (docRef: any) => {
+  try {
+    return deleteDoc(docRef).catch((err) => {
+      console.warn('Firestore delete note:', err);
+    });
+  } catch (err) {
+    return Promise.resolve();
+  }
+};
+
 interface AppContextType {
   // Authentication & Session
   currentUser: UserProfile | null;
@@ -366,6 +390,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}homeworks`, JSON.stringify(homeworks));
   }, [homeworks]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(progressMap));
+  }, [progressMap]);
 
   // One-time silent background sync with Firestore (Does not disrupt or jump UI)
   useEffect(() => {
@@ -929,35 +957,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newLesson: Lesson = {
       ...lessonData,
       id: newId,
+      subtopicIds: lessonData.subtopicIds || [],
+      contentDetail: lessonData.contentDetail || '',
+      durationMinutes: lessonData.durationMinutes || 0,
       createdAt: new Date().toISOString(),
     };
     setLessons((prev) => [newLesson, ...prev]);
-    setDoc(doc(db, 'lessons', newId), newLesson).catch(() => {});
+    safeSetDoc(doc(db, 'lessons', newId), newLesson);
 
     // อัปเดตความคืบหน้าของสารบัญหัวข้อ (Syllabus) ให้นักเรียนทันที พร้อมบันทึกจำนวนครั้งที่เรียนและเฉลยลายมือ
-    if (lessonData.subtopicIds && lessonData.subtopicIds.length > 0 && lessonData.studentId) {
-      lessonData.subtopicIds.forEach((subId) => {
+    if (newLesson.subtopicIds && newLesson.subtopicIds.length > 0 && newLesson.studentId) {
+      newLesson.subtopicIds.forEach((subId) => {
         updateStudentTopicStatus(
-          lessonData.studentId,
+          newLesson.studentId,
           subId,
           'completed',
-          lessonData.handwrittenSolutionUrl
+          newLesson.handwrittenSolutionUrl
         );
       });
     }
   };
 
   const updateLesson = (lesson: Lesson) => {
-    setLessons((prev) => prev.map((l) => (l.id === lesson.id ? lesson : l)));
-    setDoc(doc(db, 'lessons', lesson.id), lesson).catch(() => {});
+    const safeLesson: Lesson = {
+      ...lesson,
+      subtopicIds: lesson.subtopicIds || [],
+      contentDetail: lesson.contentDetail || '',
+      durationMinutes: lesson.durationMinutes || 0,
+    };
+    setLessons((prev) => prev.map((l) => (l.id === safeLesson.id ? safeLesson : l)));
+    safeSetDoc(doc(db, 'lessons', safeLesson.id), safeLesson);
 
-    if (lesson.subtopicIds && lesson.subtopicIds.length > 0 && lesson.studentId) {
-      lesson.subtopicIds.forEach((subId) => {
+    if (safeLesson.subtopicIds && safeLesson.subtopicIds.length > 0 && safeLesson.studentId) {
+      safeLesson.subtopicIds.forEach((subId) => {
         updateStudentTopicStatus(
-          lesson.studentId,
+          safeLesson.studentId,
           subId,
           'completed',
-          lesson.handwrittenSolutionUrl
+          safeLesson.handwrittenSolutionUrl
         );
       });
     }
@@ -965,7 +1002,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteLesson = (lessonId: string) => {
     setLessons((prev) => prev.filter((l) => l.id !== lessonId));
-    deleteDoc(doc(db, 'lessons', lessonId)).catch(() => {});
+    safeDeleteDoc(doc(db, 'lessons', lessonId));
   };
 
   // Progress Tracking: บันทึกสถานะเรียนแล้ว และนับจำนวนครั้งที่เรียนซ้ำ
@@ -1008,7 +1045,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const res = { ...prev, [studentId]: updated };
-      setDoc(doc(db, 'progress', studentId), { progress: updated }).catch(() => {});
+      safeSetDoc(doc(db, 'progress', studentId), { progress: updated });
       return res;
     });
   };

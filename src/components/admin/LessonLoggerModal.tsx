@@ -493,17 +493,19 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                   </p>
                 </div>
               ) : (
-                currentCourse?.topics.map((top) => (
-                  <div key={top.id} className="text-xs border-b border-slate-100 pb-2 last:border-b-0 last:pb-0">
-                    <div className="font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                      <span>{top.sortOrder}. {top.name} {top.nameEn ? `(${top.nameEn})` : ''}</span>
-                      <span className="text-[10px] text-slate-400 font-normal">
-                        {top.subtopics.length} ข้อย่อย
-                      </span>
-                    </div>
+                (currentCourse?.topics || []).map((top) => {
+                  const subs = top.subtopics || [];
+                  return (
+                    <div key={top.id} className="text-xs border-b border-slate-100 pb-2 last:border-b-0 last:pb-0">
+                      <div className="font-bold text-slate-800 mb-1.5 flex items-center justify-between">
+                        <span>{top.sortOrder}. {top.name} {top.nameEn ? `(${top.nameEn})` : ''}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          {subs.length} ข้อย่อย
+                        </span>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-2">
-                      {top.subtopics.map((sub) => {
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-2">
+                        {subs.map((sub) => {
                         const isSelected = selectedSubtopicIds.includes(sub.id);
                         return (
                           <button
@@ -531,7 +533,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                       })}
                     </div>
                   </div>
-                ))
+                );
+              })
               )}
             </div>
           </div>

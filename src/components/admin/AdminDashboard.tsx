@@ -58,14 +58,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       : '0';
 
   // Total subtopics in subject
-  const totalSubtopics = activeSubject.topics.reduce((acc, t) => acc + t.subtopics.length, 0);
+  const totalSubtopics =
+    activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
 
   // Filter lessons
   const filteredLessons = lessons.filter((lesson) => {
     const matchesStudent = studentFilter === 'all' || lesson.studentId === studentFilter;
+    const content = lesson.contentDetail || '';
+    const note = lesson.teacherNote || '';
+    const query = searchQuery.toLowerCase();
     const matchesQuery =
-      lesson.contentDetail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (lesson.teacherNote && lesson.teacherNote.toLowerCase().includes(searchQuery.toLowerCase()));
+      content.toLowerCase().includes(query) || note.toLowerCase().includes(query);
     return matchesStudent && matchesQuery;
   });
 
@@ -321,11 +324,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-blue-900 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                        {student?.nickname.slice(0, 2) || 'ST'}
+                        {student?.nickname ? student.nickname.slice(0, 2) : 'ST'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-slate-900 text-sm">{student?.nickname}</h4>
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            {student?.nickname || 'นักเรียน'}
+                          </h4>
                           <span className="text-slate-400">·</span>
                           <span className="text-xs text-slate-500 font-mono tabular-nums flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
@@ -336,7 +341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             {les.startTime}–{les.endTime} ({durationHours} ชม.)
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500">{student?.fullName}</p>
+                        <p className="text-xs text-slate-500">{student?.fullName || '-'}</p>
                       </div>
                     </div>
 
@@ -374,13 +379,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </p>
 
                   {/* Covered Subtopics Badges (clean unboxed text or soft tags) */}
-                  {les.subtopicIds.length > 0 && (
+                  {(les.subtopicIds || []).length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
                       <span className="text-slate-400 font-medium">หัวข้อที่สอน:</span>
-                      {les.subtopicIds.map((subId) => {
+                      {(les.subtopicIds || []).map((subId) => {
                         let subName = subId;
-                        activeSubject.topics.forEach((t) => {
-                          const found = t.subtopics.find((s) => s.id === subId);
+                        activeSubject?.topics?.forEach((t) => {
+                          const found = (t.subtopics || []).find((s) => s.id === subId);
                           if (found) subName = found.name;
                         });
                         return (

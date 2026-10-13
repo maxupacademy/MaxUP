@@ -11,10 +11,7 @@ import {
   Subtopic,
   VideoLesson,
   VideoProgress,
-  Flashcard,
-  FlashcardProgress,
-  Quiz,
-  QuizAttempt,
+  StudySchedulePlan,
   CourseMaterial,
   HomeworkSubmission,
 } from '../types';
@@ -26,8 +23,7 @@ import {
   INITIAL_LESSONS,
   INITIAL_PROGRESS,
   INITIAL_VIDEO_PROGRESS,
-  INITIAL_FLASHCARDS,
-  INITIAL_QUIZZES,
+  INITIAL_SCHEDULE_PLANS,
   INITIAL_MATERIALS,
   INITIAL_HOMEWORKS,
 } from '../data/initialData';
@@ -111,8 +107,10 @@ interface AppContextType {
   updateStudentTopicStatus: (
     studentId: string,
     subtopicId: string,
-    status: StudentTopicProgress['status']
+    status: StudentTopicProgress['status'],
+    handwrittenSolutionUrl?: string
   ) => void;
+  adjustStudentTopicCount: (studentId: string, subtopicId: string, delta: number) => void;
   updateHomeworkStatus: (homeworkId: string, status: Homework['status'], note?: string) => void;
 
   // Dedicated Homework Suite
@@ -135,24 +133,30 @@ interface AppContextType {
   videoProgressMap: Record<string, VideoProgress[]>;
   toggleVideoWatched: (studentId: string, videoId: string) => void;
 
-  // Flashcards (แฟลชการ์ด)
-  flashcards: Flashcard[];
-  addFlashcard: (card: Omit<Flashcard, 'id'>) => void;
-  deleteFlashcard: (cardId: string) => void;
-  flashcardProgressMap: Record<string, Record<string, FlashcardProgress>>;
-  toggleFlashcardKnown: (studentId: string, cardId: string) => void;
-
-  // Quizzes & Practice (ควิซ & โจทย์แบบฝึกหัด)
-  quizzes: Quiz[];
-  addQuiz: (quiz: Omit<Quiz, 'id'>) => void;
-  quizAttempts: QuizAttempt[];
-  submitQuizAttempt: (
-    quizId: string,
-    studentId: string,
-    answers: Record<string, number>,
-    score: number,
-    total: number
+  // Study Schedule & Planning (ตารางเรียน & แผนสอนล่วงหน้า)
+  schedulePlans: StudySchedulePlan[];
+  addSchedulePlan: (plan: Omit<StudySchedulePlan, 'id' | 'createdAt'>) => void;
+  updateSchedulePlan: (plan: StudySchedulePlan) => void;
+  deleteSchedulePlan: (planId: string) => void;
+  toggleSchedulePlanStatus: (
+    planId: string,
+    status: 'upcoming' | 'completed' | 'cancelled'
   ) => void;
+  submitSchedulePaymentSlip: (
+    planId: string,
+    slipUrl: string,
+    note?: string
+  ) => void;
+  confirmSchedulePayment: (
+    planId: string,
+    confirmed: boolean
+  ) => void;
+  teacherPromptPay: {
+    number: string;
+    name: string;
+    qrUrl?: string;
+  };
+  setTeacherPromptPay: (data: { number: string; name: string; qrUrl?: string }) => void;
 
   // Course Materials (เอกสารดาวน์โหลด & ไฟล์เรียน)
   materials: CourseMaterial[];
@@ -170,7 +174,7 @@ interface AppContextType {
   resetAllData: () => void;
 }
 
-const STORAGE_KEY_PREFIX = 'maxup_v10_';
+const STORAGE_KEY_PREFIX = 'maxup_v18_fresh_';
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -250,29 +254,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_VIDEO_PROGRESS;
   });
 
-  // Flashcards
-  const [flashcards, setFlashcards] = useState<Flashcard[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}flashcards`);
-    return saved ? JSON.parse(saved) : INITIAL_FLASHCARDS;
+  // Study Schedule Plans (ตารางเรียนและวางแผนล่วงหน้า)
+  const [schedulePlans, setSchedulePlans] = useState<StudySchedulePlan[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}schedules`);
+    return saved ? JSON.parse(saved) : INITIAL_SCHEDULE_PLANS;
   });
 
-  const [flashcardProgressMap, setFlashcardProgressMap] = useState<
-    Record<string, Record<string, FlashcardProgress>>
-  >(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}fc_progress`);
-    return saved ? JSON.parse(saved) : {};
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}schedules`, JSON.stringify(schedulePlans));
+  }, [schedulePlans]);
+
+  // Teacher PromptPay Settings
+  const [teacherPromptPay, setTeacherPromptPayState] = useState<{
+    number: string;
+    name: string;
+    qrUrl?: string;
+  }>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}teacher_promptpay`);
+    return saved
+      ? JSON.parse(saved)
+      : {
+          number: '0812345678',
+          name: 'อาจารย์แม็ก (MaxUp)',
+          qrUrl: '',
+        };
   });
 
-  // Quizzes
-  const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}quizzes`);
-    return saved ? JSON.parse(saved) : INITIAL_QUIZZES;
-  });
-
-  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}quiz_attempts`);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const setTeacherPromptPay = (data: { number: string; name: string; qrUrl?: string }) => {
+    setTeacherPromptPayState(data);
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}teacher_promptpay`, JSON.stringify(data));
+    setDoc(doc(db, 'settings', 'promptpay'), data).catch(() => {});
+  };
 
   // Progress
   const [progressMap, setProgressMap] = useState<Record<string, StudentTopicProgress[]>>(() => {
@@ -334,19 +346,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setStudents(remoteStudents);
         }
 
-        // 2. Sync Courses from Firestore
+        // 2. Sync Courses from Firestore (Filter out legacy pre-baked courses if any)
         const courseSnap = await getDocs(collection(db, 'courses'));
-        if (courseSnap.empty) {
-          ALL_INITIAL_SUBJECTS.forEach((c) => {
-            setDoc(doc(db, 'courses', c.id), c).catch(() => {});
-          });
-        } else {
+        if (!courseSnap.empty) {
           const remoteCourses: Course[] = [];
           courseSnap.forEach((docItem) => {
-            remoteCourses.push(docItem.data() as Course);
+            const data = docItem.data() as Course;
+            if (
+              data.id !== 'chem_alevel' &&
+              data.id !== 'math_junior' &&
+              data.id !== 'phys_senior' &&
+              data.id !== 'sci_junior'
+            ) {
+              remoteCourses.push(data);
+            }
           });
           if (remoteCourses.length > 0) {
             setCourses(remoteCourses);
+          }
+        }
+
+        // 3. Sync Schedules from Firestore
+        const scheduleSnap = await getDocs(collection(db, 'schedules'));
+        if (!scheduleSnap.empty) {
+          const remoteSchedules: StudySchedulePlan[] = [];
+          scheduleSnap.forEach((docItem) => {
+            remoteSchedules.push(docItem.data() as StudySchedulePlan);
+          });
+          if (remoteSchedules.length > 0) {
+            setSchedulePlans(remoteSchedules);
           }
         }
       } catch (e) {
@@ -610,8 +638,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Course Management
+  const fallbackCourse: Course = {
+    id: 'draft_starter',
+    name: 'ร่างคอร์สเรียนใหม่',
+    code: 'DRAFT',
+    gradeLevel: 'ม.ปลาย',
+    description: 'ยังไม่มีคอร์สเรียนในระบบ คุณครู Max สามารถเริ่มสร้างและร่างสารบัญบทเรียนได้ทันที',
+    passcode: 'MAXUP1',
+    topics: [],
+  };
+
   const activeCourse =
-    courses.find((c) => c.id === activeCourseId) || courses[0] || ALL_INITIAL_SUBJECTS[0];
+    courses.find((c) => c.id === activeCourseId) || courses[0] || fallbackCourse;
 
   const addCourse = (
     name: string,
@@ -641,11 +679,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteCourse = (courseId: string) => {
-    setCourses((prev) => prev.filter((c) => c.id !== courseId));
-    if (activeCourseId === courseId && courses.length > 1) {
-      const remaining = courses.filter((c) => c.id !== courseId);
-      setActiveCourseId(remaining[0].id);
-    }
+    setCourses((prev) => {
+      const remaining = prev.filter((c) => c.id !== courseId);
+      if (activeCourseId === courseId) {
+        setActiveCourseId(remaining[0]?.id || '');
+      }
+      return remaining;
+    });
     deleteDoc(doc(db, 'courses', courseId)).catch(() => {});
   };
 
@@ -795,11 +835,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setLessons((prev) => [newLesson, ...prev]);
     setDoc(doc(db, 'lessons', newId), newLesson).catch(() => {});
+
+    // อัปเดตความคืบหน้าของสารบัญหัวข้อ (Syllabus) ให้นักเรียนทันที พร้อมบันทึกจำนวนครั้งที่เรียนและเฉลยลายมือ
+    if (lessonData.subtopicIds && lessonData.subtopicIds.length > 0 && lessonData.studentId) {
+      lessonData.subtopicIds.forEach((subId) => {
+        updateStudentTopicStatus(
+          lessonData.studentId,
+          subId,
+          'completed',
+          lessonData.handwrittenSolutionUrl
+        );
+      });
+    }
   };
 
   const updateLesson = (lesson: Lesson) => {
     setLessons((prev) => prev.map((l) => (l.id === lesson.id ? lesson : l)));
     setDoc(doc(db, 'lessons', lesson.id), lesson).catch(() => {});
+
+    if (lesson.subtopicIds && lesson.subtopicIds.length > 0 && lesson.studentId) {
+      lesson.subtopicIds.forEach((subId) => {
+        updateStudentTopicStatus(
+          lesson.studentId,
+          subId,
+          'completed',
+          lesson.handwrittenSolutionUrl
+        );
+      });
+    }
   };
 
   const deleteLesson = (lessonId: string) => {
@@ -807,11 +870,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     deleteDoc(doc(db, 'lessons', lessonId)).catch(() => {});
   };
 
-  // Progress
+  // Progress Tracking: บันทึกสถานะเรียนแล้ว และนับจำนวนครั้งที่เรียนซ้ำ
   const updateStudentTopicStatus = (
     studentId: string,
     subtopicId: string,
-    status: StudentTopicProgress['status']
+    status: StudentTopicProgress['status'],
+    handwrittenSolutionUrl?: string
   ) => {
     setProgressMap((prev) => {
       const studentProgress = prev[studentId] || [];
@@ -819,15 +883,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let updated: StudentTopicProgress[];
 
       if (existingIdx >= 0) {
+        const existing = studentProgress[existingIdx];
+        const newCount = (existing.studyCount || 1) + (status === 'completed' ? 1 : 0);
         updated = studentProgress.map((p, idx) =>
           idx === existingIdx
-            ? { ...p, status, lastStudiedDate: new Date().toISOString().split('T')[0] }
+            ? {
+                ...p,
+                status,
+                studyCount: newCount,
+                lastStudiedDate: new Date().toISOString().split('T')[0],
+                handwrittenSolutionUrl: handwrittenSolutionUrl || p.handwrittenSolutionUrl,
+              }
             : p
         );
       } else {
         updated = [
           ...studentProgress,
-          { subtopicId, status, lastStudiedDate: new Date().toISOString().split('T')[0] },
+          {
+            subtopicId,
+            status,
+            studyCount: 1,
+            lastStudiedDate: new Date().toISOString().split('T')[0],
+            handwrittenSolutionUrl,
+          },
+        ];
+      }
+
+      const res = { ...prev, [studentId]: updated };
+      setDoc(doc(db, 'progress', studentId), { progress: updated }).catch(() => {});
+      return res;
+    });
+  };
+
+  const adjustStudentTopicCount = (
+    studentId: string,
+    subtopicId: string,
+    delta: number
+  ) => {
+    setProgressMap((prev) => {
+      const studentProgress = prev[studentId] || [];
+      const existingIdx = studentProgress.findIndex((p) => p.subtopicId === subtopicId);
+      let updated: StudentTopicProgress[];
+
+      if (existingIdx >= 0) {
+        const existing = studentProgress[existingIdx];
+        const newCount = Math.max(0, (existing.studyCount || 1) + delta);
+        const newStatus =
+          newCount > 0
+            ? existing.status === 'not_started'
+              ? 'completed'
+              : existing.status
+            : 'not_started';
+        updated = studentProgress.map((p, idx) =>
+          idx === existingIdx
+            ? {
+                ...p,
+                studyCount: newCount,
+                status: newStatus,
+                lastStudiedDate: new Date().toISOString().split('T')[0],
+              }
+            : p
+        );
+      } else {
+        const newCount = Math.max(0, 1 + delta);
+        updated = [
+          ...studentProgress,
+          {
+            subtopicId,
+            status: newCount > 0 ? 'completed' : 'not_started',
+            studyCount: newCount,
+            lastStudiedDate: new Date().toISOString().split('T')[0],
+          },
         ];
       }
 
@@ -983,66 +1109,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Flashcards
-  const addFlashcard = (cardData: Omit<Flashcard, 'id'>) => {
-    const newCard: Flashcard = {
-      ...cardData,
-      id: `fc_${Date.now()}`,
+  // Study Schedule & Planning (ตารางเรียน & แผนสอนล่วงหน้า)
+  const addSchedulePlan = (planData: Omit<StudySchedulePlan, 'id' | 'createdAt'>) => {
+    const newId = `sch_${Date.now()}`;
+    const newPlan: StudySchedulePlan = {
+      ...planData,
+      id: newId,
+      createdAt: new Date().toISOString(),
     };
-    setFlashcards((prev) => [...prev, newCard]);
+    setSchedulePlans((prev) => [newPlan, ...prev]);
+    setDoc(doc(db, 'schedules', newId), newPlan).catch(() => {});
   };
 
-  const deleteFlashcard = (cardId: string) => {
-    setFlashcards((prev) => prev.filter((c) => c.id !== cardId));
+  const updateSchedulePlan = (plan: StudySchedulePlan) => {
+    setSchedulePlans((prev) => prev.map((p) => (p.id === plan.id ? plan : p)));
+    setDoc(doc(db, 'schedules', plan.id), plan).catch(() => {});
   };
 
-  const toggleFlashcardKnown = (studentId: string, cardId: string) => {
-    setFlashcardProgressMap((prev) => {
-      const studentMap = prev[studentId] || {};
-      const current = studentMap[cardId];
-      const isKnown = current ? !current.known : true;
-
-      return {
-        ...prev,
-        [studentId]: {
-          ...studentMap,
-          [cardId]: {
-            cardId,
-            known: isKnown,
-            reviewCount: (current?.reviewCount || 0) + 1,
-            lastReviewed: new Date().toISOString().split('T')[0],
-          },
-        },
-      };
-    });
+  const deleteSchedulePlan = (planId: string) => {
+    setSchedulePlans((prev) => prev.filter((p) => p.id !== planId));
+    deleteDoc(doc(db, 'schedules', planId)).catch(() => {});
   };
 
-  // Quizzes
-  const addQuiz = (quizData: Omit<Quiz, 'id'>) => {
-    const newQuiz: Quiz = {
-      ...quizData,
-      id: `quiz_${Date.now()}`,
-    };
-    setQuizzes((prev) => [...prev, newQuiz]);
-  };
-
-  const submitQuizAttempt = (
-    quizId: string,
-    studentId: string,
-    answers: Record<string, number>,
-    score: number,
-    total: number
+  const toggleSchedulePlanStatus = (
+    planId: string,
+    status: 'upcoming' | 'completed' | 'cancelled'
   ) => {
-    const attempt: QuizAttempt = {
-      id: `att_${Date.now()}`,
-      quizId,
-      studentId,
-      answers,
-      score,
-      total,
-      submittedAt: new Date().toISOString(),
-    };
-    setQuizAttempts((prev) => [attempt, ...prev]);
+    setSchedulePlans((prev) =>
+      prev.map((p) => (p.id === planId ? { ...p, status } : p))
+    );
+    const existing = schedulePlans.find((p) => p.id === planId);
+    if (existing) {
+      setDoc(doc(db, 'schedules', planId), { ...existing, status }).catch(() => {});
+    }
+  };
+
+  const submitSchedulePaymentSlip = (
+    planId: string,
+    slipUrl: string,
+    note?: string
+  ) => {
+    const slipUploadedAt = new Date().toISOString();
+    setSchedulePlans((prev) =>
+      prev.map((p) =>
+        p.id === planId
+          ? {
+              ...p,
+              paymentStatus: 'slip_uploaded',
+              paymentSlipUrl: slipUrl,
+              paymentSlipNote: note || '',
+              slipUploadedAt,
+            }
+          : p
+      )
+    );
+    const existing = schedulePlans.find((p) => p.id === planId);
+    if (existing) {
+      setDoc(doc(db, 'schedules', planId), {
+        ...existing,
+        paymentStatus: 'slip_uploaded',
+        paymentSlipUrl: slipUrl,
+        paymentSlipNote: note || '',
+        slipUploadedAt,
+      }).catch(() => {});
+    }
+  };
+
+  const confirmSchedulePayment = (planId: string, confirmed: boolean) => {
+    const paidAt = confirmed ? new Date().toISOString() : undefined;
+    const newStatus: StudySchedulePlan['paymentStatus'] = confirmed ? 'paid' : 'pending';
+    setSchedulePlans((prev) =>
+      prev.map((p) =>
+        p.id === planId
+          ? {
+              ...p,
+              paymentStatus: newStatus,
+              confirmedByTeacher: confirmed,
+              paidAt,
+            }
+          : p
+      )
+    );
+    const existing = schedulePlans.find((p) => p.id === planId);
+    if (existing) {
+      setDoc(doc(db, 'schedules', planId), {
+        ...existing,
+        paymentStatus: newStatus,
+        confirmedByTeacher: confirmed,
+        paidAt,
+      }).catch(() => {});
+    }
   };
 
   // Materials (PDFs)
@@ -1080,12 +1236,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetAllData = () => {
     localStorage.clear();
-    setCourses(ALL_INITIAL_SUBJECTS);
-    setStudents(INITIAL_STUDENTS);
-    setLessons(INITIAL_LESSONS);
-    setProgressMap(INITIAL_PROGRESS);
-    setHomeworks(INITIAL_HOMEWORKS);
-    setMaterials(INITIAL_MATERIALS);
+    setCourses([]);
+    setStudents([]);
+    setLessons([]);
+    setProgressMap({});
+    setHomeworks([]);
+    setMaterials([]);
+    setVideos([]);
+    setSchedulePlans([]);
     window.location.reload();
   };
 
@@ -1158,6 +1316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         progressMap,
         updateStudentTopicStatus,
+        adjustStudentTopicCount,
         updateHomeworkStatus,
 
         homeworks,
@@ -1173,16 +1332,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         videoProgressMap,
         toggleVideoWatched,
 
-        flashcards,
-        addFlashcard,
-        deleteFlashcard,
-        flashcardProgressMap,
-        toggleFlashcardKnown,
-
-        quizzes,
-        addQuiz,
-        quizAttempts,
-        submitQuizAttempt,
+        schedulePlans,
+        addSchedulePlan,
+        updateSchedulePlan,
+        deleteSchedulePlan,
+        toggleSchedulePlanStatus,
+        submitSchedulePaymentSlip,
+        confirmSchedulePayment,
+        teacherPromptPay,
+        setTeacherPromptPay,
 
         materials,
         addMaterial,

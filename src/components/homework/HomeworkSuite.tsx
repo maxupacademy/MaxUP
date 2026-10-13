@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Homework, HomeworkSubmission } from '../../types';
-import { ProfessorMeow } from '../brand/ProfessorMeow';
 import {
   ClipboardList,
   Plus,

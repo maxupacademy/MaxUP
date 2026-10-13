@@ -54,6 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const adminTabs = [
     { id: 'overview', label: 'ภาพรวม', icon: LayoutDashboard },
+    { id: 'schedule', label: 'ตารางเรียน & แผนสอน', icon: Calendar },
     { id: 'learning-hub', label: 'คอร์ส & สื่อเรียน', icon: BookOpen },
     { id: 'admin-suite', label: 'จัดการเนื้อหา', icon: Settings },
     { id: 'students', label: 'นักเรียน', icon: Users },
@@ -61,6 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const studentTabs = [
     { id: 'home', label: 'แดชบอร์ด', icon: LayoutDashboard },
+    { id: 'schedule', label: 'ตารางเรียนล่วงหน้า', icon: Calendar },
     { id: 'learning-hub', label: 'คอร์ส & สื่อเรียน', icon: BookOpen },
     { id: 'my-lessons', label: 'ประวัติเรียน', icon: Calendar },
     { id: 'my-homework', label: 'การบ้าน', icon: ClipboardList },
@@ -104,20 +106,22 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right: Actions, Course Switcher & User Profile Menu */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Course Selector */}
-          <div className="relative shrink-0">
-            <select
-              value={activeCourseId}
-              onChange={(e) => setActiveCourseId(e.target.value)}
-              className="bg-white border border-amber-200 text-xs font-medium text-slate-800 py-1.5 pl-2 pr-6 rounded-xl shadow-2xs focus:ring-1 focus:ring-amber-500 cursor-pointer max-w-[130px] sm:max-w-[180px] truncate"
-              title="เลือกคอร์สเรียน"
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {courses.length > 0 && (
+            <div className="relative shrink-0">
+              <select
+                value={activeCourseId}
+                onChange={(e) => setActiveCourseId(e.target.value)}
+                className="bg-white border border-amber-200 text-xs font-medium text-slate-800 py-1.5 pl-2 pr-6 rounded-xl shadow-2xs focus:ring-1 focus:ring-amber-500 cursor-pointer max-w-[130px] sm:max-w-[180px] truncate"
+                title="เลือกคอร์สเรียน"
+              >
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Record Lesson button for Admin */}
           {currentUserRole === 'admin' && (

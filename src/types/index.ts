@@ -5,7 +5,6 @@ export interface UserProfile {
   role: UserRole;
   fullName: string;
   nickname: string;
-  email?: string;
   username?: string;
   password?: string;
   enrolledCourseIds?: string[];
@@ -27,6 +26,8 @@ export interface Subtopic {
   sortOrder: number;
   difficulty?: 'basic' | 'intermediate' | 'advanced';
   keyPoints?: string[];
+  googleDriveUrl?: string; // ลิงก์ Google Drive ชีท/เอกสารประจำหัวข้อ
+  handwrittenSolutionUrl?: string; // ลิงก์เฉลยจากการเขียนลายมือครู Max (Handwritten Solution)
 }
 
 export interface Topic {
@@ -36,13 +37,8 @@ export interface Topic {
   nameEn?: string;
   sortOrder: number;
   subtopics: Subtopic[];
-  examWeights?: {
-    y2568?: number;
-    y2567?: number;
-    y2566?: number;
-    y2565?: number;
-    totalHistorical?: number;
-  };
+  googleDriveUrl?: string; // ลิงก์ Google Drive โฟลเดอร์/ชีทประจำบท
+  handwrittenSolutionUrl?: string; // ลิงก์เฉลยจากการเขียนลายมือประจำบท
 }
 
 // Course represents a learning course (คอร์สเรียน)
@@ -55,6 +51,7 @@ export interface Course {
   topics: Topic[];
   badgeColor?: string;
   passcode?: string; // รหัสผ่านสำหรับให้นักเรียนกรอกเพื่อเข้าเรียนคอร์สนี้
+  googleDriveFolderUrl?: string; // ลิงก์ Google Drive โฟลเดอร์รวมของคอร์ส
 }
 
 // Backward-compatible alias
@@ -89,6 +86,7 @@ export interface Homework {
   status: 'pending' | 'submitted' | 'graded';
   submissionNote?: string;
   allowedSubmissionTypes?: ('pdf' | 'image' | 'text')[];
+  googleDriveUrl?: string; // ลิงก์ Google Drive โจทย์การบ้าน
   questionFile?: {
     name: string;
     fileData?: string;
@@ -103,6 +101,7 @@ export interface LessonAttachment {
   name: string;
   fileType: 'pdf' | 'doc' | 'image' | 'link';
   url?: string;
+  driveUrl?: string;
   size?: string;
 }
 
@@ -121,6 +120,8 @@ export interface Lesson {
   teacherNote?: string;
   homework?: Homework;
   attachments?: LessonAttachment[];
+  googleDriveUrl?: string;
+  handwrittenSolutionUrl?: string; // ลิงก์เฉลยจากการเขียนลายมือครู Max
   createdAt: string;
 }
 
@@ -130,8 +131,10 @@ export interface StudentTopicProgress {
   subtopicId: string;
   status: TopicLearningStatus;
   lastStudiedDate?: string;
+  studyCount?: number; // จำนวนครั้งที่เรียนหัวข้อนี้ (เช่น เรียนซ้ำ 2 ครั้ง)
   quizScore?: number;
   notes?: string;
+  handwrittenSolutionUrl?: string; // ลิงก์เฉลยลายมือสำหรับหัวข้อนี้
 }
 
 export interface VideoLesson {
@@ -155,53 +158,34 @@ export interface VideoProgress {
   lastPositionSeconds?: number;
 }
 
-// Flashcards system (แฟลชการ์ด)
-export interface Flashcard {
+// แผนตารางเรียนล่วงหน้า & วางแผนเนื้อหารายชั่วโมง
+export interface StudySchedulePlan {
   id: string;
   courseId: string;
-  topicId: string;
-  subtopicId?: string;
-  front: string; // คำถาม / สูตร / หัวข้อ
-  back: string;  // คำตอบ / วิธีจำ / คำอธิบาย
-  hint?: string;
-  keyFormula?: string;
-}
-
-export interface FlashcardProgress {
-  cardId: string;
-  known: boolean;
-  reviewCount: number;
-  lastReviewed?: string;
-}
-
-// Quizzes & Practice system (ควิซ & ข้อสอบฝึกฝน)
-export interface QuizQuestion {
-  id: string;
-  quizId: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-export interface Quiz {
-  id: string;
-  courseId: string;
-  topicId: string;
+  studentId: string; // 'all' หรือ studentId เฉพาะ
   title: string;
-  description: string;
-  timeLimitMinutes?: number;
-  questions: QuizQuestion[];
-}
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  durationHours: number;
+  plannedSubtopicIds: string[]; // หัวข้อใน Syllabus ที่จะเรียนล่วงหน้า
+  plannedContentDescription: string; // เนื้อหาที่จะเรียน
+  preparationNote?: string; // ข้อความเตรียมตัวก่อนเรียน / เอกสารที่ต้องเตรียม
+  googleDriveUrl?: string; // ลิงก์ Google Drive เอกสารประจำคาบนี้
+  status: 'upcoming' | 'completed' | 'cancelled';
+  createdAt: string;
 
-export interface QuizAttempt {
-  id: string;
-  quizId: string;
-  studentId: string;
-  score: number;
-  total: number;
-  answers: Record<string, number>; // questionId -> chosen index
-  submittedAt: string;
+  // ระบบชำระเงินสำหรับคาบเรียน (PromptPay Payment & Slip Verification)
+  priceAmount?: number; // ค่าเรียน (บาท) - ครูสามารถกรอกเองได้ มีค่าแนะนำ เช่น ชั่วโมงละ 250 บ.
+  promptPayNumber?: string; // หมายเลขพร้อมเพย์ (เบอร์มือถือ หรือ เลขบัตรประชาชน)
+  promptPayAccountName?: string; // ชื่อบัญชีผู้รับเงิน เช่น "ครูพี่แม็ก (ธนดล)"
+  promptPayQrUrl?: string; // รูป QR Code พร้อมเพย์ หรือ ลิงก์รูป QR Code ของครู
+  paymentStatus?: 'pending' | 'slip_uploaded' | 'paid'; // สถานะ: รอชำระ, แนบสลิปแล้วรอตรวจ, ชำระเงินสำเร็จ
+  paymentSlipUrl?: string; // รูปภาพสลิปที่นักเรียนแนบ
+  paymentSlipNote?: string; // บันทึกจากนักเรียน เช่น เวลาที่โอนเงิน
+  slipUploadedAt?: string; // เวลาที่แนบสลิป
+  paidAt?: string; // เวลาที่คุณครูกดยืนยันชำระเงิน
+  confirmedByTeacher?: boolean; // ครูกดยืนยันการตรวจสอบสลิปแล้ว
 }
 
 export interface MaterialPage {
@@ -225,7 +209,8 @@ export interface CourseMaterial {
   fileSize: string;
   downloadCount: number;
   updatedAt: string;
-  fileData?: string; // Base64 data URL for uploaded PDF
-  isProtected?: boolean; // Secure in-app viewing
-  embeddedPages?: MaterialPage[]; // Multi-page structured reader content
+  driveUrl?: string; // ลิงก์ Google Drive สำหรับเปิดหรือดาวน์โหลดเอกสาร
+  fileData?: string; // Optional embedded data URL
+  isProtected?: boolean;
+  embeddedPages?: MaterialPage[];
 }

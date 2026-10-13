@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Course, Topic, Subtopic, VideoLesson, Flashcard, Quiz, CourseMaterial } from '../../types';
+import { Course, Topic, Subtopic, VideoLesson, CourseMaterial } from '../../types';
 import { HomeworkSuite } from '../homework/HomeworkSuite';
 import {
   Settings,
   BookOpen,
   Play,
-  Layers,
-  HelpCircle,
   Download,
   Plus,
   Edit2,
@@ -22,6 +20,7 @@ import {
   UploadCloud,
   FileCheck,
   KeyRound,
+  FolderOpen,
 } from 'lucide-react';
 
 export const AdminContentSuite: React.FC = () => {
@@ -42,18 +41,13 @@ export const AdminContentSuite: React.FC = () => {
     videos,
     addVideo,
     deleteVideo,
-    flashcards,
-    addFlashcard,
-    deleteFlashcard,
-    quizzes,
-    addQuiz,
     materials,
     addMaterial,
     deleteMaterial,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
-    'courses' | 'syllabus' | 'videos' | 'flashcards' | 'quizzes' | 'materials' | 'homework'
+    'courses' | 'syllabus' | 'videos' | 'materials' | 'homework'
   >('courses');
 
   // Edit/Add Course Modal
@@ -81,13 +75,6 @@ export const AdminContentSuite: React.FC = () => {
   const [vidDesc, setVidDesc] = useState('');
   const [vidTopicId, setVidTopicId] = useState('');
 
-  // Add Flashcard Modal
-  const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
-  const [cardFront, setCardFront] = useState('');
-  const [cardBack, setCardBack] = useState('');
-  const [cardHint, setCardHint] = useState('');
-  const [cardFormula, setCardFormula] = useState('');
-
   // Add Material Modal
   const [isAddMatModalOpen, setIsAddMatModalOpen] = useState(false);
   const [matTitle, setMatTitle] = useState('');
@@ -99,8 +86,6 @@ export const AdminContentSuite: React.FC = () => {
 
   // Current course items
   const courseVideos = videos.filter((v) => v.subjectId === activeCourseId);
-  const courseCards = flashcards.filter((f) => f.courseId === activeCourseId);
-  const courseQuizzes = quizzes.filter((q) => q.courseId === activeCourseId);
   const courseMaterials = materials.filter((m) => m.courseId === activeCourseId);
 
   // Extract YouTube ID
@@ -197,25 +182,7 @@ export const AdminContentSuite: React.FC = () => {
     setVidDesc('');
   };
 
-  const handleAddCardSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cardFront.trim() || !cardBack.trim()) return;
 
-    addFlashcard({
-      courseId: activeCourseId,
-      topicId: activeCourse.topics[0]?.id || 'topic_01',
-      front: cardFront.trim(),
-      back: cardBack.trim(),
-      hint: cardHint.trim() || undefined,
-      keyFormula: cardFormula.trim() || undefined,
-    });
-
-    setIsAddCardModalOpen(false);
-    setCardFront('');
-    setCardBack('');
-    setCardHint('');
-    setCardFormula('');
-  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -279,17 +246,23 @@ export const AdminContentSuite: React.FC = () => {
             <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
               คอร์สที่กำลังแก้ไข:
             </span>
-            <select
-              value={activeCourseId}
-              onChange={(e) => setActiveCourseId(e.target.value)}
-              className="bg-[#FFFDF7] border border-amber-200 text-xs font-semibold rounded-xl px-3 py-2 text-slate-800 shadow-2xs focus:ring-1 focus:ring-amber-500 cursor-pointer"
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.code})
-                </option>
-              ))}
-            </select>
+            {courses.length === 0 ? (
+              <span className="text-xs text-amber-800 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200 font-semibold">
+                ยังไม่มีคอร์ส (เริ่มร่างใหม่)
+              </span>
+            ) : (
+              <select
+                value={activeCourseId}
+                onChange={(e) => setActiveCourseId(e.target.value)}
+                className="bg-[#FFFDF7] border border-amber-200 text-xs font-semibold rounded-xl px-3 py-2 text-slate-800 shadow-2xs focus:ring-1 focus:ring-amber-500 cursor-pointer"
+              >
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
@@ -299,10 +272,8 @@ export const AdminContentSuite: React.FC = () => {
             { id: 'courses', label: '1. คอร์สเรียน', icon: BookOpen },
             { id: 'syllabus', label: '2. สารบัญ & บทเรียน', icon: BookOpen },
             { id: 'videos', label: '3. วิดีโอ YouTube', icon: Play },
-            { id: 'flashcards', label: '4. แฟลชการ์ด', icon: Layers },
-            { id: 'quizzes', label: '5. ควิซ & ข้อสอบ', icon: HelpCircle },
-            { id: 'materials', label: '6. ไฟล์เรียน & PDF', icon: Download },
-            { id: 'homework', label: '7. การบ้าน & ตรวจงาน', icon: ClipboardList },
+            { id: 'materials', label: '4. ไฟล์เรียน & Google Drive', icon: Download },
+            { id: 'homework', label: '5. การบ้าน & ตรวจงาน', icon: ClipboardList },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -333,7 +304,7 @@ export const AdminContentSuite: React.FC = () => {
                 รายการคอร์สเรียนทั้งหมดในระบบ ({courses.length} คอร์ส)
               </h2>
               <p className="text-xs text-slate-500">
-                สามารถเพิ่มคอร์สใหม่ เปลี่ยนชื่อคอร์ส หรือแก้ไขรหัสวิชาได้ตามต้องการ
+                สามารถเพิ่มคอร์สใหม่ กำหนดรหัสคอร์สและรหัสผ่านเข้าเรียน (Passcode) ได้ตามต้องการ
               </p>
             </div>
             <button
@@ -341,6 +312,7 @@ export const AdminContentSuite: React.FC = () => {
                 setCourseName('');
                 setCourseCode('');
                 setCourseDesc('');
+                setCoursePasscode('');
                 setIsAddCourseModalOpen(true);
               }}
               className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
@@ -350,57 +322,82 @@ export const AdminContentSuite: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className={`p-5 rounded-2xl border transition-all flex flex-col justify-between space-y-4 ${
-                  activeCourseId === course.id
-                    ? 'border-blue-900 bg-blue-50/20 shadow-xs'
-                    : 'border-slate-200 bg-[#FFFDF7]'
-                }`}
+          {courses.length === 0 ? (
+            <div className="bg-[#FFFDF7] border-2 border-dashed border-amber-300 rounded-3xl p-10 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto text-2xl font-bold shadow-2xs">
+                📚
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ (เริ่มต้นร่างคอร์สแรก)</h3>
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                  ข้อมูลเดิมถูกล้างเรียบร้อยตามคำสั่ง คุณครู Max สามารถกดปุ่ม <strong>"+ เพิ่มคอร์สใหม่"</strong> ด้านล่างเพื่อเริ่มร่างชื่อวิชา กำหนดรหัสคอร์ส รหัสผ่านเข้าเรียน (Passcode) และสารบัญบทเรียนได้ทันที
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setCourseName('');
+                  setCourseCode('');
+                  setCourseDesc('');
+                  setCoursePasscode('');
+                  setIsAddCourseModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
-                      {course.code}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {course.gradeLevel || 'ม.ปลาย'}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 text-base">{course.name}</h3>
-                  <p className="text-xs text-slate-600 line-clamp-2">{course.description}</p>
-
-                  <div className="p-2 bg-emerald-50/80 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
-                      <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>รหัสเข้าคอร์ส:</span>
+                <Plus className="w-4 h-4 text-amber-300" />
+                <span>+ สร้างคอร์สแรกของคุณ</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {courses.map((course) => (
+                <div
+                  key={course.id}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between space-y-4 ${
+                    activeCourseId === course.id
+                      ? 'border-blue-900 bg-blue-50/20 shadow-xs'
+                      : 'border-slate-200 bg-[#FFFDF7]'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded">
+                        {course.code}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {course.gradeLevel || 'ม.ปลาย'}
+                      </span>
                     </div>
-                    <span className="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-300">
-                      {course.passcode || course.code}
-                    </span>
+
+                    <h3 className="font-bold text-slate-900 text-base">{course.name}</h3>
+                    <p className="text-xs text-slate-600 line-clamp-2">{course.description}</p>
+
+                    <div className="p-2 bg-emerald-50/80 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
+                        <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>รหัสเข้าคอร์ส:</span>
+                      </div>
+                      <span className="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-300">
+                        {course.passcode || course.code}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 font-mono pt-1">
+                      • จำนวนบทในสารบัญ: {course.topics.length} บท
+                    </div>
                   </div>
 
-                  <div className="text-[11px] text-slate-500 font-mono pt-1">
-                    • จำนวนบทในสารบัญ: {course.topics.length} บท
-                  </div>
-                </div>
+                  <div className="pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                    <button
+                      onClick={() => {
+                        setActiveCourseId(course.id);
+                        handleOpenEditCourse(course);
+                      }}
+                      className="text-blue-900 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>แก้ไขข้อมูล</span>
+                    </button>
 
-                <div className="pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                  <button
-                    onClick={() => {
-                      setActiveCourseId(course.id);
-                      handleOpenEditCourse(course);
-                    }}
-                    className="text-blue-900 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span>แก้ไขข้อมูล</span>
-                  </button>
-
-                  {courses.length > 1 && (
                     <button
                       onClick={() => deleteCourse(course.id)}
                       className="text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
@@ -408,11 +405,11 @@ export const AdminContentSuite: React.FC = () => {
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>ลบ</span>
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -428,16 +425,31 @@ export const AdminContentSuite: React.FC = () => {
                 เพิ่มหัวข้อหลัก (Topic) และหัวข้อย่อย (Subtopic) พร้อมกำหนดเวลาเรียน
               </p>
             </div>
-            <button
-              onClick={() => setIsAddTopicModalOpen(true)}
-              className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ เพิ่มบทใหม่ (Topic)</span>
-            </button>
+            {courses.length > 0 && (
+              <button
+                onClick={() => setIsAddTopicModalOpen(true)}
+                className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-amber-300" />
+                <span>+ เพิ่มบทใหม่ (Topic)</span>
+              </button>
+            )}
           </div>
 
-          <div className="space-y-4">
+          {courses.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-amber-200 rounded-2xl bg-[#FFFDF7] space-y-2">
+              <BookOpen className="w-10 h-10 text-amber-600/50 mx-auto" />
+              <p className="text-sm font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ</p>
+              <p className="text-xs text-slate-500">กรุณาสร้างคอร์สแรกที่แท็บ "1. คอร์สเรียน" ก่อนเริ่มกำหนดสารบัญ</p>
+            </div>
+          ) : activeCourse.topics.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-amber-200 rounded-2xl bg-[#FFFDF7] space-y-2">
+              <BookOpen className="w-10 h-10 text-amber-600/50 mx-auto" />
+              <p className="text-sm font-bold text-slate-800">ยังไม่มีบทเรียนในสารบัญวิชา {activeCourse.name}</p>
+              <p className="text-xs text-slate-500">กดปุ่ม "+ เพิ่มบทใหม่ (Topic)" ด้านบนเพื่อเริ่มร่างบทเรียนแรก</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
             {activeCourse.topics.map((topic, tIdx) => (
               <div
                 key={topic.id}
@@ -505,7 +517,8 @@ export const AdminContentSuite: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -555,82 +568,7 @@ export const AdminContentSuite: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 4: Flashcards Management */}
-      {activeTab === 'flashcards' && (
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-6 shadow-2xs space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                แฟลชการ์ดในคอร์ส: {activeCourse.name} ({courseCards.length} ใบ)
-              </h2>
-              <p className="text-xs text-slate-500">จัดการสูตรและคำถาม-คำตอบพลิกการ์ด</p>
-            </div>
-            <button
-              onClick={() => setIsAddCardModalOpen(true)}
-              className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ เพิ่มแฟลชการ์ด</span>
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {courseCards.map((card, idx) => (
-              <div
-                key={card.id}
-                className="p-4 rounded-xl border border-slate-200 bg-[#FFFDF7] space-y-2 text-xs flex flex-col justify-between"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-slate-400 text-[11px]">
-                    <span>การ์ดที่ {idx + 1}</span>
-                    <button
-                      onClick={() => deleteFlashcard(card.id)}
-                      className="text-red-400 hover:text-red-600 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="font-bold text-slate-900">หน้า: {card.front}</div>
-                  <div className="text-amber-900 font-mono bg-amber-50 p-2 rounded-lg border border-amber-200/60">
-                    หลัง: {card.back}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 5: Quizzes Management */}
-      {activeTab === 'quizzes' && (
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-6 shadow-2xs space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                ควิซ & ข้อสอบในคอร์ส: {activeCourse.name} ({courseQuizzes.length} ชุด)
-              </h2>
-              <p className="text-xs text-slate-500">ชุดโจทย์คำถามพร้อมเฉลยละเอียดและจับเวลา</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {courseQuizzes.map((quiz) => (
-              <div
-                key={quiz.id}
-                className="p-4 rounded-xl border border-slate-200 bg-[#FFFDF7] space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900 text-sm">{quiz.title}</h3>
-                  <span className="font-mono text-slate-500">
-                    {quiz.questions.length} ข้อ ({quiz.timeLimitMinutes || 5} นาที)
-                  </span>
-                </div>
-                <p className="text-slate-600">{quiz.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Tab 6: Materials Management (PDFs) */}
       {activeTab === 'materials' && (
@@ -996,74 +934,6 @@ export const AdminContentSuite: React.FC = () => {
                 </button>
                 <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
                   บันทึกวิดีโอ
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Add Flashcard */}
-      {isAddCardModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">เพิ่มแฟลชการ์ดช่วยจำ</h3>
-              <button onClick={() => setIsAddCardModalOpen(false)} className="p-1 text-slate-400 cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleAddCardSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำถาม / หัวข้อ (ด้านหน้าการ์ด) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="เช่น กฎของแก๊สในอุดมคติ และค่าคงที่ R"
-                  value={cardFront}
-                  onChange={(e) => setCardFront(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                />
-              </div>
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำตอบ / วิธีจำ (ด้านหลังการ์ด) *</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="เช่น PV = nRT โดย R = 0.0821 dm³·atm/(mol·K)"
-                  value={cardBack}
-                  onChange={(e) => setCardBack(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-mono"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">คำใบ้ (Hint)</label>
-                  <input
-                    type="text"
-                    placeholder="เช่น จำหน่วยอุณหภูมิเป็นเคลวิน"
-                    value={cardHint}
-                    onChange={(e) => setCardHint(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">สูตรคีย์เวิร์ด</label>
-                  <input
-                    type="text"
-                    placeholder="PV = nRT"
-                    value={cardFormula}
-                    onChange={(e) => setCardFormula(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-mono"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button type="button" onClick={() => setIsAddCardModalOpen(false)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
-                </button>
-                <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกการ์ด
                 </button>
               </div>
             </form>

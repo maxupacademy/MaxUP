@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { MaxUpLogo } from '../brand/MaxUpLogo';
-import { ProfessorMeow } from '../brand/ProfessorMeow';
 import {
   Shield,
   GraduationCap,
@@ -106,12 +105,28 @@ export const LoginView: React.FC = () => {
             กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้ (Username) และรหัสผ่าน หรือสมัครสมาชิกนักเรียนใหม่พร้อมกรอกรหัสเข้าคอร์สเรียนที่คุณครู Max กำหนดให้
           </p>
 
-          <div className="pt-2 flex justify-center lg:justify-start">
-            <ProfessorMeow
-              pose="cheering"
-              size="lg"
-              bubbleText="ยินดีต้อนรับครับ! กรอกชื่อผู้ใช้และรหัสผ่านเพื่อเข้าเรียนเมี๊ยว!"
-            />
+          {/* Platform Feature Highlights Card */}
+          <div className="pt-2 grid grid-cols-2 gap-2 text-left">
+            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
+              <div className="text-base">📚</div>
+              <div className="text-xs font-bold text-slate-800">สารบัญบทเรียน</div>
+              <p className="text-[10px] text-slate-500">เช็คหัวข้อที่เรียนและไฟล์ Google Drive</p>
+            </div>
+            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
+              <div className="text-base">📅</div>
+              <div className="text-xs font-bold text-slate-800">ตารางเรียนล่วงหน้า</div>
+              <p className="text-[10px] text-slate-500">วางแผนชั่วโมงและเนื้อหาล่วงหน้า</p>
+            </div>
+            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
+              <div className="text-base">▶️</div>
+              <div className="text-xs font-bold text-slate-800">วิดีโอย้อนหลัง</div>
+              <p className="text-[10px] text-slate-500">คลิปสอน YouTube ทบทวนได้ตลอด</p>
+            </div>
+            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
+              <div className="text-base">📝</div>
+              <div className="text-xs font-bold text-slate-800">การบ้าน & ตรวจงาน</div>
+              <p className="text-[10px] text-slate-500">ส่งการบ้านพร้อมคำแนะนำครู</p>
+            </div>
           </div>
         </div>
 
@@ -223,13 +238,10 @@ export const LoginView: React.FC = () => {
                 )}
               </button>
 
-              <div className="pt-2 border-t border-slate-100 text-center text-[11px] text-slate-500 space-y-1">
-                <div>
-                  💡 สำหรับคุณครู Max: Username <strong className="text-slate-800">Maxnum</strong> / รหัสผ่าน <strong className="text-slate-800">Maxnum</strong>
-                </div>
-                <div>
-                  สำหรับนักเรียน: หากยังไม่มีบัญชี กรุณากดปุ่ม <strong className="text-blue-900 cursor-pointer" onClick={() => setAuthMode('signup')}>"สมัครใหม่"</strong> ด้านบน
-                </div>
+              <div className="pt-2 border-t border-slate-100 text-center text-[11px] text-slate-500">
+                <span>สำหรับนักเรียน: หากยังไม่มีบัญชี กรุณากดปุ่ม </span>
+                <strong className="text-blue-900 cursor-pointer underline" onClick={() => setAuthMode('signup')}>"สมัครใหม่"</strong>
+                <span> ด้านบน</span>
               </div>
             </form>
           ) : (
@@ -293,51 +305,60 @@ export const LoginView: React.FC = () => {
               </div>
 
               {/* Course Selection & Course Passcode */}
-              <div className="p-3 bg-amber-50/70 border border-amber-200/90 rounded-2xl space-y-2.5">
-                <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
-                  <BookOpen className="w-4 h-4 text-amber-700" />
-                  <span>เลือกคอร์สเรียน & ระบุรหัสเข้าคอร์ส (Course Passcode)</span>
+              {courses.length === 0 ? (
+                <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-2xl text-center text-xs text-amber-900 space-y-1">
+                  <div className="font-bold">ยังไม่มีคอร์สเรียนเปิดรับสมัครในขณะนี้</div>
+                  <p className="text-[11px] text-slate-600">
+                    คุณครู Max กำลังเริ่มร่างหลักสูตรคอร์สเรียนใหม่ กรุณาติดต่อคุณครูเพื่อเปิดระบบคอร์ส
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">คอร์สที่ต้องการสมัคร *</label>
-                    <select
-                      value={selectedCourseId}
-                      onChange={(e) => setSelectedCourseId(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none font-medium"
-                    >
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.code})
-                        </option>
-                      ))}
-                    </select>
+              ) : (
+                <div className="p-3 bg-amber-50/70 border border-amber-200/90 rounded-2xl space-y-2.5">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                    <BookOpen className="w-4 h-4 text-amber-700" />
+                    <span>เลือกคอร์สเรียน & ระบุรหัสเข้าคอร์ส (Course Passcode)</span>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                      <span>รหัสเข้าคอร์สเรียน (Passcode) *</span>
-                      <span className="text-[10px] text-amber-700 font-normal">ถามจากคุณครู Max</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        placeholder="กรอกรหัสเข้าคอร์ส เช่น CHEM68"
-                        value={coursePasscode}
-                        onChange={(e) => setCoursePasscode(e.target.value)}
-                        className="w-full bg-white border border-amber-300 rounded-xl pl-8 pr-3 py-2 font-mono font-bold tracking-wider text-slate-900 uppercase focus:ring-1 focus:ring-amber-500 focus:outline-none"
-                      />
-                      <KeyRound className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">คอร์สที่ต้องการสมัคร *</label>
+                      <select
+                        value={selectedCourseId}
+                        onChange={(e) => setSelectedCourseId(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none font-medium"
+                      >
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.code})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>รหัสเข้าคอร์สเรียน (Passcode) *</span>
+                        <span className="text-[10px] text-amber-700 font-normal">ถามจากคุณครู Max</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          placeholder="กรอกรหัสเข้าคอร์ส เช่น CHEM68"
+                          value={coursePasscode}
+                          onChange={(e) => setCoursePasscode(e.target.value)}
+                          className="w-full bg-white border border-amber-300 rounded-xl pl-8 pr-3 py-2 font-mono font-bold tracking-wider text-slate-900 uppercase focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                        />
+                        <KeyRound className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <p className="text-[11px] text-slate-500 leading-normal">
-                  📌 เมื่อกรอกรหัสถูกต้อง คอร์ส <strong className="text-slate-800">{selectedCourse?.name}</strong> จะถูกเพิ่มเข้าโปรไฟล์ของคุณทันที (นักเรียนสามารถเพิ่มคอร์สอื่นภายหลังได้ด้วยรหัสคอร์สนั้นๆ)
-                </p>
-              </div>
+                  <p className="text-[11px] text-slate-500 leading-normal">
+                    📌 เมื่อกรอกรหัสถูกต้อง คอร์ส <strong className="text-slate-800">{selectedCourse?.name}</strong> จะถูกเพิ่มเข้าโปรไฟล์ของคุณทันที (นักเรียนสามารถเพิ่มคอร์สอื่นภายหลังได้ด้วยรหัสคอร์สนั้นๆ)
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>

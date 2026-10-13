@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SyllabusManager } from '../admin/SyllabusManager';
 import { VideoLibraryView } from '../video/VideoLibraryView';
-import { FlashcardsView } from './FlashcardsView';
-import { QuizPracticeView } from './QuizPracticeView';
 import { CourseMaterialsView } from './CourseMaterialsView';
 import { HomeworkSuite } from '../homework/HomeworkSuite';
 import {
   BookOpen,
   Play,
-  Layers,
-  HelpCircle,
   Download,
   GraduationCap,
   Sparkles,
@@ -24,7 +20,7 @@ import {
 } from 'lucide-react';
 
 interface CourseLearningHubProps {
-  initialSubTab?: 'syllabus' | 'videos' | 'flashcards' | 'quizzes' | 'materials' | 'homework';
+  initialSubTab?: 'syllabus' | 'videos' | 'materials' | 'homework';
 }
 
 export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
@@ -41,7 +37,7 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
   } = useApp();
 
   const [currentSubTab, setCurrentSubTab] = useState<
-    'syllabus' | 'videos' | 'flashcards' | 'quizzes' | 'materials' | 'homework'
+    'syllabus' | 'videos' | 'materials' | 'homework'
   >(initialSubTab);
 
   const [copied, setCopied] = useState(false);
@@ -74,13 +70,27 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
   };
 
   const subTabs = [
-    { id: 'syllabus', label: 'สารบัญ & ไฟล์เรียน PDF', icon: BookOpen },
+    { id: 'syllabus', label: 'สารบัญ & ไฟล์เรียน Google Drive', icon: BookOpen },
     { id: 'videos', label: 'วิดีโอ YouTube', icon: Play },
-    { id: 'flashcards', label: 'แฟลชการ์ด', icon: Layers },
-    { id: 'quizzes', label: 'ควิซ & ข้อสอบ', icon: HelpCircle },
-    { id: 'materials', label: 'คลังเอกสาร & สรุป', icon: Download },
+    { id: 'materials', label: 'คลังเอกสาร & Google Drive', icon: Download },
     { id: 'homework', label: 'การบ้าน & ส่งงาน', icon: ClipboardList },
   ];
+
+  if (courses.length === 0) {
+    return (
+      <div className="bg-white border border-amber-900/10 rounded-3xl p-10 text-center space-y-4 max-w-lg mx-auto shadow-sm animate-in fade-in">
+        <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto text-2xl font-bold">
+          📚
+        </div>
+        <h2 className="text-lg font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          {currentUserRole === 'admin'
+            ? 'ข้อมูลถูกรีเซ็ตเรียบร้อยแล้ว คุณครู Max สามารถไปที่เมนู "คอร์ส & สารบัญ" เพื่อเริ่มสร้างคอร์สและร่างบทเรียนได้ทันที'
+            : 'คุณครู Max กำลังเริ่มร่างหลักสูตรคอร์สเรียนใหม่ กรุณารอเปิดระบบคอร์สครับ'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -228,14 +238,12 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
                       ? 'text-amber-300'
                       : tab.id === 'videos'
                       ? 'text-red-500'
-                      : tab.id === 'flashcards'
-                      ? 'text-amber-600'
-                      : tab.id === 'quizzes'
-                      ? 'text-blue-700'
+                      : tab.id === 'homework'
+                      ? 'text-purple-600'
                       : 'text-emerald-600'
                   }`}
                 />
-                <span style={tab.id === 'homework' ? { width: '100.45px' } : undefined}>
+                <span>
                   {tab.label}
                 </span>
               </button>
@@ -247,8 +255,6 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
       {/* Render Selected Learning View */}
       {currentSubTab === 'syllabus' && <SyllabusManager />}
       {currentSubTab === 'videos' && <VideoLibraryView />}
-      {currentSubTab === 'flashcards' && <FlashcardsView />}
-      {currentSubTab === 'quizzes' && <QuizPracticeView />}
       {currentSubTab === 'materials' && <CourseMaterialsView />}
       {currentSubTab === 'homework' && <HomeworkSuite />}
     </div>

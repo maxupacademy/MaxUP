@@ -282,9 +282,10 @@ export const StudentManager: React.FC = () => {
             const percent =
               totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;
 
-            const enrolledNames = (st.enrolledCourseIds || ['chem_alevel'])
-              .map((id) => courses.find((c) => c.id === id)?.name || id)
-              .join(', ');
+            const enrolledNames =
+              (st.enrolledCourseIds || [])
+                .map((id) => courses.find((c) => c.id === id)?.name || id)
+                .join(', ') || 'ยังไม่ได้ระบุคอร์ส';
 
             return (
               <div

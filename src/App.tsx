@@ -12,6 +12,7 @@ import { AdminContentSuite } from './components/admin/AdminContentSuite';
 import { StudentManager } from './components/admin/StudentManager';
 import { StudentDashboard } from './components/student/StudentDashboard';
 import { CourseLearningHub } from './components/learning/CourseLearningHub';
+import { SchedulePlannerView } from './components/schedule/SchedulePlannerView';
 import { HomeworkSuite } from './components/homework/HomeworkSuite';
 import { LoginView } from './components/auth/LoginView';
 import { MaxUpLogo } from './components/brand/MaxUpLogo';
@@ -80,21 +81,24 @@ const MainContent: React.FC = () => {
                 onEditLesson={handleOpenEditLesson}
                 onNavigateToSyllabus={() => setCurrentTab('learning-hub')}
                 onNavigateToStudents={() => setCurrentTab('students')}
+                onNavigateToSchedule={() => setCurrentTab('schedule')}
               />
             )}
             {currentTab === 'learning-hub' && <CourseLearningHub />}
+            {currentTab === 'schedule' && <SchedulePlannerView />}
             {currentTab === 'admin-suite' && <AdminContentSuite />}
             {currentTab === 'students' && <StudentManager />}
           </>
         ) : (
           <>
-            {currentTab === 'home' && (
+            {(currentTab === 'home' || currentTab === 'my-lessons') && (
               <StudentDashboard currentTab={currentTab} setCurrentTab={setCurrentTab} />
             )}
-            {currentTab === 'learning-hub' && <CourseLearningHub />}
-            {currentTab === 'my-lessons' && (
-              <StudentDashboard currentTab="my-lessons" setCurrentTab={setCurrentTab} />
-            )}
+            {currentTab === 'schedule' && <SchedulePlannerView />}
+            {currentTab === 'learning-hub' && <CourseLearningHub initialSubTab="syllabus" />}
+            {currentTab === 'my-syllabus' && <CourseLearningHub initialSubTab="syllabus" />}
+            {currentTab === 'my-materials' && <CourseLearningHub initialSubTab="materials" />}
+            {currentTab === 'my-videos' && <CourseLearningHub initialSubTab="videos" />}
             {currentTab === 'my-homework' && <HomeworkSuite />}
           </>
         )}

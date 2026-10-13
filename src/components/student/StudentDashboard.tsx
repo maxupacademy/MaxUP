@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ProfessorMeow } from '../brand/ProfessorMeow';
 import {
   Clock,
   BookOpen,
@@ -14,7 +13,14 @@ import {
   KeyRound,
   Plus,
   Check,
+  ExternalLink,
+  FolderOpen,
+  CalendarDays,
+  ChevronLeft,
+  CreditCard,
 } from 'lucide-react';
+import { PromptPayPaymentModal } from '../payment/PromptPayPaymentModal';
+import { StudySchedulePlan } from '../../types';
 
 interface StudentDashboardProps {
   currentTab: string;
@@ -36,11 +42,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setActiveCourseId,
     currentUser,
     enrollByPasscode,
+    schedulePlans,
   } = useApp();
 
   const [expandedLessonId, setExpandedLessonId] = useState<string | null>(
     activeStudentLessons[0]?.id || null
   );
+
+  const [calViewDate, setCalViewDate] = useState<Date>(new Date());
+  const [selectedCalDate, setSelectedCalDate] = useState<string | null>(null);
+  const [selectedPaymentPlan, setSelectedPaymentPlan] = useState<StudySchedulePlan | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
 
   const [passcodeInput, setPasscodeInput] = useState('');
   const [enrollError, setEnrollError] = useState<string | null>(null);
@@ -126,39 +138,45 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 สารบัญคอร์ส ({completedCount}/{totalSubtopics})
               </button>
               <button
-                onClick={() => setCurrentTab('my-flashcards')}
-                className="px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-100/70 hover:bg-amber-100 border border-amber-200 rounded-xl shadow-2xs transition-all"
+                onClick={() => setCurrentTab('schedule')}
+                className="px-3 py-1.5 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl shadow-2xs transition-all cursor-pointer"
               >
-                🗂️ แฟลชการ์ด
-              </button>
-              <button
-                onClick={() => setCurrentTab('my-quizzes')}
-                className="px-3 py-1.5 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl shadow-2xs transition-all"
-              >
-                📝 ควิซ & ข้อสอบ
+                📅 ตารางเรียนล่วงหน้า
               </button>
               <button
                 onClick={() => setCurrentTab('my-materials')}
-                className="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl shadow-2xs transition-all"
+                className="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl shadow-2xs transition-all cursor-pointer"
               >
                 📥 โหลดไฟล์เรียน
               </button>
               <button
                 onClick={() => setCurrentTab('my-videos')}
-                className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl shadow-2xs transition-all"
+                className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl shadow-2xs transition-all cursor-pointer"
               >
                 ▶️ วิดีโอ YouTube
+              </button>
+              <button
+                onClick={() => setCurrentTab('my-homework')}
+                className="px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+              >
+                📝 การบ้าน & ส่งงาน
               </button>
             </div>
           </div>
 
-          {/* Professor Meow Mascot with Encouraging Speech Bubble */}
-          <div className="flex-shrink-0">
-            <ProfessorMeow
-              pose={syllabusPercent >= 30 ? 'exam_pass' : 'happy'}
-              size="lg"
-              bubbleText={`เยี่ยมมากเลย${activeStudent?.nickname}! เรียนสะสมไปแล้ว ${totalHours} ชั่วโมงแล้วเมี๊ยว!`}
-            />
+          {/* Student Goal & Encouragement Badge */}
+          <div className="flex-shrink-0 bg-white/90 border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col items-center justify-center text-center min-w-[200px]">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-800 flex items-center justify-center font-bold text-xl mb-2">
+              🎯
+            </div>
+            <div className="text-xs font-bold text-slate-800">
+              เป้าหมาย: {activeStudent?.targetExam || 'เตรียมสอบ A-Level / ม.ปลาย'}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-1 max-w-[180px]">
+              {activeStudent?.targetFaculty
+                ? `คณะ ${activeStudent.targetFaculty}`
+                : `สะสมชั่วโมงเรียนไปแล้ว ${totalHours} ชม.`}
+            </div>
           </div>
         </div>
       </section>
@@ -220,8 +238,407 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
       {/* Main Content Split: Lessons Timeline + Pending Homework / Syllabus Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Lesson History Timeline */}
+        {/* Left 2 Cols: Upcoming Lesson Calendar & Lesson History Timeline */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Student Dashboard Calendar & Planned Syllabus Topics */}
+          {(() => {
+            const myPlans = schedulePlans
+              .filter((plan) => {
+                const isForMe =
+                  plan.studentId === 'all' ||
+                  plan.studentId === (activeStudent?.id || currentUser?.id);
+                const isForMyCourse =
+                  plan.courseId === activeCourseId ||
+                  (currentUser?.enrolledCourseIds || []).includes(plan.courseId);
+                return isForMe && isForMyCourse;
+              })
+              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            const upcomingCount = myPlans.filter((p) => p.status === 'upcoming').length;
+
+            const calYear = calViewDate.getFullYear();
+            const calMonth = calViewDate.getMonth();
+            const firstDayIdx = new Date(calYear, calMonth, 1).getDay();
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            const focusedDate = selectedCalDate || myPlans.find((p) => p.status === 'upcoming')?.date || todayStr;
+            const focusedPlans = myPlans.filter((p) => p.date === focusedDate);
+
+            return (
+              <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-md mb-1">
+                      <CalendarDays className="w-3.5 h-3.5 text-blue-700" />
+                      <span>ปฏิทินตารางเรียน & แผนการสอน (Lesson Calendar)</span>
+                    </div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                      ตารางเรียนล่วงหน้า & หัวข้อที่ต้องเตรียมตัว
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      กำหนดการเรียนและหัวข้อ Syllabus ที่คุณครู Max วางแผนจะสอนในแต่ละคาบ
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60">
+                      ตามแผน {upcomingCount} คาบ
+                    </span>
+                    <button
+                      onClick={() => setCurrentTab('schedule')}
+                      className="px-3 py-1 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                    >
+                      <span>ดูเต็มจอ</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Calendar Layout: Month Grid + Scheduled Slot Details */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                  {/* Left Column: Mini Month Calendar Grid */}
+                  <div className="md:col-span-6 bg-[#FFFDF7] border border-amber-200/70 rounded-2xl p-4 space-y-3">
+                    {/* Month Nav */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))}
+                        className="p-1 rounded-lg hover:bg-amber-100 text-slate-600 transition-colors cursor-pointer"
+                        title="เดือนก่อนหน้า"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                        <span>
+                          {[
+                            'มกราคม',
+                            'กุมภาพันธ์',
+                            'มีนาคม',
+                            'เมษายน',
+                            'พฤษภาคม',
+                            'มิถุนายน',
+                            'กรกฎาคม',
+                            'สิงหาคม',
+                            'กันยายน',
+                            'ตุลาคม',
+                            'พฤศจิกายน',
+                            'ธันวาคม',
+                          ][calMonth]}{' '}
+                          {calYear + 543}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))}
+                        className="p-1 rounded-lg hover:bg-amber-100 text-slate-600 transition-colors cursor-pointer"
+                        title="เดือนถัดไป"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Weekday headers */}
+                    <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-500 pb-1 border-b border-amber-100">
+                      <span className="text-red-500">อา.</span>
+                      <span>จ.</span>
+                      <span>อ.</span>
+                      <span>พ.</span>
+                      <span>พฤ.</span>
+                      <span>ศ.</span>
+                      <span className="text-blue-600">ส.</span>
+                    </div>
+
+                    {/* Days Grid */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {/* Leading days from previous month */}
+                      {Array.from({ length: firstDayIdx }).map((_, idx) => {
+                        const dayNum = daysInPrevMonth - firstDayIdx + 1 + idx;
+                        return (
+                          <div
+                            key={`prev-${dayNum}`}
+                            className="h-8 rounded-lg flex items-center justify-center text-[11px] text-slate-300"
+                          >
+                            {dayNum}
+                          </div>
+                        );
+                      })}
+
+                      {/* Current month days */}
+                      {Array.from({ length: daysInMonth }).map((_, idx) => {
+                        const day = idx + 1;
+                        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const dayPlans = myPlans.filter((p) => p.date === dateStr);
+                        const hasPlans = dayPlans.length > 0;
+                        const isToday = todayStr === dateStr;
+                        const isSelected = focusedDate === dateStr;
+
+                        return (
+                          <button
+                            type="button"
+                            key={dateStr}
+                            onClick={() => setSelectedCalDate(dateStr)}
+                            className={`h-8 rounded-lg text-xs font-semibold flex flex-col items-center justify-center relative transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-900 text-white shadow-2xs ring-2 ring-amber-400'
+                                : isToday
+                                ? 'bg-amber-100 text-amber-950 font-bold'
+                                : hasPlans
+                                ? 'bg-blue-50 text-blue-900 hover:bg-blue-100 font-bold'
+                                : 'text-slate-700 hover:bg-amber-50/80'
+                            }`}
+                          >
+                            <span>{day}</span>
+                            {hasPlans && (
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
+                                  isSelected ? 'bg-amber-300' : 'bg-blue-600'
+                                }`}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1 border-t border-amber-100">
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+                        <span>วันที่มีคาบเรียน</span>
+                      </span>
+                      {selectedCalDate && (
+                        <button
+                          onClick={() => setSelectedCalDate(null)}
+                          className="text-blue-900 hover:underline cursor-pointer"
+                        >
+                          แสดงทั้งหมด
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Scheduled Lesson Slot Details & Syllabus Topics */}
+                  <div className="md:col-span-6 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-blue-900" />
+                          <span>
+                            {selectedCalDate
+                              ? `คาบเรียนวันที่ ${new Date(selectedCalDate).toLocaleDateString('th-TH', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}`
+                              : 'คาบเรียนตามแผนที่กำลังจะถึง'}
+                          </span>
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          {selectedCalDate ? `${focusedPlans.length} คาบ` : `${myPlans.length} คาบทั้งหมด`}
+                        </span>
+                      </div>
+
+                      {/* Display Focused Plans or Upcoming Plans */}
+                      {(selectedCalDate ? focusedPlans : myPlans.slice(0, 3)).length === 0 ? (
+                        <div className="p-6 bg-slate-50/70 border border-dashed border-slate-200 rounded-xl text-center space-y-2">
+                          <div className="text-2xl">📅</div>
+                          <p className="text-xs text-slate-600 font-semibold">
+                            {selectedCalDate
+                              ? 'ไม่มีคาบเรียนในวันที่เลือก'
+                              : 'ยังไม่มีตารางเรียนที่กำหนดไว้'}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            คุณครู Max จะอัปเดตวันเวลาและหัวข้อที่จะสอนล่วงหน้าให้น้องทราบที่นี่ครับ
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                          {(selectedCalDate ? focusedPlans : myPlans.slice(0, 3)).map((plan) => {
+                            const isDone = plan.status === 'completed';
+                            const course = courses.find((c) => c.id === plan.courseId);
+
+                            // Find planned subtopics from course
+                            const allCourseSubtopics = (course || activeSubject)?.topics?.flatMap(
+                              (t) => t.subtopics
+                            ) || [];
+                            const matchedSubtopics = allCourseSubtopics.filter((sub) =>
+                              plan.plannedSubtopicIds?.includes(sub.id)
+                            );
+
+                            return (
+                              <div
+                                key={plan.id}
+                                className={`p-3.5 rounded-xl border transition-all space-y-2 ${
+                                  isDone
+                                    ? 'bg-emerald-50/30 border-emerald-200'
+                                    : 'bg-[#FFFDF7] border-amber-200/80 hover:border-amber-400'
+                                }`}
+                              >
+                                {/* Top Badge: Date, Time & Status */}
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-900 border border-blue-200 flex items-center gap-1">
+                                      <Calendar className="w-3 h-3 text-blue-700" />
+                                      {new Date(plan.date).toLocaleDateString('th-TH', {
+                                        weekday: 'short',
+                                        day: 'numeric',
+                                        month: 'short',
+                                      })}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200 flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-amber-700" />
+                                      {plan.startTime} - {plan.endTime} ({plan.durationHours} ชม.)
+                                    </span>
+                                  </div>
+
+                                  <span
+                                    className={`px-2 py-0.2 rounded-full text-[10px] font-bold shrink-0 ${
+                                      isDone
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : 'bg-amber-100 text-amber-900'
+                                    }`}
+                                  >
+                                    {isDone ? '✓ เรียนแล้ว' : '⏳ ตามแผน'}
+                                  </span>
+                                </div>
+
+                                {/* Title */}
+                                <div>
+                                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                                    {plan.title}
+                                  </h4>
+                                  {course && (
+                                    <span className="text-[10px] text-slate-500 font-medium">
+                                      วิชา: {course.name}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Assigned Syllabus Topics from Active Course */}
+                                {(matchedSubtopics.length > 0 || plan.plannedContentDescription) && (
+                                  <div className="bg-white border border-amber-100 rounded-lg p-2 space-y-1">
+                                    <div className="text-[10px] font-bold text-blue-900 flex items-center gap-1">
+                                      <BookOpen className="w-3 h-3 text-blue-800" />
+                                      <span>หัวข้อ Syllabus ที่ต้องเตรียมตัว:</span>
+                                    </div>
+
+                                    {matchedSubtopics.length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {matchedSubtopics.map((sub) => (
+                                          <span
+                                            key={sub.id}
+                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200/80 text-[10px] font-semibold"
+                                          >
+                                            <span>•</span>
+                                            <span>{sub.name}</span>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {plan.plannedContentDescription && (
+                                      <p className="text-[11px] text-slate-700 font-medium leading-snug">
+                                        {plan.plannedContentDescription}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Preparation Note */}
+                                {plan.preparationNote && (
+                                  <div className="text-[11px] text-amber-900 bg-amber-50/90 border border-amber-200/60 rounded-lg p-2 flex items-start gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="font-semibold block text-[10px]">
+                                        เตือนเตรียมตัวก่อนเข้าเรียน:
+                                      </span>
+                                      <span>{plan.preparationNote}</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Google Drive Study Material Link */}
+                                {plan.googleDriveUrl && (
+                                  <div>
+                                    <a
+                                      href={plan.googleDriveUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>เปิดเอกสารชีทเรียนใน Google Drive</span>
+                                      <ExternalLink className="w-3 h-3 text-emerald-500 ml-0.5" />
+                                    </a>
+                                  </div>
+                                )}
+
+                                {/* Payment & PromptPay Strip */}
+                                {plan.priceAmount !== undefined && plan.priceAmount > 0 && (
+                                  <div className="flex items-center justify-between p-2.5 bg-gradient-to-r from-blue-50/70 to-amber-50/50 border border-blue-200/80 rounded-xl text-xs gap-2">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <CreditCard className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                                      <span className="font-bold text-slate-900 font-mono text-xs">
+                                        ฿{plan.priceAmount.toLocaleString()}
+                                      </span>
+                                      <span
+                                        className={`px-2 py-0.2 rounded-full text-[10px] font-bold shrink-0 ${
+                                          plan.paymentStatus === 'paid'
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : plan.paymentStatus === 'slip_uploaded'
+                                            ? 'bg-blue-100 text-blue-900 border border-blue-300'
+                                            : 'bg-amber-100 text-amber-900'
+                                        }`}
+                                      >
+                                        {plan.paymentStatus === 'paid'
+                                          ? '✓ ชำระแล้ว'
+                                          : plan.paymentStatus === 'slip_uploaded'
+                                          ? '🔔 แนบสลิปแล้ว (รอครูตรวจ)'
+                                          : 'รอชำระเงิน'}
+                                      </span>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedPaymentPlan(plan);
+                                        setIsPaymentModalOpen(true);
+                                      }}
+                                      className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                    >
+                                      {plan.paymentStatus === 'paid'
+                                        ? 'ดูสลิปที่ยืนยันแล้ว'
+                                        : plan.paymentStatus === 'slip_uploaded'
+                                        ? 'ดูสลิป / ส่งใหม่'
+                                        : 'สแกน QR จ่าย / แนบสลิป'}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => setCurrentTab('schedule')}
+                        className="w-full py-2 text-center text-xs font-bold text-blue-900 hover:text-blue-800 bg-blue-50/60 hover:bg-blue-100/60 border border-blue-200/60 rounded-xl transition-all cursor-pointer"
+                      >
+                        เปิดดูตารางเรียนทั้งหมดแบบเต็มจอ (Schedule Planner) →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+          })()}
+
+          {/* Lesson Logs Timeline */}
           <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -234,9 +651,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             </div>
 
             {activeStudentLessons.length === 0 ? (
-              <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl">
-                <ProfessorMeow pose="thinking" size="md" className="mx-auto" />
-                <p className="text-xs text-slate-500 mt-2">ยังไม่มีบันทึกคาบเรียนสำหรับคุณ</p>
+              <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl bg-amber-50/20">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-2">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">ยังไม่มีบันทึกคาบเรียนสำหรับคุณ</p>
               </div>
             ) : (
               <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-amber-200">
@@ -302,6 +721,35 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-100">
                           {les.contentDetail}
                         </p>
+
+                        {/* Handwritten Solution & Google Drive Buttons */}
+                        {(les.handwrittenSolutionUrl || les.googleDriveUrl) && (
+                          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                            {les.handwrittenSolutionUrl && (
+                              <a
+                                href={les.handwrittenSolutionUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-2xs"
+                              >
+                                <span>✍️ เฉลยลายมือประจำคาบ (เปิดดูวิธีคิด)</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-amber-700" />
+                              </a>
+                            )}
+                            {les.googleDriveUrl && (
+                              <a
+                                href={les.googleDriveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all shadow-2xs"
+                              >
+                                <FolderOpen className="w-3.5 h-3.5 text-emerald-700" />
+                                <span>ชีทเรียน Google Drive</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
+                              </a>
+                            )}
+                          </div>
+                        )}
 
                         {/* Expanded details (Homework & Teacher Note) */}
                         {isExpanded && (
@@ -587,6 +1035,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </section>
         </div>
       </div>
+
+      {/* Student PromptPay Payment & Slip Upload Modal */}
+      {selectedPaymentPlan && (
+        <PromptPayPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedPaymentPlan(null);
+          }}
+          plan={selectedPaymentPlan}
+        />
+      )}
     </div>
   );
 };

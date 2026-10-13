@@ -18,6 +18,12 @@ import {
   Sparkles,
   Edit2,
   Trash2,
+  ExternalLink,
+  Flame,
+  Calendar,
+  Users,
+  RotateCw,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 export const SyllabusManager: React.FC = () => {
@@ -34,6 +40,12 @@ export const SyllabusManager: React.FC = () => {
     updateSubtopic,
     deleteSubtopic,
     currentUserRole,
+    currentUser,
+    students,
+    lessons,
+    progressMap,
+    updateStudentTopicStatus,
+    adjustStudentTopicCount,
     materials,
     addMaterial,
     deleteMaterial,
@@ -44,8 +56,23 @@ export const SyllabusManager: React.FC = () => {
     activeSubject.topics.slice(0, 3).map((t) => t.id)
   );
 
+  // Student progress view filter (default to currentUser if student, or first student if admin)
+  const [selectedStudentFilterId, setSelectedStudentFilterId] = useState<string>('');
+  const effectiveStudentId =
+    currentUserRole === 'student'
+      ? currentUser?.id || ''
+      : selectedStudentFilterId || (students[0]?.id || '');
+
   // Material reader modal
   const [selectedMaterialForReader, setSelectedMaterialForReader] = useState<CourseMaterial | null>(null);
+
+  // Quick Edit Links (Google Drive & Handwritten Solution) modal state
+  const [quickLinkSub, setQuickLinkSub] = useState<{
+    topicId: string;
+    sub: Subtopic;
+    handwrittenSolutionUrl: string;
+    googleDriveUrl: string;
+  } | null>(null);
 
   // New Subject modal state
   const [isAddingSubject, setIsAddingSubject] = useState(false);
@@ -68,12 +95,16 @@ export const SyllabusManager: React.FC = () => {
   const [newSubName, setNewSubName] = useState('');
   const [newSubDesc, setNewSubDesc] = useState('');
   const [newSubDifficulty, setNewSubDifficulty] = useState<Subtopic['difficulty']>('intermediate');
+  const [newSubGoogleDriveUrl, setNewSubGoogleDriveUrl] = useState('');
+  const [newSubHandwrittenSolutionUrl, setNewSubHandwrittenSolutionUrl] = useState('');
 
   // Edit Subtopic modal state
   const [editingSub, setEditingSub] = useState<{ topicId: string; sub: Subtopic } | null>(null);
   const [editSubName, setEditSubName] = useState('');
   const [editSubDesc, setEditSubDesc] = useState('');
   const [editSubDifficulty, setEditSubDifficulty] = useState<Subtopic['difficulty']>('intermediate');
+  const [editSubGoogleDriveUrl, setEditSubGoogleDriveUrl] = useState('');
+  const [editSubHandwrittenSolutionUrl, setEditSubHandwrittenSolutionUrl] = useState('');
 
   // Attach PDF Material directly to Topic Modal state
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
@@ -116,9 +147,13 @@ export const SyllabusManager: React.FC = () => {
       name: newSubName.trim(),
       description: newSubDesc.trim() || undefined,
       difficulty: newSubDifficulty,
+      googleDriveUrl: newSubGoogleDriveUrl.trim() || undefined,
+      handwrittenSolutionUrl: newSubHandwrittenSolutionUrl.trim() || undefined,
     });
     setNewSubName('');
     setNewSubDesc('');
+    setNewSubGoogleDriveUrl('');
+    setNewSubHandwrittenSolutionUrl('');
     setActiveTopicForSub(null);
   };
 
@@ -142,8 +177,28 @@ export const SyllabusManager: React.FC = () => {
       name: editSubName.trim(),
       description: editSubDesc.trim() || undefined,
       difficulty: editSubDifficulty,
+      googleDriveUrl: editSubGoogleDriveUrl.trim() || undefined,
+      handwrittenSolutionUrl: editSubHandwrittenSolutionUrl.trim() || undefined,
     });
     setEditingSub(null);
+  };
+
+  const handleSaveQuickLinks = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickLinkSub) return;
+    updateSubtopic(activeSubjectId, quickLinkSub.topicId, quickLinkSub.sub.id, {
+      handwrittenSolutionUrl: quickLinkSub.handwrittenSolutionUrl.trim() || undefined,
+      googleDriveUrl: quickLinkSub.googleDriveUrl.trim() || undefined,
+    });
+    if (effectiveStudentId && quickLinkSub.handwrittenSolutionUrl.trim()) {
+      updateStudentTopicStatus(
+        effectiveStudentId,
+        quickLinkSub.sub.id,
+        'completed',
+        quickLinkSub.handwrittenSolutionUrl.trim()
+      );
+    }
+    setQuickLinkSub(null);
   };
 
   const handleDeleteSubtopic = (topicId: string, sub: Subtopic) => {
@@ -362,6 +417,57 @@ export const SyllabusManager: React.FC = () => {
         </div>
       </div>
 
+      {/* Student Learning Progress & Count Tracker Bar */}
+      <div className="bg-gradient-to-r from-amber-50/90 via-white to-blue-50/70 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-bold text-slate-900 text-sm">
+                ติดตามสถานะการเรียน & จำนวนครั้งที่เรียน (Learning Status & Study Count)
+              </h4>
+              <span className="text-[11px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                ซิงค์อัตโนมัติกับคาบเรียน
+              </span>
+            </div>
+            <p className="text-slate-600 text-[11px] mt-0.5">
+              เมื่อบันทึกคาบเรียนแล้วเลือกหัวข้อ สถานะจะขึ้น "เรียนแล้ว" พร้อมนับจำนวนครั้งที่เรียนซ้ำ และเปิดดูไฟล์เฉลยลายมือได้ทันที
+            </p>
+          </div>
+        </div>
+
+        {/* Student Selector (If Admin) or Student Info (If Student) */}
+        {currentUserRole === 'admin' ? (
+          <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-white p-2 rounded-xl border border-amber-200 shadow-2xs">
+            <span className="font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1">
+              <Users className="w-3.5 h-3.5 text-blue-900" />
+              <span>ดูสถานะของนักเรียน:</span>
+            </span>
+            {students.length === 0 ? (
+              <span className="text-slate-400 italic">ยังไม่มีนักเรียนในระบบ</span>
+            ) : (
+              <select
+                value={effectiveStudentId}
+                onChange={(e) => setSelectedStudentFilterId(e.target.value)}
+                className="bg-amber-50/70 border border-amber-300 font-bold text-slate-900 rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                {students.map((st) => (
+                  <option key={st.id} value={st.id}>
+                    {st.nickname} ({st.fullName})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl self-start md:self-auto shrink-0">
+            <span>โปรไฟล์ของฉัน: {currentUser?.nickname || 'นักเรียน'}</span>
+          </div>
+        )}
+      </div>
+
       {/* Add New Subject Modal */}
       {isAddingSubject && (
         <div className="bg-amber-50/90 border border-amber-300 rounded-2xl p-5 animate-in fade-in duration-200">
@@ -508,6 +614,32 @@ export const SyllabusManager: React.FC = () => {
                 className="w-full bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-slate-800"
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  📂 ลิงก์ Google Drive ชีทเรียนประจำหัวข้อ (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/file/d/..."
+                  value={newSubGoogleDriveUrl}
+                  onChange={(e) => setNewSubGoogleDriveUrl(e.target.value)}
+                  className="w-full bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  ✍️ ลิงก์เฉลยจากการเขียนลายมือครู Max (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/... (ไฟล์เฉลยลายมือ)"
+                  value={newSubHandwrittenSolutionUrl}
+                  onChange={(e) => setNewSubHandwrittenSolutionUrl(e.target.value)}
+                  className="w-full bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-slate-800"
+                />
+              </div>
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
@@ -538,7 +670,6 @@ export const SyllabusManager: React.FC = () => {
         ) : (
           activeSubject.topics.map((topic, index) => {
             const isExpanded = expandedTopicIds.includes(topic.id);
-            const hasExamStats = topic.examWeights;
 
             // Direct linked PDF materials for this topic
             const topicMaterials = materials.filter(
@@ -749,90 +880,231 @@ export const SyllabusManager: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        {topic.subtopics.map((sub, sIdx) => (
-                          <div
-                            key={sub.id}
-                            className="p-3 bg-white border border-slate-200/80 rounded-xl hover:border-amber-300 transition-colors flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs"
-                          >
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900">
-                                  {index + 1}.{sIdx + 1} {sub.name}
-                                </span>
-                                {sub.difficulty && (
-                                  <span
-                                    className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${
-                                      sub.difficulty === 'basic'
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : sub.difficulty === 'intermediate'
-                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                                    }`}
-                                  >
-                                    {sub.difficulty === 'basic'
-                                      ? 'พื้นฐาน'
-                                      : sub.difficulty === 'intermediate'
-                                      ? 'ปานกลาง'
-                                      : 'ประยุกต์เข้มข้น'}
+                        {topic.subtopics.map((sub, sIdx) => {
+                          const studentLessonsWithSub = effectiveStudentId
+                            ? lessons.filter(
+                                (l) =>
+                                  l.studentId === effectiveStudentId &&
+                                  (l.subtopicIds || []).includes(sub.id)
+                              )
+                            : [];
+                          const progress = effectiveStudentId
+                            ? (progressMap[effectiveStudentId] || []).find(
+                                (p) => p.subtopicId === sub.id
+                              )
+                            : undefined;
+                          const lessonCount = studentLessonsWithSub.length;
+                          const recordedCount = progress?.studyCount || 0;
+                          const totalStudyCount = Math.max(lessonCount, recordedCount);
+                          const isCompleted =
+                            totalStudyCount > 0 ||
+                            progress?.status === 'completed' ||
+                            progress?.status === 'mastered';
+                          const latestDate =
+                            studentLessonsWithSub[0]?.lessonDate || progress?.lastStudiedDate;
+                          const handwrittenUrl =
+                            sub.handwrittenSolutionUrl ||
+                            progress?.handwrittenSolutionUrl ||
+                            studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)
+                              ?.handwrittenSolutionUrl;
+                          const driveUrl = sub.googleDriveUrl;
+
+                          return (
+                            <div
+                              key={sub.id}
+                              className="p-3 bg-white border border-slate-200/80 rounded-xl hover:border-amber-300 transition-colors flex flex-col lg:flex-row lg:items-start justify-between gap-3 text-xs"
+                            >
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-slate-900 text-sm">
+                                    {index + 1}.{sIdx + 1} {sub.name}
                                   </span>
+
+                                  {sub.difficulty && (
+                                    <span
+                                      className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${
+                                        sub.difficulty === 'basic'
+                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          : sub.difficulty === 'intermediate'
+                                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                      }`}
+                                    >
+                                      {sub.difficulty === 'basic'
+                                        ? 'พื้นฐาน'
+                                        : sub.difficulty === 'intermediate'
+                                        ? 'ปานกลาง'
+                                        : 'ประยุกต์เข้มข้น'}
+                                    </span>
+                                  )}
+
+                                  {/* Status and Study Count Badges */}
+                                  {isCompleted ? (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-md shadow-2xs">
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                        <span>เรียนแล้ว</span>
+                                      </span>
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md shadow-2xs">
+                                        <Flame className="w-3 h-3 text-amber-600" />
+                                        <span>เรียน {totalStudyCount} ครั้ง {totalStudyCount > 1 ? '(เรียนซ้ำ)' : ''}</span>
+                                      </span>
+                                      {latestDate && (
+                                        <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+                                          (ล่าสุด {latestDate})
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                                      <span>ยังไม่ได้เรียน</span>
+                                    </span>
+                                  )}
+
+                                  {/* Teacher Quick Increment/Decrement Buttons */}
+                                  {currentUserRole === 'admin' && effectiveStudentId && (
+                                    <div className="inline-flex items-center gap-1 ml-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => adjustStudentTopicCount(effectiveStudentId, sub.id, 1)}
+                                        className="px-2 py-0.5 text-[10px] font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded hover:border-amber-400 cursor-pointer transition-colors shadow-2xs"
+                                        title="เพิ่มจำนวนครั้งที่เรียนซ้ำให้นักเรียนคนนี้ +1 รอบ"
+                                      >
+                                        +1 รอบ
+                                      </button>
+                                      {totalStudyCount > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => adjustStudentTopicCount(effectiveStudentId, sub.id, -1)}
+                                          className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-red-700 bg-slate-50 hover:bg-red-50 border border-slate-200 rounded cursor-pointer transition-colors"
+                                          title="ลดจำนวนครั้งที่เรียน -1 รอบ"
+                                        >
+                                          -1
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {sub.description && (
+                                  <p className="text-slate-600 leading-relaxed text-xs">{sub.description}</p>
+                                )}
+
+                                {sub.keyPoints && sub.keyPoints.length > 0 && (
+                                  <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] text-slate-500">
+                                    <span className="text-slate-400 font-medium">จุดเน้น:</span>
+                                    {sub.keyPoints.map((kp, kIdx) => (
+                                      <span key={kIdx} className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">
+                                        {kp}
+                                      </span>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
-                              {sub.description && (
-                                <p className="text-slate-600 leading-relaxed">{sub.description}</p>
-                              )}
-                              {sub.keyPoints && sub.keyPoints.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500">
-                                  <span className="text-slate-400 font-medium">จุดเน้น:</span>
-                                  {sub.keyPoints.map((kp, kIdx) => (
-                                    <span key={kIdx} className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">
-                                      {kp}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
 
-                            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                              <button
-                                onClick={() => handleOpenMaterialForSubtopic(topic, sub)}
-                                className="flex items-center gap-1 text-[11px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200/70 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                                title="เปิดอ่านชีทสรุปหัวข้อนี้"
-                              >
-                                <BookOpen className="w-3 h-3 text-blue-700" />
-                                <span>อ่านชีทหัวข้อนี้</span>
-                              </button>
-
-                              {currentUserRole === 'admin' && (
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => {
-                                      setEditingSub({ topicId: topic.id, sub });
-                                      setEditSubName(sub.name);
-                                      setEditSubDesc(sub.description || '');
-                                      setEditSubDifficulty(sub.difficulty || 'intermediate');
-                                    }}
-                                    className="p-1 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                                    title="แก้ไขหัวข้อย่อย"
+                              {/* Action Buttons: Handwritten Solution, Google Drive, and Reader */}
+                              <div className="flex items-center gap-2 flex-wrap self-end lg:self-center shrink-0">
+                                {/* ✍️ Handwritten Solution Button */}
+                                {handwrittenUrl ? (
+                                  <a
+                                    href={handwrittenUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+                                    title="เปิดไฟล์/ลิงก์เฉลยจากการเขียนลายมือครู Max"
                                   >
-                                    <Edit2 className="w-3 h-3" />
-                                  </button>
+                                    <span>✍️ เฉลยลายมือครู Max</span>
+                                    <ExternalLink className="w-3.5 h-3.5 text-amber-700" />
+                                  </a>
+                                ) : currentUserRole === 'admin' ? (
                                   <button
-                                    onClick={() => handleDeleteSubtopic(topic.id, sub)}
-                                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                    title="ลบหัวข้อย่อยนี้"
+                                    type="button"
+                                    onClick={() =>
+                                      setQuickLinkSub({
+                                        topicId: topic.id,
+                                        sub,
+                                        handwrittenSolutionUrl: '',
+                                        googleDriveUrl: sub.googleDriveUrl || '',
+                                      })
+                                    }
+                                    className="flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50/70 hover:bg-amber-100 border border-dashed border-amber-300 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
+                                    title="แปะลิงก์เฉลยลายมือสำหรับหัวข้อนี้"
                                   >
-                                    <Trash2 className="w-3 h-3" />
+                                    <span>+ ✍️ แปะเฉลยลายมือ</span>
                                   </button>
-                                </div>
-                              )}
+                                ) : null}
 
-                              <div className="text-slate-400 flex items-center gap-1">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                <span className="text-[11px] text-slate-500 hidden sm:inline">เชื่อมโยงแล้ว</span>
+                                {/* 📂 Google Drive Sheet Button */}
+                                {driveUrl ? (
+                                  <a
+                                    href={driveUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+                                    title="เปิดไฟล์ชีทเรียน Google Drive"
+                                  >
+                                    <span>📂 ชีท Google Drive</span>
+                                    <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
+                                  </a>
+                                ) : currentUserRole === 'admin' ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setQuickLinkSub({
+                                        topicId: topic.id,
+                                        sub,
+                                        handwrittenSolutionUrl: sub.handwrittenSolutionUrl || '',
+                                        googleDriveUrl: '',
+                                      })
+                                    }
+                                    className="flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100 border border-dashed border-emerald-300 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
+                                    title="แปะลิงก์ Google Drive ชีทเรียน"
+                                  >
+                                    <span>+ 📂 แปะ Drive</span>
+                                  </button>
+                                ) : null}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenMaterialForSubtopic(topic, sub)}
+                                  className="flex items-center gap-1 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200/70 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shadow-2xs"
+                                  title="เปิดอ่านชีทสรุปหัวข้อนี้"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-blue-700" />
+                                  <span>อ่านชีท</span>
+                                </button>
+
+                                {currentUserRole === 'admin' && (
+                                  <div className="flex items-center gap-1 border-l border-slate-200 pl-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingSub({ topicId: topic.id, sub });
+                                        setEditSubName(sub.name);
+                                        setEditSubDesc(sub.description || '');
+                                        setEditSubDifficulty(sub.difficulty || 'intermediate');
+                                        setEditSubGoogleDriveUrl(sub.googleDriveUrl || '');
+                                        setEditSubHandwrittenSolutionUrl(sub.handwrittenSolutionUrl || '');
+                                      }}
+                                      className="p-1.5 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                      title="แก้ไขหัวข้อย่อยและลิงก์"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteSubtopic(topic.id, sub)}
+                                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                      title="ลบหัวข้อย่อยนี้"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1073,6 +1345,32 @@ export const SyllabusManager: React.FC = () => {
                 />
               </div>
 
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  📂 ลิงก์ Google Drive ชีทเรียน (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/file/d/..."
+                  value={editSubGoogleDriveUrl}
+                  onChange={(e) => setEditSubGoogleDriveUrl(e.target.value)}
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  ✍️ ลิงก์เฉลยจากการเขียนลายมือครู Max (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/... (ไฟล์เฉลยลายมือ)"
+                  value={editSubHandwrittenSolutionUrl}
+                  onChange={(e) => setEditSubHandwrittenSolutionUrl(e.target.value)}
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                />
+              </div>
+
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
@@ -1086,6 +1384,93 @@ export const SyllabusManager: React.FC = () => {
                   className="px-5 py-2 font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
                 >
                   บันทึกการแก้ไข
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Attach Links Modal (Google Drive & Handwritten Solution) */}
+      {quickLinkSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-amber-900/15 overflow-hidden p-6 animate-in fade-in zoom-in-95 duration-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">✍️</span>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    แปะลิงก์เฉลยลายมือ & ไฟล์เรียน Google Drive
+                  </h3>
+                  <p className="text-[11px] text-slate-500 truncate max-w-[280px]">
+                    หัวข้อ: {quickLinkSub.sub.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickLinkSub(null)}
+                className="p-1 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveQuickLinks} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span className="text-amber-600 font-bold">✍️</span>
+                  <span>ลิงก์เฉลยจากการเขียนลายมือครู Max:</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/... หรือ ลิงก์ไฟล์เฉลยลายมือ"
+                  value={quickLinkSub.handwrittenSolutionUrl}
+                  onChange={(e) =>
+                    setQuickLinkSub({
+                      ...quickLinkSub,
+                      handwrittenSolutionUrl: e.target.value,
+                    })
+                  }
+                  className="w-full bg-[#FFFDF7] border border-amber-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  นักเรียนจะสามารถกดปุ่ม "✍️ เฉลยลายมือครู Max" เพื่อเปิดดูวิธีคิดและเฉลยได้ทันที
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span className="text-emerald-600 font-bold">📂</span>
+                  <span>ลิงก์ Google Drive ชีทเรียนประจำหัวข้อ:</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/file/d/..."
+                  value={quickLinkSub.googleDriveUrl}
+                  onChange={(e) =>
+                    setQuickLinkSub({
+                      ...quickLinkSub,
+                      googleDriveUrl: e.target.value,
+                    })
+                  }
+                  className="w-full bg-[#FFFDF7] border border-amber-300 rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setQuickLinkSub(null)}
+                  className="px-4 py-2 text-slate-600 hover:text-slate-900 rounded-xl cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
+                >
+                  บันทึกลิงก์
                 </button>
               </div>
             </form>

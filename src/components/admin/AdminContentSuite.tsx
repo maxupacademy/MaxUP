@@ -21,6 +21,7 @@ import {
   FileCheck,
   KeyRound,
   FolderOpen,
+  RotateCcw,
 } from 'lucide-react';
 
 export const AdminContentSuite: React.FC = () => {
@@ -44,6 +45,7 @@ export const AdminContentSuite: React.FC = () => {
     materials,
     addMaterial,
     deleteMaterial,
+    resetToDefaultMathJuniorCourse,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
@@ -313,32 +315,23 @@ export const AdminContentSuite: React.FC = () => {
                 สามารถเพิ่มคอร์สใหม่ กำหนดรหัสคอร์สและรหัสผ่านเข้าเรียน (Passcode) ได้ตามต้องการ
               </p>
             </div>
-            <button
-              onClick={() => {
-                setCourseName('');
-                setCourseCode('');
-                setCourseDesc('');
-                setCoursePasscode('');
-                setIsAddCourseModalOpen(true);
-              }}
-              className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ เพิ่มคอร์สใหม่</span>
-            </button>
-          </div>
-
-          {courses.length === 0 ? (
-            <div className="bg-[#FFFDF7] border-2 border-dashed border-amber-300 rounded-3xl p-10 text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto text-2xl font-bold shadow-2xs">
-                📚
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ (เริ่มต้นร่างคอร์สแรก)</h3>
-                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                  ข้อมูลเดิมถูกล้างเรียบร้อยตามคำสั่ง คุณครู Max สามารถกดปุ่ม <strong>"+ เพิ่มคอร์สใหม่"</strong> ด้านล่างเพื่อเริ่มร่างชื่อวิชา กำหนดรหัสคอร์ส รหัสผ่านเข้าเรียน (Passcode) และสารบัญบทเรียนได้ทันที
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  if (
+                    window.confirm(
+                      'คุณต้องการล้างวิชาอื่นและรีเซ็ตโครงสร้างวิชาเป็น "คณิตศาสตร์ พื้นฐาน ม.ต้น" (มาตรฐาน สสวท. 10 บทหลัก ครบถ้วน) หรือไม่?'
+                    )
+                  ) {
+                    await resetToDefaultMathJuniorCourse();
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl shadow-2xs transition-all cursor-pointer"
+                title="รีเซ็ตและโหลดโครงสร้างวิชาคณิตศาสตร์ ม.ต้น สสวท. 10 บทใหม่ทั้งหมด"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                <span>รีเซ็ตวิชาคณิต ม.ต้น</span>
+              </button>
               <button
                 onClick={() => {
                   setCourseName('');
@@ -347,11 +340,47 @@ export const AdminContentSuite: React.FC = () => {
                   setCoursePasscode('');
                   setIsAddCourseModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
+                className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-amber-300" />
-                <span>+ สร้างคอร์สแรกของคุณ</span>
+                <Plus className="w-3.5 h-3.5 text-amber-300" />
+                <span>+ เพิ่มคอร์สใหม่</span>
               </button>
+            </div>
+          </div>
+
+          {courses.length === 0 ? (
+            <div className="bg-[#FFFDF7] border-2 border-dashed border-amber-300 rounded-3xl p-10 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto text-2xl font-bold shadow-2xs">
+                📚
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ</h3>
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                  คุณครู Max สามารถกดปุ่มโหลด <strong>"คณิตศาสตร์ พื้นฐาน ม.ต้น"</strong> ตามมาตรฐาน สสวท. 10 บทได้ทันที หรือกดเพิ่มคอร์สใหม่
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => resetToDefaultMathJuniorCourse()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
+                >
+                  <RotateCcw className="w-4 h-4 text-slate-950" />
+                  <span>โหลดวิชาคณิตศาสตร์ ม.ต้น ทันที</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setCourseName('');
+                    setCourseCode('');
+                    setCourseDesc('');
+                    setCoursePasscode('');
+                    setIsAddCourseModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
+                >
+                  <Plus className="w-4 h-4 text-amber-300" />
+                  <span>+ สร้างคอร์สใหม่</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

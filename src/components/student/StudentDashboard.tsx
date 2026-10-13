@@ -832,14 +832,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-blue-900" />
-                คอร์สเรียนของฉัน ({currentUser?.enrolledCourseIds?.length || 1} คอร์ส)
+                คอร์สเรียนของฉัน ({courses.length} คอร์ส)
               </h3>
             </div>
 
             {/* List of enrolled courses */}
             <div className="space-y-2">
               {courses
-                .filter((c) => (currentUser?.enrolledCourseIds || ['chem_alevel']).includes(c.id))
+                .filter((c) => {
+                  if (!currentUser?.enrolledCourseIds || currentUser.enrolledCourseIds.length === 0) {
+                    return true;
+                  }
+                  return (
+                    currentUser.enrolledCourseIds.includes(c.id) ||
+                    currentUser.enrolledCourseIds.includes(c.code) ||
+                    currentUser.enrolledCourseIds.includes('chem_alevel')
+                  );
+                })
                 .map((c) => {
                   const isActive = activeCourseId === c.id;
                   return (

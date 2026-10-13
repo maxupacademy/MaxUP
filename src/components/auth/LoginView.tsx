@@ -35,7 +35,9 @@ export const LoginView: React.FC = () => {
   const [nickname, setNickname] = useState<string>('');
   const [newUsername, setNewUsername] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
-  const [selectedCourseId, setSelectedCourseId] = useState<string>(activeCourseId || courses[0]?.id || 'chem_alevel');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(
+    activeCourseId || courses[0]?.id || 'MATH_JUNIOR_FUNDENMENTAL_01'
+  );
   const [coursePasscode, setCoursePasscode] = useState<string>('');
   const [grade, setGrade] = useState<string>('มัธยมศึกษาปีที่ 6');
   const [targetExam, setTargetExam] = useState<string>('A-Level 68 (เคมี)');

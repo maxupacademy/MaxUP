@@ -214,15 +214,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
-  // Courses (เริ่มที่ เคมี ม.ปลาย & A-Level เสมอ)
+  // Courses (คอร์สคณิตศาสตร์ ม.ต้น MATH_JUNIOR_FUNDENMENTAL_01 และคอร์สอื่นๆ)
   const [courses, setCourses] = useState<Course[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}courses`);
-    return saved ? JSON.parse(saved) : ALL_INITIAL_SUBJECTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Course[];
+        const hasMathJunior = parsed.some(
+          (c) => c.id === 'MATH_JUNIOR_FUNDENMENTAL_01' || c.code === 'MATH_JUNIOR_FUNDENMENTAL_01'
+        );
+        if (!hasMathJunior && ALL_INITIAL_SUBJECTS.length > 0) {
+          return [...ALL_INITIAL_SUBJECTS, ...parsed];
+        }
+        return parsed.length > 0 ? parsed : ALL_INITIAL_SUBJECTS;
+      } catch {
+        return ALL_INITIAL_SUBJECTS;
+      }
+    }
+    return ALL_INITIAL_SUBJECTS;
   });
 
   const [activeCourseId, setActiveCourseId] = useState<string>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}active_course_id`);
-    return saved || 'chem_alevel';
+    if (saved && saved !== 'chem_alevel') {
+      return saved;
+    }
+    return 'MATH_JUNIOR_FUNDENMENTAL_01';
   });
 
   // Lessons
@@ -753,10 +770,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (c.id === courseId) {
           const newTopics = c.topics.map((t) => {
             if (t.id === topicId) {
+              const parentSub = subtopicData.parentId
+                ? t.subtopics.find((s) => s.id === subtopicData.parentId)
+                : undefined;
+              const calculatedLevel: 1 | 2 | 3 = subtopicData.level
+                ? subtopicData.level
+                : parentSub
+                ? ((Math.min(3, (parentSub.level || 1) + 1)) as 1 | 2 | 3)
+                : 1;
+
               const newSub: Subtopic = {
                 ...subtopicData,
-                id: `sub_${Date.now()}`,
+                id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
                 topicId,
+                parentId: subtopicData.parentId,
+                level: calculatedLevel,
                 sortOrder: t.subtopics.length + 1,
               };
               return {
@@ -811,7 +839,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (c.id === courseId) {
           const newTopics = c.topics.map((t) => {
             if (t.id === topicId) {
-              const newSubs = t.subtopics.filter((s) => s.id !== subtopicId);
+              // Delete subtopic and any nested descendants
+              const toDelete = new Set<string>([subtopicId]);
+              // Find children
+              t.subtopics.forEach((s) => {
+                if (s.parentId && toDelete.has(s.parentId)) {
+                  toDelete.add(s.id);
+                }
+              });
+              // Find grand-children (level 3)
+              t.subtopics.forEach((s) => {
+                if (s.parentId && toDelete.has(s.parentId)) {
+                  toDelete.add(s.id);
+                }
+              });
+
+              const newSubs = t.subtopics.filter((s) => !toDelete.has(s.id));
               return { ...t, subtopics: newSubs };
             }
             return t;

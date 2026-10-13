@@ -66,6 +66,8 @@ export const AdminContentSuite: React.FC = () => {
   const [selectedTopicForSubtopic, setSelectedTopicForSubtopic] = useState<string | null>(null);
   const [newSubtopicName, setNewSubtopicName] = useState('');
   const [newSubtopicDesc, setNewSubtopicDesc] = useState('');
+  const [subLevel, setSubLevel] = useState<1 | 2 | 3>(1);
+  const [subParentId, setSubParentId] = useState<string>('');
 
   // Add Video Modal
   const [isAddVideoModalOpen, setIsAddVideoModalOpen] = useState(false);
@@ -155,10 +157,14 @@ export const AdminContentSuite: React.FC = () => {
       name: newSubtopicName.trim(),
       description: newSubtopicDesc.trim() || 'หัวข้อย่อยและเนื้อหาฝึกปฏิบัติ',
       difficulty: 'intermediate',
+      level: subLevel,
+      parentId: subLevel > 1 ? subParentId || undefined : undefined,
     });
     setSelectedTopicForSubtopic(null);
     setNewSubtopicName('');
     setNewSubtopicDesc('');
+    setSubLevel(1);
+    setSubParentId('');
   };
 
   const handleAddVideoSubmit = (e: React.FormEvent) => {
@@ -486,34 +492,62 @@ export const AdminContentSuite: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Subtopics list */}
+                {/* Subtopics list (Supports 3 Levels) */}
                 <div className="pl-3 space-y-1.5 border-l-2 border-amber-300">
-                  {topic.subtopics.map((sub, sIdx) => (
-                    <div
-                      key={sub.id}
-                      className="p-2 bg-white rounded-lg border border-slate-100 flex items-center justify-between text-xs"
-                    >
-                      <span className="font-medium text-slate-700">
-                        {tIdx + 1}.{sIdx + 1} {sub.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {sub.difficulty || 'intermediate'}
+                  {topic.subtopics.map((sub, sIdx) => {
+                    const isLv2 = sub.level === 2;
+                    const isLv3 = sub.level === 3;
+                    return (
+                      <div
+                        key={sub.id}
+                        className={`p-2 bg-white rounded-lg border flex items-center justify-between text-xs shadow-2xs ${
+                          isLv3
+                            ? 'ml-6 border-purple-200 bg-purple-50/20'
+                            : isLv2
+                            ? 'ml-3 border-amber-200 bg-amber-50/20'
+                            : 'border-slate-100'
+                        }`}
+                      >
+                        <span className="font-medium text-slate-700 flex items-center gap-1.5">
+                          {isLv3 ? (
+                            <span className="text-purple-600 font-mono text-[10px]">↳↳</span>
+                          ) : isLv2 ? (
+                            <span className="text-amber-600 font-mono text-[10px]">↳</span>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-[10px]">{tIdx + 1}.{sIdx + 1}</span>
+                          )}
+                          <span>{sub.name}</span>
+                          <span
+                            className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
+                              isLv3
+                                ? 'bg-purple-100 text-purple-800'
+                                : isLv2
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-blue-50 text-blue-800'
+                            }`}
+                          >
+                            ขั้นที่ {sub.level || 1}
+                          </span>
                         </span>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`ยืนยันการลบหัวข้อย่อย "${sub.name}" หรือไม่?`)) {
-                              deleteSubtopic(activeCourseId, topic.id, sub.id);
-                            }
-                          }}
-                          className="p-0.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
-                          title="ลบหัวข้อย่อย"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {sub.difficulty || 'intermediate'}
+                          </span>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`ยืนยันการลบหัวข้อย่อย "${sub.name}" หรือไม่?`)) {
+                                deleteSubtopic(activeCourseId, topic.id, sub.id);
+                              }
+                            }}
+                            className="p-0.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                            title="ลบหัวข้อย่อย"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -826,6 +860,74 @@ export const AdminContentSuite: React.FC = () => {
               </button>
             </div>
             <form onSubmit={handleAddSubtopicSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">ระดับขั้น (Hierarchy Level)</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubLevel(1);
+                      setSubParentId('');
+                    }}
+                    className={`py-1.5 px-2 rounded-lg border font-semibold text-center cursor-pointer ${
+                      subLevel === 1 ? 'bg-blue-900 text-white border-blue-900' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    ขั้นที่ 1 (หลัก)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubLevel(2);
+                      const currentTopic = activeCourse.topics.find((t) => t.id === selectedTopicForSubtopic);
+                      const l1 = (currentTopic?.subtopics || []).filter((s) => !s.parentId || s.level === 1);
+                      if (l1.length > 0 && !subParentId) setSubParentId(l1[0].id);
+                    }}
+                    className={`py-1.5 px-2 rounded-lg border font-semibold text-center cursor-pointer ${
+                      subLevel === 2 ? 'bg-amber-500 text-white border-amber-600' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    ขั้นที่ 2 (ย่อย)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubLevel(3);
+                      const currentTopic = activeCourse.topics.find((t) => t.id === selectedTopicForSubtopic);
+                      const l2 = (currentTopic?.subtopics || []).filter((s) => s.level === 2 || (s.parentId && s.level !== 3));
+                      if (l2.length > 0 && !subParentId) setSubParentId(l2[0].id);
+                    }}
+                    className={`py-1.5 px-2 rounded-lg border font-semibold text-center cursor-pointer ${
+                      subLevel === 3 ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    ขั้นที่ 3 (ย่อยลึก)
+                  </button>
+                </div>
+              </div>
+
+              {subLevel > 1 && (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {subLevel === 2 ? 'เลือกหัวข้อหลัก (ขั้นที่ 1)' : 'เลือกข้อย่อยแม่ (ขั้นที่ 2 หรือ 1)'}
+                  </label>
+                  <select
+                    value={subParentId}
+                    onChange={(e) => setSubParentId(e.target.value)}
+                    className="w-full border border-amber-300 rounded-lg px-3 py-2 text-slate-800 bg-[#FFFDF7]"
+                  >
+                    <option value="">-- กรุณาเลือกหัวข้อแม่ --</option>
+                    {(activeCourse.topics.find((t) => t.id === selectedTopicForSubtopic)?.subtopics || [])
+                      .filter((s) => (subLevel === 2 ? (!s.parentId || s.level === 1) : true))
+                      .map((pSub) => (
+                        <option key={pSub.id} value={pSub.id}>
+                          {pSub.level === 2 ? '↳ ' : ''}{pSub.name} ({pSub.level ? `ขั้นที่ ${pSub.level}` : 'ขั้นที่ 1'})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">ชื่อหัวข้อย่อย *</label>
                 <input

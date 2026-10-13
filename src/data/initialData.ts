@@ -9,6 +9,7 @@ import {
   Homework,
   StudySchedulePlan,
 } from '../types';
+import { COURSE_MATH_JUNIOR } from './mathJuniorCourse';
 
 export const INITIAL_ADMIN: UserProfile = {
   id: 'admin_max',
@@ -21,9 +22,9 @@ export const INITIAL_ADMIN: UserProfile = {
   createdAt: '2025-01-01',
 };
 
-// All students, courses, syllabus, and records reset to clean slate
+// All students, courses, syllabus, and records
 export const INITIAL_STUDENTS: UserProfile[] = [];
-export const ALL_INITIAL_SUBJECTS: Course[] = [];
+export const ALL_INITIAL_SUBJECTS: Course[] = [COURSE_MATH_JUNIOR];
 export const INITIAL_LESSONS: Lesson[] = [];
 export const INITIAL_HOMEWORKS: Homework[] = [];
 export const INITIAL_MATERIALS: CourseMaterial[] = [];

@@ -966,10 +966,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               <button
                 onClick={() => setCurrentTab('learning-hub')}
                 className="font-bold text-slate-900 text-sm flex items-center gap-1.5 hover:text-blue-900 transition-colors cursor-pointer text-left"
-                title="คลิกเพื่อเปิดสารบัญคอร์สและอ่านชีทเรียน"
+                title="คลิกเพื่อเปิดสารบัญคอร์ส"
               >
                 <BookOpen className="w-4 h-4 text-blue-900 shrink-0" />
-                <span>สารบัญ {activeSubject.name} (เปิดอ่านชีท →)</span>
+                <span>สารบัญหลักสูตร {activeSubject.name}</span>
               </button>
               <span className="text-xs font-mono text-slate-500 font-semibold">
                 {syllabusPercent}%
@@ -1006,20 +1006,31 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </span>
                     </div>
 
-                    <div className="pl-3 mt-1 space-y-1">
+                    <div className="pl-2 mt-1 space-y-1">
                       {top.subtopics.map((sub) => {
                         const prog = activeStudentProgress.find((p) => p.subtopicId === sub.id);
                         const isDone = prog && (prog.status === 'completed' || prog.status === 'mastered');
+                        const isLv2 = sub.level === 2;
+                        const isLv3 = sub.level === 3;
 
                         return (
                           <div
                             key={sub.id}
-                            className="flex items-center justify-between text-[11px] text-slate-600"
+                            className={`flex items-center justify-between text-[11px] text-slate-600 py-0.5 ${
+                              isLv3 ? 'pl-5 text-slate-500' : isLv2 ? 'pl-2.5 text-slate-700' : 'pl-0 font-medium'
+                            }`}
                           >
-                            <span className="truncate pr-2">{sub.name}</span>
+                            <span className="truncate pr-2 flex items-center gap-1">
+                              {isLv3 ? (
+                                <span className="text-purple-500 font-mono text-[10px]">↳↳</span>
+                              ) : isLv2 ? (
+                                <span className="text-amber-500 font-mono text-[10px]">↳</span>
+                              ) : null}
+                              <span>{sub.name}</span>
+                            </span>
                             <span
-                              className={`flex-shrink-0 ${
-                                isDone ? 'text-emerald-600 font-medium' : 'text-slate-300'
+                              className={`flex-shrink-0 text-[10px] ${
+                                isDone ? 'text-emerald-600 font-semibold' : 'text-slate-300'
                               }`}
                             >
                               {isDone ? 'เรียนแล้ว ✓' : 'ยังไม่เรียน'}

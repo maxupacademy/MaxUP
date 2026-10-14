@@ -58,12 +58,12 @@ export const SyllabusManager: React.FC = () => {
     activeSubject.topics.slice(0, 3).map((t) => t.id)
   );
 
-  // Student progress view filter (default to currentUser if student, or first student if admin)
-  const [selectedStudentFilterId, setSelectedStudentFilterId] = useState<string>('');
+  // Student progress view filter (default to currentUser if student, or 'all' for complete overview if admin)
+  const [selectedStudentFilterId, setSelectedStudentFilterId] = useState<string>('all');
   const effectiveStudentId =
     currentUserRole === 'student'
       ? currentUser?.id || ''
-      : selectedStudentFilterId || (students[0]?.id || '');
+      : selectedStudentFilterId;
 
   // Material reader modal
   const [selectedMaterialForReader, setSelectedMaterialForReader] = useState<CourseMaterial | null>(null);
@@ -543,6 +543,7 @@ export const SyllabusManager: React.FC = () => {
                 onChange={(e) => setSelectedStudentFilterId(e.target.value)}
                 className="bg-amber-50/70 border border-amber-300 font-bold text-slate-900 rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
               >
+                <option value="all">🌐 ภาพรวมทั้งหมด (รวมทุกนักเรียน)</option>
                 {students.map((st) => (
                   <option key={st.id} value={st.id}>
                     {st.nickname} ({st.fullName})
@@ -865,11 +866,11 @@ export const SyllabusManager: React.FC = () => {
                       )}
                     </div>
 
-                    {/* 2. SUBTOPICS LIST (Supports 3-Level Hierarchy) */}
+                    {/* 2. SUBTOPICS LIST */}
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between text-xs text-slate-500 py-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-800">หัวข้อย่อยและจุดเน้นในบทเรียนนี้ (รองรับ 3 ขั้น):</span>
+                          <span className="font-bold text-slate-800">หัวข้อย่อยประจำบทเรียน:</span>
                           <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">
                             {topic.subtopics.length} ข้อย่อย
                           </span>
@@ -886,7 +887,7 @@ export const SyllabusManager: React.FC = () => {
                             className="text-blue-900 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition-all"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                            <span>+ เพิ่มหัวข้อย่อย (ขั้นที่ 1)</span>
+                            <span>+ เพิ่มหัวข้อย่อย</span>
                           </button>
                         )}
                       </div>
@@ -897,34 +898,65 @@ export const SyllabusManager: React.FC = () => {
                             ยังไม่มีหัวข้อย่อยในบทนี้ คุณครูกดปุ่ม "+ เพิ่มหัวข้อย่อย" หรือพิมพ์เพิ่มด่วนด้านล่างได้เลย
                           </div>
                         ) : (
-                          getOrganizedSubtopics(topic, index).map(({ sub, level, numbering, parentName }) => {
-                            const studentLessonsWithSub = effectiveStudentId
+                          getOrganizedSubtopics(topic, index).map(({ sub, level, numbering }) => {
+                            const isAll = effectiveStudentId === 'all';
+                            const studentLessonsWithSub = isAll
+                              ? lessons.filter((l) => (l.subtopicIds || []).includes(sub.id))
+                              : effectiveStudentId
                               ? lessons.filter(
                                   (l) =>
                                     l.studentId === effectiveStudentId &&
                                     (l.subtopicIds || []).includes(sub.id)
                                 )
                               : [];
-                            const progress = effectiveStudentId
-                              ? (progressMap[effectiveStudentId] || []).find(
-                                  (p) => p.subtopicId === sub.id
-                                )
-                              : undefined;
-                            const lessonCount = studentLessonsWithSub.length;
-                            const recordedCount = progress?.studyCount || 0;
-                            const totalStudyCount = Math.max(lessonCount, recordedCount);
-                            const isCompleted =
-                              totalStudyCount > 0 ||
-                              progress?.status === 'completed' ||
-                              progress?.status === 'mastered';
-                            const latestDate =
-                              studentLessonsWithSub[0]?.lessonDate || progress?.lastStudiedDate;
-                            const handwrittenUrl =
-                              sub.handwrittenSolutionUrl ||
-                              progress?.handwrittenSolutionUrl ||
-                              studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)
-                                ?.handwrittenSolutionUrl;
+
+                            let totalStudyCount = 0;
+                            let isCompleted = false;
+                            let latestDate = '';
+                            let handwrittenUrl: string | undefined = sub.handwrittenSolutionUrl;
                             const driveUrl = sub.googleDriveUrl;
+
+                            if (isAll) {
+                              const lessonCount = studentLessonsWithSub.length;
+                              let progressCount = 0;
+                              Object.values(progressMap).forEach((list) => {
+                                const p = list.find((item) => item.subtopicId === sub.id);
+                                if (p) {
+                                  progressCount += p.studyCount || 0;
+                                  if (p.status === 'completed' || p.status === 'mastered') isCompleted = true;
+                                  if (p.lastStudiedDate && p.lastStudiedDate > latestDate) {
+                                    latestDate = p.lastStudiedDate;
+                                  }
+                                  if (p.handwrittenSolutionUrl && !handwrittenUrl) {
+                                    handwrittenUrl = p.handwrittenSolutionUrl;
+                                  }
+                                }
+                              });
+                              totalStudyCount = Math.max(lessonCount, progressCount);
+                              if (totalStudyCount > 0) isCompleted = true;
+                              const firstLessonDate = studentLessonsWithSub[0]?.lessonDate;
+                              if (firstLessonDate && firstLessonDate > latestDate) {
+                                latestDate = firstLessonDate;
+                              }
+                            } else {
+                              const progress = effectiveStudentId
+                                ? (progressMap[effectiveStudentId] || []).find(
+                                    (p) => p.subtopicId === sub.id
+                                  )
+                                : undefined;
+                              const lessonCount = studentLessonsWithSub.length;
+                              const recordedCount = progress?.studyCount || 0;
+                              totalStudyCount = Math.max(lessonCount, recordedCount);
+                              isCompleted =
+                                totalStudyCount > 0 ||
+                                progress?.status === 'completed' ||
+                                progress?.status === 'mastered';
+                              latestDate = studentLessonsWithSub[0]?.lessonDate || progress?.lastStudiedDate || '';
+                              handwrittenUrl =
+                                sub.handwrittenSolutionUrl ||
+                                progress?.handwrittenSolutionUrl ||
+                                studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)?.handwrittenSolutionUrl;
+                            }
 
                             return (
                               <div
@@ -954,26 +986,6 @@ export const SyllabusManager: React.FC = () => {
                                     <span className="font-bold text-slate-900 text-sm">
                                       {numbering} {sub.name}
                                     </span>
-
-                                    {/* Level Badge */}
-                                    <span
-                                      className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase ${
-                                        level === 1
-                                          ? 'bg-blue-100 text-blue-900 border border-blue-200'
-                                          : level === 2
-                                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                          : 'bg-purple-100 text-purple-900 border border-purple-300'
-                                      }`}
-                                    >
-                                      ขั้นที่ {level}
-                                      {level === 1 ? ': หลัก' : level === 2 ? ': ข้อย่อย' : ': ประเด็นย่อย'}
-                                    </span>
-
-                                    {parentName && (
-                                      <span className="text-[10px] text-slate-400 truncate max-w-[140px]">
-                                        (ใต้ {parentName})
-                                      </span>
-                                    )}
 
                                     {sub.difficulty && (
                                       <span
@@ -1017,21 +1029,27 @@ export const SyllabusManager: React.FC = () => {
                                     )}
 
                                     {/* Teacher Quick Increment/Decrement Buttons */}
-                                    {currentUserRole === 'admin' && effectiveStudentId && (
-                                      <div className="inline-flex items-center gap-1 ml-1">
+                                    {currentUserRole === 'admin' && (
+                                      <div className="inline-flex items-center gap-1.5 ml-1">
                                         <button
                                           type="button"
-                                          onClick={() => adjustStudentTopicCount(effectiveStudentId, sub.id, 1)}
-                                          className="px-2 py-0.5 text-[10px] font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded hover:border-amber-400 cursor-pointer transition-colors shadow-2xs"
-                                          title="เพิ่มจำนวนครั้งที่เรียนซ้ำให้นักเรียนคนนี้ +1 รอบ"
+                                          onClick={() => {
+                                            const targetId = effectiveStudentId === 'all' ? (students[0]?.id || '') : effectiveStudentId;
+                                            if (targetId) adjustStudentTopicCount(targetId, sub.id, 1);
+                                          }}
+                                          className="h-7 px-2.5 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg hover:border-amber-400 cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1"
+                                          title="เพิ่มจำนวนครั้งที่เรียนซ้ำ +1 รอบ"
                                         >
                                           +1 รอบ
                                         </button>
                                         {totalStudyCount > 0 && (
                                           <button
                                             type="button"
-                                            onClick={() => adjustStudentTopicCount(effectiveStudentId, sub.id, -1)}
-                                            className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-red-700 bg-slate-50 hover:bg-red-50 border border-slate-200 rounded cursor-pointer transition-colors"
+                                            onClick={() => {
+                                              const targetId = effectiveStudentId === 'all' ? (students[0]?.id || '') : effectiveStudentId;
+                                              if (targetId) adjustStudentTopicCount(targetId, sub.id, -1);
+                                            }}
+                                            className="h-7 px-2 text-xs font-semibold text-slate-500 hover:text-red-700 bg-slate-50 hover:bg-red-50 border border-slate-200 rounded-lg cursor-pointer transition-colors inline-flex items-center"
                                             title="ลดจำนวนครั้งที่เรียน -1 รอบ"
                                           >
                                             -1

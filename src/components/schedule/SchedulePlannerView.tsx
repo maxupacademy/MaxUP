@@ -25,6 +25,7 @@ import {
   QrCode,
   CheckCircle2,
   Upload,
+  Printer,
 } from 'lucide-react';
 import { PromptPayPaymentModal } from '../payment/PromptPayPaymentModal';
 
@@ -65,6 +66,7 @@ export const SchedulePlannerView: React.FC = () => {
   // Payment Modal State
   const [selectedPaymentPlan, setSelectedPaymentPlan] = useState<StudySchedulePlan | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Form Fields
   const [formCourseId, setFormCourseId] = useState<string>(activeCourseId);
@@ -324,12 +326,18 @@ export const SchedulePlannerView: React.FC = () => {
   };
 
   const handleMarkAsCompletedAndLog = (plan: StudySchedulePlan) => {
-    toggleSchedulePlanStatus(plan.id, 'completed');
+    const isNowCompleted = plan.status !== 'completed';
+    toggleSchedulePlanStatus(plan.id, isNowCompleted ? 'completed' : 'upcoming');
 
     // Optionally create a lesson log entry if studentId is specific
-    if (plan.studentId && plan.studentId !== 'all') {
+    let targetStudentId = plan.studentId;
+    if ((!targetStudentId || targetStudentId === 'all') && students.length > 0) {
+      targetStudentId = students[0].id;
+    }
+
+    if (isNowCompleted && targetStudentId && targetStudentId !== 'all') {
       addLesson({
-        studentId: plan.studentId,
+        studentId: targetStudentId,
         subjectId: plan.courseId,
         lessonDate: plan.date,
         startTime: plan.startTime,
@@ -342,14 +350,40 @@ export const SchedulePlannerView: React.FC = () => {
         teacherNote: 'บันทึกอัตโนมัติจากแผนตารางเรียน',
         googleDriveUrl: plan.googleDriveUrl,
       });
+      setToastMessage('✓ บันทึกคาบเรียนเข้าสู่ประวัติการสอนและอัปเดตความคืบหน้าเรียบร้อยแล้ว!');
+      setTimeout(() => setToastMessage(null), 4000);
+    } else {
+      setToastMessage(isNowCompleted ? '✓ ปรับสถานะเป็นสอนแล้ว' : 'ปรับสถานะเป็นกำลังจะมาถึง');
+      setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 print:hidden">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Printable Sheet Header (Visible only when printed or exported to PDF) */}
+      <div className="hidden print:block mb-6 p-4 border-b-2 border-slate-800 text-center">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          MaxUp TutorHub · ตารางเรียนและแผนการสอน
+        </h1>
+        <p className="text-xs text-slate-600 mt-1">
+          ผู้สอน: อาจารย์แม็ก (ครูพี่แม็ก) · สถาบันกวดวิชา MaxUp
+        </p>
+        <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
+          ข้อมูล ณ วันที่ {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
+
       {/* Header & Planning Overview */}
-      <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 print:border-none print:shadow-none print:p-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-md mb-1.5">
               <Calendar className="w-3.5 h-3.5 text-blue-700" />
@@ -371,19 +405,31 @@ export const SchedulePlannerView: React.FC = () => {
             </p>
           </div>
 
-          {currentUserRole === 'admin' && (
+          <div className="flex items-center gap-2 flex-wrap self-start sm:self-center shrink-0">
             <button
-              onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs cursor-pointer transition-all active:scale-98 shrink-0 self-start sm:self-center"
+              type="button"
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs cursor-pointer transition-all active:scale-98"
+              title="พิมพ์ตารางเรียนออกเป็นชีท หรือบันทึกเป็น PDF"
             >
-              <Plus className="w-4 h-4 text-amber-300" />
-              <span>เพิ่มตารางเรียนล่วงหน้า</span>
+              <Printer className="w-4 h-4 text-amber-700" />
+              <span>🖨️ พิมพ์ตารางเรียน (PDF)</span>
             </button>
-          )}
+            {currentUserRole === 'admin' && (
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs cursor-pointer transition-all active:scale-98"
+              >
+                <Plus className="w-4 h-4 text-amber-300" />
+                <span>เพิ่มตารางเรียนล่วงหน้า</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Quantitative Metric Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100 print:hidden">
           <div className="bg-[#FFFDF7] p-3 rounded-xl border border-amber-200/60">
             <span className="text-[11px] text-slate-500 block">คาบที่กำลังจะมาถึง</span>
             <span className="text-lg font-bold text-blue-900">{upcomingCount} คาบ</span>
@@ -929,7 +975,7 @@ export const SchedulePlannerView: React.FC = () => {
                                   setSelectedPaymentPlan(plan);
                                   setIsPaymentModalOpen(true);
                                 }}
-                                className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1 print:hidden"
                               >
                                 {currentUserRole === 'admin' && plan.paymentStatus === 'slip_uploaded' ? (
                                   <>
@@ -947,7 +993,7 @@ export const SchedulePlannerView: React.FC = () => {
 
                           {/* Teacher Action Controls */}
                           {currentUserRole === 'admin' && (
-                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs print:hidden">
                               <button
                                 onClick={() => handleMarkAsCompletedAndLog(plan)}
                                 className={`flex items-center gap-1 font-semibold px-2 py-1 rounded-lg transition-all cursor-pointer ${
@@ -1142,7 +1188,7 @@ export const SchedulePlannerView: React.FC = () => {
                           setSelectedPaymentPlan(plan);
                           setIsPaymentModalOpen(true);
                         }}
-                        className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                        className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1 print:hidden"
                       >
                         {currentUserRole === 'admin' && plan.paymentStatus === 'slip_uploaded' ? (
                           <>
@@ -1160,7 +1206,7 @@ export const SchedulePlannerView: React.FC = () => {
 
                   {/* Teacher Actions */}
                   {currentUserRole === 'admin' && (
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs print:hidden">
                       <button
                         onClick={() => handleMarkAsCompletedAndLog(plan)}
                         className={`flex items-center gap-1 font-semibold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
@@ -1609,10 +1655,10 @@ export const SchedulePlannerView: React.FC = () => {
                           <input
                             type="number"
                             min="0"
-                            step="10"
+                            step="any"
                             value={formPriceAmount}
                             onChange={(e) => setFormPriceAmount(e.target.value)}
-                            placeholder="500"
+                            placeholder="375"
                             required={formEnablePayment}
                             className="w-full bg-white border border-blue-200 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs font-mono"
                           />
@@ -1623,7 +1669,7 @@ export const SchedulePlannerView: React.FC = () => {
                       {/* Quick preset amount chips */}
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <span className="text-[10px] text-slate-500">เลือกเร็ว:</span>
-                        {[250, 500, 750, 1000].map((amt) => (
+                        {[250, 375, 500, 750, 1000].map((amt) => (
                           <button
                             type="button"
                             key={amt}
@@ -1634,11 +1680,11 @@ export const SchedulePlannerView: React.FC = () => {
                                 : 'bg-white text-slate-600 hover:bg-blue-50 border-slate-200'
                             }`}
                           >
-                            ฿{amt.toLocaleString()} {amt === 250 ? '(1 ชม.)' : amt === 500 ? '(2 ชม.)' : amt === 750 ? '(3 ชม.)' : '(4 ชม.)'}
+                            ฿{amt.toLocaleString()} {amt === 250 ? '(1 ชม.)' : amt === 375 ? '(1.5 ชม.)' : amt === 500 ? '(2 ชม.)' : amt === 750 ? '(3 ชม.)' : '(4 ชม.)'}
                           </button>
                         ))}
                         <span className="text-[10px] text-slate-400 ml-1">
-                          * คุณครูกรอกเลขเองได้อิสระ
+                          * กรอกเลขได้อิสระ เช่น 375
                         </span>
                       </div>
                     </div>
@@ -1764,6 +1810,18 @@ export const SchedulePlannerView: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* PromptPay & Slip Upload / Verification Modal */}
+      {isPaymentModalOpen && selectedPaymentPlan && (
+        <PromptPayPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedPaymentPlan(null);
+          }}
+          plan={selectedPaymentPlan}
+        />
       )}
     </div>
   );

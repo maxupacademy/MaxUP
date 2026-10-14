@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext';
 import {
   Clock,
   BookOpen,
-  Award,
   Calendar,
   CheckCircle,
   FileText,
@@ -85,15 +84,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const totalMinutes = activeStudentLessons.reduce((acc, l) => acc + (l.durationMinutes || 0), 0);
   const totalHours = (totalMinutes / 60).toFixed(1);
   const totalLessons = activeStudentLessons.length;
-  const avgScore =
-    totalLessons > 0
-      ? (
-          activeStudentLessons.reduce(
-            (acc, l) => acc + (l.scoreScale === '1-5' ? l.score * 20 : l.score),
-            0
-          ) / totalLessons
-        ).toFixed(0)
-      : '0';
 
   const totalSubtopics =
     activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
@@ -158,13 +148,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-white/15">
+          <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-white/15 max-w-sm">
             <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
               <span className="text-[11px] text-blue-200 block">จำนวนคาบทั้งหมด</span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-white">
                 {activeStudentLessons.length}
               </span>
-              <span className="text-[10px] text-blue-200 block">คาบ</span>
+              <span className="text-[10px] text-blue-200 block">คาบเรียน</span>
             </div>
             <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
               <span className="text-[11px] text-blue-200 block">ชั่วโมงเรียนสะสม</span>
@@ -172,13 +162,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 {totalHours}
               </span>
               <span className="text-[10px] text-blue-200 block">ชั่วโมง</span>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
-              <span className="text-[11px] text-blue-200 block">ความเข้าใจเฉลี่ย</span>
-              <span className="text-xl sm:text-2xl font-bold font-mono text-emerald-300">
-                {avgScore}%
-              </span>
-              <span className="text-[10px] text-blue-200 block">จากติวเตอร์</span>
             </div>
           </div>
         </section>
@@ -486,7 +469,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       </section>
 
       {/* Quantitative Metric Cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-medium">ชั่วโมงเรียนสะสม</span>
@@ -510,19 +493,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
           <div className="text-xs text-slate-500 mt-1">
             <span>คาบเรียนเข้มข้น</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">ความเข้าใจเฉลี่ย</span>
-            <Award className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {avgScore}%
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>ประเมินโดยติวเตอร์</span>
           </div>
         </div>
 

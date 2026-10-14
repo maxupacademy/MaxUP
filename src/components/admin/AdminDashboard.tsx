@@ -5,7 +5,6 @@ import {
   Clock,
   BookOpen,
   Users,
-  Award,
   Calendar,
   Search,
   PlusCircle,
@@ -49,13 +48,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const totalMinutes = lessons.reduce((acc, l) => acc + (l.durationMinutes || 0), 0);
   const totalHours = (totalMinutes / 60).toFixed(1);
   const totalLessons = lessons.length;
-  const avgScore =
-    totalLessons > 0
-      ? (
-          lessons.reduce((acc, l) => acc + (l.scoreScale === '1-5' ? l.score * 20 : l.score), 0) /
-          totalLessons
-        ).toFixed(0)
-      : '0';
 
   // Total subtopics in subject
   const totalSubtopics =
@@ -127,8 +119,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </section>
 
-      {/* 4 Quantitative Metric Cards (Tabular numerals, zero-pill discipline) */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3 Quantitative Metric Cards (Tabular numerals, zero-pill discipline) */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-medium">ชั่วโมงสอนสะสม</span>
@@ -165,19 +157,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div className="text-xs text-slate-500 mt-1">
             <span>กำลังติวอย่างต่อเนื่อง</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">คะแนนประเมินเฉลี่ย</span>
-            <Award className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {avgScore}%
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>ระดับความเข้าใจของนักเรียน</span>
           </div>
         </div>
       </section>

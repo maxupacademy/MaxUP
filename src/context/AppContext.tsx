@@ -38,11 +38,24 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 
+const deepCleanSanitize = (val: any): any => {
+  if (val === undefined) return null;
+  if (val === null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) {
+    return val.map(deepCleanSanitize);
+  }
+  const cleaned: Record<string, any> = {};
+  for (const [k, v] of Object.entries(val)) {
+    if (v !== undefined) {
+      cleaned[k] = deepCleanSanitize(v);
+    }
+  }
+  return cleaned;
+};
+
 const safeSetDoc = (docRef: any, data: any) => {
   try {
-    const sanitized = JSON.parse(
-      JSON.stringify(data, (_, value) => (value === undefined ? null : value))
-    );
+    const sanitized = deepCleanSanitize(data);
     return setDoc(docRef, sanitized).catch((err) => {
       console.warn('Firestore offline note:', err);
     });
@@ -61,6 +74,7 @@ const safeDeleteDoc = (docRef: any) => {
     return Promise.resolve();
   }
 };
+
 
 interface AppContextType {
   // Authentication & Session
@@ -859,12 +873,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCourses((prev) => [...prev, newCourse]);
     setActiveCourseId(newId);
-    setDoc(doc(db, 'courses', newId), newCourse).catch(() => {});
+    safeSetDoc(doc(db, 'courses', newId), newCourse);
   };
 
   const updateCourse = (course: Course) => {
     setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
-    setDoc(doc(db, 'courses', course.id), course).catch(() => {});
+    safeSetDoc(doc(db, 'courses', course.id), course);
   };
 
   const deleteCourse = (courseId: string) => {
@@ -875,7 +889,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return remaining;
     });
-    deleteDoc(doc(db, 'courses', courseId)).catch(() => {});
+    safeDeleteDoc(doc(db, 'courses', courseId));
   };
 
   const addTopic = (courseId: string, name: string, nameEn?: string) => {
@@ -886,12 +900,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             id: `topic_${Date.now()}`,
             subjectId: courseId,
             name,
-            nameEn,
+            nameEn: nameEn || '',
             sortOrder: c.topics.length + 1,
             subtopics: [],
           };
           const updated = { ...c, topics: [...c.topics, newTopic] };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -905,12 +919,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (c.id === courseId) {
           const newTopics = c.topics.map((t) => {
             if (t.id === topicId) {
-              return { ...t, name, nameEn: nameEn !== undefined ? nameEn : t.nameEn };
+              return { ...t, name, nameEn: nameEn !== undefined ? nameEn : (t.nameEn || '') };
             }
             return t;
           });
           const updated = { ...c, topics: newTopics };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -924,7 +938,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (c.id === courseId) {
           const newTopics = c.topics.filter((t) => t.id !== topicId);
           const updated = { ...c, topics: newTopics };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -967,7 +981,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return t;
           });
           const updated = { ...c, topics: newTopics };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -997,7 +1011,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return t;
           });
           const updated = { ...c, topics: newTopics };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -1032,7 +1046,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return t;
           });
           const updated = { ...c, topics: newTopics };
-          setDoc(doc(db, 'courses', courseId), updated).catch(() => {});
+          safeSetDoc(doc(db, 'courses', courseId), updated);
           return updated;
         }
         return c;
@@ -1495,7 +1509,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await deleteDoc(doc(db, 'courses', d.id));
         }
       }
-      await setDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
+      await safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
     } catch {
       // offline fallback
     }
@@ -1517,7 +1531,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMaterials([]);
     setVideos([]);
     setSchedulePlans([]);
-    setDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR).catch(() => {});
+    safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
     window.location.reload();
   };
 

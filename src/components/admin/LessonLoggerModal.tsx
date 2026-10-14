@@ -673,39 +673,18 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             </div>
           </div>
 
-          {/* Row 6: Score & Teacher Note */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                คะแนนความตั้งใจ / ความเข้าใจในคาบนี้ (1 - 5 ดาว)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={score}
-                  onChange={(e) => setScore(Number(e.target.value))}
-                  className="w-full accent-amber-500 cursor-pointer"
-                />
-                <span className="text-xs font-bold text-amber-700 w-10 text-right">
-                  {score} / 5 ⭐
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                โน้ตถึงผู้ปกครอง / นักเรียน (Optional)
-              </label>
-              <input
-                type="text"
-                value={teacherNote}
-                onChange={(e) => setTeacherNote(e.target.value)}
-                placeholder="เช่น ทำความเข้าใจได้ดีมาก แนะนำให้ทำโจทย์ข้อ 4 เพิ่ม"
-                className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-              />
-            </div>
+          {/* Row 6: Teacher Note */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              โน้ตถึงผู้ปกครอง / นักเรียน (Optional)
+            </label>
+            <input
+              type="text"
+              value={teacherNote}
+              onChange={(e) => setTeacherNote(e.target.value)}
+              placeholder="เช่น ทำความเข้าใจได้ดีมาก แนะนำให้ทำโจทย์ข้อ 4 เพิ่ม"
+              className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+            />
           </div>
 
           {/* Row 7: Homework Toggle */}

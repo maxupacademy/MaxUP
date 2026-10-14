@@ -258,9 +258,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-amber-900 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
-                            {les.scoreScale === '1-5' ? `${les.score}/5 ⭐` : `${les.score}/100 คะแนน`}
-                          </span>
                           <ChevronRight
                             className={`w-4 h-4 text-slate-400 transition-transform ${
                               isExpanded ? 'rotate-90' : ''
@@ -965,9 +962,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded">
-                              คะแนน: {les.scoreScale === '1-5' ? `${les.score}/5 ⭐` : `${les.score}/100`}
-                            </span>
                             <ChevronRight
                               className={`w-4 h-4 text-slate-400 transition-transform ${
                                 isExpanded ? 'rotate-90' : ''

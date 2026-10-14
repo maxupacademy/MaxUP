@@ -325,11 +325,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <div className="text-right mr-2">
-                        <span className="text-xs font-semibold text-amber-700">
-                          {les.scoreScale === '1-5' ? `${les.score}/5 ⭐` : `${les.score}/100 คะแนน`}
-                        </span>
-                      </div>
+
 
                       <button
                         onClick={() => onEditLesson(les)}

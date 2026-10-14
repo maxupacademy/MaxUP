@@ -34,6 +34,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     updateLesson,
     addStudent,
     addCourse,
+    schedulePlans,
+    toggleSchedulePlanStatus,
   } = useApp();
 
   const [studentId, setStudentId] = useState<string>('');
@@ -53,6 +55,41 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   const [hwDescription, setHwDescription] = useState<string>('');
   const [hwDueDate, setHwDueDate] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedSchedulePlanId, setSelectedSchedulePlanId] = useState<string>('');
+
+  const handleSelectSchedulePlan = (planId: string) => {
+    setSelectedSchedulePlanId(planId);
+    if (!planId) return;
+    const plan = schedulePlans.find((p) => p.id === planId);
+    if (!plan) return;
+
+    if (plan.studentId && plan.studentId !== 'all') {
+      setStudentId(plan.studentId);
+    } else if (students.length > 0 && !studentId) {
+      setStudentId(students[0].id);
+    }
+    if (plan.courseId) {
+      setSelectedSubjectId(plan.courseId);
+    }
+    if (plan.date) {
+      setLessonDate(plan.date);
+    }
+    if (plan.startTime) {
+      setStartTime(plan.startTime);
+    }
+    if (plan.endTime) {
+      setEndTime(plan.endTime);
+    }
+    if (plan.plannedSubtopicIds && plan.plannedSubtopicIds.length > 0) {
+      setSelectedSubtopicIds(plan.plannedSubtopicIds);
+    }
+    if (plan.plannedContentDescription || plan.title) {
+      setContentDetail(plan.plannedContentDescription || plan.title);
+    }
+    if (plan.googleDriveUrl) {
+      setGoogleDriveUrl(plan.googleDriveUrl);
+    }
+  };
 
   // Quick inline add student state if students list is empty
   const [showQuickAddStudent, setShowQuickAddStudent] = useState(false);
@@ -262,6 +299,10 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
       });
     }
 
+    if (selectedSchedulePlanId) {
+      toggleSchedulePlanStatus(selectedSchedulePlanId, 'completed');
+    }
+
     onClose();
   };
 
@@ -288,6 +329,46 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* Quick Import from Schedule Plan */}
+          {!editLesson && schedulePlans && schedulePlans.length > 0 && (
+            <div className="p-3.5 bg-gradient-to-r from-blue-50/90 to-amber-50/80 border border-blue-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 text-xs block">
+                    📅 ดึงข้อมูลจากตารางเรียนล่วงหน้า (Import from Schedule)
+                  </span>
+                  <span className="text-[11px] text-slate-600 block">
+                    เลือกคาบเพื่อกรอกนักเรียน วิชา เวลา และหัวข้อในสารบัญให้อัตโนมัติ
+                  </span>
+                </div>
+              </div>
+
+              <select
+                value={selectedSchedulePlanId}
+                onChange={(e) => handleSelectSchedulePlan(e.target.value)}
+                className="bg-white border border-blue-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs cursor-pointer max-w-sm"
+              >
+                <option value="">-- คลิกเพื่อเลือกคาบจากตารางเรียน --</option>
+                {schedulePlans
+                  .slice()
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .map((p) => {
+                    const st = students.find((s) => s.id === p.studentId);
+                    const stName = st ? st.nickname : p.studentId === 'all' ? 'ทุกคน' : 'นักเรียน';
+                    const isDone = p.status === 'completed';
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {isDone ? '✓ ' : ''}{p.date} ({p.startTime}–{p.endTime}) • {stName} • {p.title}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+          )}
+
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />

@@ -43,6 +43,7 @@ export const SchedulePlannerView: React.FC = () => {
     updateSchedulePlan,
     deleteSchedulePlan,
     toggleSchedulePlanStatus,
+    completeSchedulePlanAndLogLesson,
     addLesson,
     deleteLesson,
     lessons,
@@ -83,6 +84,7 @@ export const SchedulePlannerView: React.FC = () => {
   const [formDriveUrl, setFormDriveUrl] = useState('');
   const [formError, setFormError] = useState('');
   const [syllabusSearch, setSyllabusSearch] = useState('');
+  const [formLogAsLesson, setFormLogAsLesson] = useState<boolean>(false);
 
   // Form Payment Fields
   const [formEnablePayment, setFormEnablePayment] = useState<boolean>(true);
@@ -174,6 +176,7 @@ export const SchedulePlannerView: React.FC = () => {
     setFormPromptPayNumber(teacherPromptPay?.number || '0812345678');
     setFormPromptPayName(teacherPromptPay?.name || 'อาจารย์แม็ก (MaxUp)');
     setFormPromptPayQrUrl(teacherPromptPay?.qrUrl || '');
+    setFormLogAsLesson(false);
 
     setIsModalOpen(true);
   };
@@ -198,6 +201,8 @@ export const SchedulePlannerView: React.FC = () => {
     setFormPromptPayNumber(teacherPromptPay?.number || '0812345678');
     setFormPromptPayName(teacherPromptPay?.name || 'อาจารย์แม็ก (MaxUp)');
     setFormPromptPayQrUrl(teacherPromptPay?.qrUrl || '');
+    const todayStr = new Date().toISOString().split('T')[0];
+    setFormLogAsLesson(dateStr <= todayStr);
 
     setIsModalOpen(true);
   };
@@ -222,6 +227,7 @@ export const SchedulePlannerView: React.FC = () => {
     setFormPromptPayNumber(plan.promptPayNumber || teacherPromptPay?.number || '0812345678');
     setFormPromptPayName(plan.promptPayAccountName || teacherPromptPay?.name || 'อาจารย์แม็ก (MaxUp)');
     setFormPromptPayQrUrl(plan.promptPayQrUrl || '');
+    setFormLogAsLesson(plan.status === 'completed');
 
     setIsModalOpen(true);
   };
@@ -297,11 +303,17 @@ export const SchedulePlannerView: React.FC = () => {
         plannedContentDescription: formDescription.trim(),
         preparationNote: formPrepNote.trim(),
         googleDriveUrl: formDriveUrl.trim(),
+        status: formLogAsLesson ? 'completed' : editingPlan.status,
         priceAmount: parsedAmount,
         promptPayNumber: formEnablePayment ? formPromptPayNumber.trim() : undefined,
         promptPayAccountName: formEnablePayment ? formPromptPayName.trim() : undefined,
         promptPayQrUrl: formEnablePayment ? formPromptPayQrUrl.trim() : undefined,
       });
+      if (formLogAsLesson) {
+        completeSchedulePlanAndLogLesson(editingPlan.id);
+        setToastMessage('✓ บันทึกคาบเรียนจริง และอัปเดตสารบัญเรียบร้อยแล้ว!');
+        setTimeout(() => setToastMessage(null), 4000);
+      }
     } else {
       addSchedulePlan({
         courseId: formCourseId,
@@ -315,60 +327,31 @@ export const SchedulePlannerView: React.FC = () => {
         plannedContentDescription: formDescription.trim(),
         preparationNote: formPrepNote.trim(),
         googleDriveUrl: formDriveUrl.trim(),
-        status: 'upcoming',
+        status: formLogAsLesson ? 'completed' : 'upcoming',
         priceAmount: parsedAmount,
         promptPayNumber: formEnablePayment ? formPromptPayNumber.trim() : undefined,
         promptPayAccountName: formEnablePayment ? formPromptPayName.trim() : undefined,
         promptPayQrUrl: formEnablePayment ? formPromptPayQrUrl.trim() : undefined,
         paymentStatus: formEnablePayment ? 'pending' : undefined,
       });
+      if (formLogAsLesson) {
+        setToastMessage('✓ สร้างตารางเรียน พร้อมบันทึกเป็นคาบเรียนจริงและอัปเดตสารบัญเรียบร้อยแล้ว!');
+        setTimeout(() => setToastMessage(null), 4000);
+      }
     }
 
     setIsModalOpen(false);
   };
 
   const handleMarkAsCompletedAndLog = (plan: StudySchedulePlan) => {
-    const isNowCompleted = plan.status !== 'completed';
-    toggleSchedulePlanStatus(plan.id, isNowCompleted ? 'completed' : 'upcoming');
-
-    // Optionally create a lesson log entry if studentId is specific
-    let targetStudentId = plan.studentId;
-    if ((!targetStudentId || targetStudentId === 'all') && students.length > 0) {
-      targetStudentId = students[0].id;
-    }
-
-    if (isNowCompleted && targetStudentId && targetStudentId !== 'all') {
-      addLesson({
-        studentId: targetStudentId,
-        subjectId: plan.courseId,
-        lessonDate: plan.date,
-        startTime: plan.startTime,
-        endTime: plan.endTime,
-        durationMinutes: Math.round(plan.durationHours * 60),
-        subtopicIds: plan.plannedSubtopicIds || [],
-        contentDetail: plan.plannedContentDescription || plan.title,
-        score: 5,
-        scoreScale: '1-5',
-        teacherNote: 'บันทึกอัตโนมัติจากแผนตารางเรียน',
-        googleDriveUrl: plan.googleDriveUrl,
-      });
-      setToastMessage('✓ บันทึกคาบเรียนเข้าสู่ประวัติการสอนและอัปเดตความคืบหน้าเรียบร้อยแล้ว!');
-      setTimeout(() => setToastMessage(null), 4000);
-    } else {
-      if (!isNowCompleted && targetStudentId) {
-        const autoLesson = lessons.find(
-          (l) =>
-            l.studentId === targetStudentId &&
-            l.lessonDate === plan.date &&
-            l.startTime === plan.startTime &&
-            l.teacherNote === 'บันทึกอัตโนมัติจากแผนตารางเรียน'
-        );
-        if (autoLesson) {
-          deleteLesson(autoLesson.id);
-        }
-      }
-      setToastMessage('ปรับสถานะเป็นกำลังจะมาถึง (ยกเลิกบันทึกคาบเรียบร้อย)');
+    if (plan.status === 'completed') {
+      toggleSchedulePlanStatus(plan.id, 'upcoming');
+      setToastMessage('ปรับสถานะเป็นกำลังจะมาถึง');
       setTimeout(() => setToastMessage(null), 3000);
+    } else {
+      completeSchedulePlanAndLogLesson(plan.id);
+      setToastMessage('✓ บันทึกคาบเรียนเข้าสู่ประวัติ & อัปเดตสารบัญเรียบร้อยแล้ว!');
+      setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
@@ -1008,17 +991,31 @@ export const SchedulePlannerView: React.FC = () => {
                           {/* Teacher Action Controls */}
                           {currentUserRole === 'admin' && (
                             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs print:hidden">
-                              <button
-                                onClick={() => handleMarkAsCompletedAndLog(plan)}
-                                className={`flex items-center gap-1 font-semibold px-2 py-1 rounded-lg transition-all cursor-pointer ${
-                                  isCompleted
-                                    ? 'text-slate-500 hover:text-slate-800 bg-slate-100'
-                                    : 'text-emerald-700 hover:bg-emerald-50 bg-emerald-50/60 border border-emerald-200'
-                                }`}
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                <span>{isCompleted ? 'เปลี่ยนเป็นยังไม่เสร็จ' : 'สอนแล้ว (บันทึกคาบ)'}</span>
-                              </button>
+                              {isCompleted ? (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs">
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>✓ บันทึกคาบ & สารบัญแล้ว</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkAsCompletedAndLog(plan)}
+                                    className="text-[10px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                                  >
+                                    (เปลี่ยนสถานะ)
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkAsCompletedAndLog(plan)}
+                                  className="flex items-center gap-1.5 font-bold px-2.5 py-1.5 rounded-lg transition-all cursor-pointer text-xs text-white bg-emerald-700 hover:bg-emerald-800 shadow-xs"
+                                  title="คลิกเพื่อบันทึกเป็นคาบเรียนจริง และอัปเดตสารบัญให้น้องทันที"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  <span>✍️ บันทึกเป็นคาบเรียนจริง & อัปเดตสารบัญ</span>
+                                </button>
+                              )}
 
                               <div className="flex items-center gap-1">
                                 <button
@@ -1221,17 +1218,31 @@ export const SchedulePlannerView: React.FC = () => {
                   {/* Teacher Actions */}
                   {currentUserRole === 'admin' && (
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs print:hidden">
-                      <button
-                        onClick={() => handleMarkAsCompletedAndLog(plan)}
-                        className={`flex items-center gap-1 font-semibold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                          isCompleted
-                            ? 'text-slate-500 hover:text-slate-800 bg-slate-100'
-                            : 'text-emerald-700 hover:bg-emerald-50 bg-emerald-50/60 border border-emerald-200'
-                        }`}
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>{isCompleted ? 'เปลี่ยนเป็นยังไม่เสร็จ' : 'สอนแล้ว (บันทึกคาบ)'}</span>
-                      </button>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>✓ บันทึกคาบ & สารบัญแล้ว</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkAsCompletedAndLog(plan)}
+                            className="text-[10px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                          >
+                            (เปลี่ยนสถานะ)
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkAsCompletedAndLog(plan)}
+                          className="flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer text-xs text-white bg-emerald-700 hover:bg-emerald-800 shadow-xs"
+                          title="คลิกเพื่อบันทึกเป็นคาบเรียนจริง และอัปเดตสารบัญให้น้องทันที"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>✍️ บันทึกเป็นคาบเรียนจริง & อัปเดตสารบัญ</span>
+                        </button>
+                      )}
 
                       <div className="flex items-center gap-1">
                         <button
@@ -1803,6 +1814,28 @@ export const SchedulePlannerView: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Option to immediately log as completed lesson */}
+              <div className="p-3.5 bg-gradient-to-r from-blue-50/90 to-amber-50/70 border border-blue-200 rounded-2xl flex items-start gap-3 shadow-2xs">
+                <input
+                  type="checkbox"
+                  id="logAsLessonImmediately"
+                  checked={formLogAsLesson}
+                  onChange={(e) => setFormLogAsLesson(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded text-blue-900 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="logAsLessonImmediately" className="text-xs cursor-pointer select-none">
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                    <span>⚡ บันทึกเป็นคาบเรียนจริงทันที (สำหรับสอนเสร็จแล้ว / บันทึกย้อนหลัง)</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                      อัปเดตสารบัญ Progression ทันที
+                    </span>
+                  </span>
+                  <span className="text-slate-600 block mt-1 leading-relaxed">
+                    ระบบจะสร้างบันทึกการเรียนลงในประวัติ พร้อมอัปเดตหัวข้อที่เลือกให้เป็นสถานะ "เรียนแล้ว" ในสารบัญ (Syllabus) ของน้องในคลิกเดียว
+                  </span>
+                </label>
               </div>
 
               {/* Footer */}

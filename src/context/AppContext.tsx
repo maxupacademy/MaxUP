@@ -182,6 +182,10 @@ interface AppContextType {
     planId: string,
     status: 'upcoming' | 'completed' | 'cancelled'
   ) => void;
+  completeSchedulePlanAndLogLesson: (
+    planId: string,
+    customData?: Partial<Lesson>
+  ) => void;
   submitSchedulePaymentSlip: (
     planId: string,
     slipUrl: string,
@@ -1225,7 +1229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const res = { ...prev, [studentId]: updated };
-      setDoc(doc(db, 'progress', studentId), { progress: updated }).catch(() => {});
+      safeSetDoc(doc(db, 'progress', studentId), { progress: updated });
       return res;
     });
   };
@@ -1385,29 +1389,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
     setSchedulePlans((prev) => [newPlan, ...prev]);
-    setDoc(doc(db, 'schedules', newId), newPlan).catch(() => {});
+    safeSetDoc(doc(db, 'schedules', newId), newPlan);
+
+    // If added directly with status === 'completed' (e.g. past class / already taught)
+    if (newPlan.status === 'completed') {
+      setTimeout(() => {
+        completeSchedulePlanAndLogLesson(newId);
+      }, 50);
+    }
   };
 
   const updateSchedulePlan = (plan: StudySchedulePlan) => {
     setSchedulePlans((prev) => prev.map((p) => (p.id === plan.id ? plan : p)));
-    setDoc(doc(db, 'schedules', plan.id), plan).catch(() => {});
+    safeSetDoc(doc(db, 'schedules', plan.id), plan);
+
+    if (plan.status === 'completed') {
+      setTimeout(() => {
+        completeSchedulePlanAndLogLesson(plan.id);
+      }, 50);
+    }
   };
 
   const deleteSchedulePlan = (planId: string) => {
     setSchedulePlans((prev) => prev.filter((p) => p.id !== planId));
-    deleteDoc(doc(db, 'schedules', planId)).catch(() => {});
+    safeDeleteDoc(doc(db, 'schedules', planId));
+  };
+
+  const completeSchedulePlanAndLogLesson = (
+    planId: string,
+    customData?: Partial<Lesson>
+  ) => {
+    const plan = schedulePlans.find((p) => p.id === planId);
+    if (!plan) return;
+
+    // 1. Mark schedule plan as completed in state and Firestore
+    const updatedPlan: StudySchedulePlan = { ...plan, status: 'completed' };
+    setSchedulePlans((prev) =>
+      prev.map((p) => (p.id === planId ? updatedPlan : p))
+    );
+    safeSetDoc(doc(db, 'schedules', planId), updatedPlan);
+
+    // 2. Identify target students
+    let targetStudentIds: string[] = [];
+    if (plan.studentId && plan.studentId !== 'all') {
+      targetStudentIds = [plan.studentId];
+    } else {
+      const enrolled = students.filter(
+        (st) => (st.enrolledCourseIds || []).includes(plan.courseId)
+      );
+      if (enrolled.length > 0) {
+        targetStudentIds = enrolled.map((s) => s.id);
+      } else if (students.length > 0) {
+        targetStudentIds = [students[0].id];
+      }
+    }
+
+    // 3. For each target student, create or sync lesson and update topic progress
+    const subIds = plan.plannedSubtopicIds || [];
+    targetStudentIds.forEach((stId) => {
+      const existingLesson = lessons.find(
+        (l) =>
+          l.studentId === stId &&
+          l.lessonDate === plan.date &&
+          (l.startTime === plan.startTime || (l.teacherNote && l.teacherNote.includes(planId)))
+      );
+
+      if (!existingLesson) {
+        const newLessonId = `les_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const durationMin = Math.round((plan.durationHours || 2) * 60);
+        const newLesson: Lesson = {
+          id: newLessonId,
+          studentId: stId,
+          subjectId: plan.courseId,
+          lessonDate: plan.date,
+          startTime: plan.startTime,
+          endTime: plan.endTime,
+          durationMinutes: durationMin,
+          subtopicIds: subIds,
+          contentDetail: plan.plannedContentDescription || plan.title,
+          score: 5,
+          scoreScale: '1-5',
+          teacherNote: `บันทึกคาบเรียนจากตารางแผนการสอน [${planId}]`,
+          googleDriveUrl: plan.googleDriveUrl,
+          createdAt: new Date().toISOString(),
+          ...customData,
+        };
+
+        setLessons((prev) => [newLesson, ...prev]);
+        safeSetDoc(doc(db, 'lessons', newLessonId), newLesson);
+      }
+
+      // Update student topic progress for all subtopics in this plan
+      if (subIds.length > 0) {
+        subIds.forEach((subId) => {
+          updateStudentTopicStatus(stId, subId, 'completed');
+        });
+      }
+    });
   };
 
   const toggleSchedulePlanStatus = (
     planId: string,
     status: 'upcoming' | 'completed' | 'cancelled'
   ) => {
+    if (status === 'completed') {
+      completeSchedulePlanAndLogLesson(planId);
+      return;
+    }
+
     setSchedulePlans((prev) =>
       prev.map((p) => (p.id === planId ? { ...p, status } : p))
     );
     const existing = schedulePlans.find((p) => p.id === planId);
     if (existing) {
-      setDoc(doc(db, 'schedules', planId), { ...existing, status }).catch(() => {});
+      safeSetDoc(doc(db, 'schedules', planId), { ...existing, status });
     }
   };
 
@@ -1432,13 +1527,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
     const existing = schedulePlans.find((p) => p.id === planId);
     if (existing) {
-      setDoc(doc(db, 'schedules', planId), {
+      safeSetDoc(doc(db, 'schedules', planId), {
         ...existing,
         paymentStatus: 'slip_uploaded',
         paymentSlipUrl: slipUrl,
         paymentSlipNote: note || '',
         slipUploadedAt,
-      }).catch(() => {});
+      });
     }
   };
 
@@ -1459,12 +1554,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
     const existing = schedulePlans.find((p) => p.id === planId);
     if (existing) {
-      setDoc(doc(db, 'schedules', planId), {
+      safeSetDoc(doc(db, 'schedules', planId), {
         ...existing,
         paymentStatus: newStatus,
         confirmedByTeacher: confirmed,
         paidAt,
-      }).catch(() => {});
+      });
     }
   };
 
@@ -1625,6 +1720,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSchedulePlan,
         deleteSchedulePlan,
         toggleSchedulePlanStatus,
+        completeSchedulePlanAndLogLesson,
         submitSchedulePaymentSlip,
         confirmSchedulePayment,
         teacherPromptPay,

@@ -35,6 +35,7 @@ import {
   setDoc,
   deleteDoc,
   getDocs,
+  onSnapshot,
 } from 'firebase/firestore';
 
 const safeSetDoc = (docRef: any, data: any) => {
@@ -395,32 +396,80 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(progressMap));
   }, [progressMap]);
 
-  // One-time silent background sync with Firestore (Does not disrupt or jump UI)
+  // Realtime background sync with Firestore for all collections (Lessons, Progress, Schedules, Users, Courses, Homeworks, Materials, Settings)
   useEffect(() => {
-    const syncInit = async () => {
-      try {
-        // 1. Sync Users from Firestore
-        const userSnap = await getDocs(collection(db, 'users'));
-        if (userSnap.empty) {
-          // Push initial clean seed in background (Only admin, no mock students)
-          setDoc(doc(db, 'users', INITIAL_ADMIN.id), INITIAL_ADMIN).catch(() => {});
+    // 1. Realtime Lessons Listener (Auto updates student & teacher dashboards instantly)
+    const unsubLessons = onSnapshot(
+      collection(db, 'lessons'),
+      (snapshot) => {
+        const remoteLessons: Lesson[] = [];
+        snapshot.forEach((docItem) => {
+          remoteLessons.push(docItem.data() as Lesson);
+        });
+        remoteLessons.sort((a, b) => (b.lessonDate || '').localeCompare(a.lessonDate || ''));
+        setLessons(remoteLessons);
+      },
+      (err) => console.warn('Lessons realtime note:', err)
+    );
+
+    // 2. Realtime Student Progress Listener (Auto updates checklist & study counts)
+    const unsubProgress = onSnapshot(
+      collection(db, 'progress'),
+      (snapshot) => {
+        const remoteProgress: Record<string, StudentTopicProgress[]> = {};
+        snapshot.forEach((docItem) => {
+          const data = docItem.data();
+          if (data && Array.isArray(data.progress)) {
+            remoteProgress[docItem.id] = data.progress;
+          }
+        });
+        if (Object.keys(remoteProgress).length > 0) {
+          setProgressMap((prev) => ({ ...prev, ...remoteProgress }));
+        }
+      },
+      (err) => console.warn('Progress realtime note:', err)
+    );
+
+    // 3. Realtime Schedules & Payment Plans Listener
+    const unsubSchedules = onSnapshot(
+      collection(db, 'schedules'),
+      (snapshot) => {
+        const remoteSchedules: StudySchedulePlan[] = [];
+        snapshot.forEach((docItem) => {
+          remoteSchedules.push(docItem.data() as StudySchedulePlan);
+        });
+        setSchedulePlans(remoteSchedules);
+      },
+      (err) => console.warn('Schedules realtime note:', err)
+    );
+
+    // 4. Realtime Users Listener (Students & Accounts)
+    const unsubUsers = onSnapshot(
+      collection(db, 'users'),
+      (snapshot) => {
+        if (snapshot.empty) {
+          safeSetDoc(doc(db, 'users', INITIAL_ADMIN.id), INITIAL_ADMIN);
         } else {
           const remoteStudents: UserProfile[] = [];
-          userSnap.forEach((docItem) => {
+          snapshot.forEach((docItem) => {
             const data = docItem.data() as UserProfile;
-            // Clean slate: do not load old mock test accounts
             if (data.role === 'student' && data.id !== 'student_phoom' && data.id !== 'student_fah') {
               remoteStudents.push(data);
             }
           });
           setStudents(remoteStudents);
         }
+      },
+      (err) => console.warn('Users realtime note:', err)
+    );
 
-        // 2. Sync Courses from Firestore (Filter out legacy pre-baked courses if any)
-        const courseSnap = await getDocs(collection(db, 'courses'));
-        if (!courseSnap.empty) {
+    // 5. Realtime Courses Listener
+    const unsubCourses = onSnapshot(
+      collection(db, 'courses'),
+      (snapshot) => {
+        if (!snapshot.empty) {
           const remoteCourses: Course[] = [];
-          courseSnap.forEach((docItem) => {
+          snapshot.forEach((docItem) => {
             const data = docItem.data() as Course;
             if (
               data &&
@@ -442,14 +491,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           let finalCourses = remoteCourses;
           if (mathJuniorIdx === -1) {
             finalCourses = [COURSE_MATH_JUNIOR, ...remoteCourses];
-            setDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR).catch(() => {});
+            safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
           } else {
             if (
               !finalCourses[mathJuniorIdx].topics ||
               finalCourses[mathJuniorIdx].topics.length < 10
             ) {
               finalCourses[mathJuniorIdx] = COURSE_MATH_JUNIOR;
-              setDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR).catch(() => {});
+              safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
             }
           }
 
@@ -457,27 +506,67 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setCourses(finalCourses);
           }
         } else {
-          // If Firestore is empty, seed pristine COURSE_MATH_JUNIOR
-          setDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR).catch(() => {});
+          safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
           setCourses([COURSE_MATH_JUNIOR]);
         }
+      },
+      (err) => console.warn('Courses realtime note:', err)
+    );
 
-        // 3. Sync Schedules from Firestore
-        const scheduleSnap = await getDocs(collection(db, 'schedules'));
-        if (!scheduleSnap.empty) {
-          const remoteSchedules: StudySchedulePlan[] = [];
-          scheduleSnap.forEach((docItem) => {
-            remoteSchedules.push(docItem.data() as StudySchedulePlan);
-          });
-          if (remoteSchedules.length > 0) {
-            setSchedulePlans(remoteSchedules);
+    // 6. Realtime Homeworks Listener
+    const unsubHomeworks = onSnapshot(
+      collection(db, 'homeworks'),
+      (snapshot) => {
+        const remoteHw: Homework[] = [];
+        snapshot.forEach((docItem) => {
+          remoteHw.push(docItem.data() as Homework);
+        });
+        setHomeworks(remoteHw);
+      },
+      (err) => console.warn('Homeworks realtime note:', err)
+    );
+
+    // 7. Realtime Course Materials Listener
+    const unsubMaterials = onSnapshot(
+      collection(db, 'materials'),
+      (snapshot) => {
+        const remoteMats: CourseMaterial[] = [];
+        snapshot.forEach((docItem) => {
+          remoteMats.push(docItem.data() as CourseMaterial);
+        });
+        setMaterials(remoteMats);
+      },
+      (err) => console.warn('Materials realtime note:', err)
+    );
+
+    // 8. Realtime PromptPay Settings Listener
+    const unsubPromptPay = onSnapshot(
+      doc(db, 'settings', 'promptpay'),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (data && data.number) {
+            setTeacherPromptPay({
+              number: data.number || '0812345678',
+              name: data.name || 'อาจารย์แม็ก (MaxUp)',
+              qrUrl: data.qrUrl || '',
+            });
           }
         }
-      } catch (e) {
-        // Safe offline mode fallback
-      }
+      },
+      (err) => console.warn('PromptPay realtime note:', err)
+    );
+
+    return () => {
+      unsubLessons();
+      unsubProgress();
+      unsubSchedules();
+      unsubUsers();
+      unsubCourses();
+      unsubHomeworks();
+      unsubMaterials();
+      unsubPromptPay();
     };
-    syncInit();
   }, []);
 
   const clearAuthError = () => setAuthError(null);
@@ -1001,8 +1090,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteLesson = (lessonId: string) => {
+    const lessonToDelete = lessons.find((l) => l.id === lessonId);
     setLessons((prev) => prev.filter((l) => l.id !== lessonId));
     safeDeleteDoc(doc(db, 'lessons', lessonId));
+
+    if (lessonToDelete && lessonToDelete.studentId && (lessonToDelete.subtopicIds || []).length > 0) {
+      const studentId = lessonToDelete.studentId;
+      const remainingLessonsForStudent = lessons.filter(
+        (l) => l.id !== lessonId && l.studentId === studentId
+      );
+
+      setProgressMap((prev) => {
+        const studentProgress = prev[studentId] || [];
+        const updated = studentProgress.map((p) => {
+          if ((lessonToDelete.subtopicIds || []).includes(p.subtopicId)) {
+            const countInRemaining = remainingLessonsForStudent.filter(
+              (l) => (l.subtopicIds || []).includes(p.subtopicId)
+            ).length;
+
+            return {
+              ...p,
+              studyCount: countInRemaining,
+              status: (countInRemaining > 0 ? 'completed' : 'not_started') as StudentTopicProgress['status'],
+            };
+          }
+          return p;
+        });
+
+        safeSetDoc(doc(db, 'progress', studentId), { progress: updated });
+        return { ...prev, [studentId]: updated };
+      });
+    }
   };
 
   // Progress Tracking: บันทึกสถานะเรียนแล้ว และนับจำนวนครั้งที่เรียนซ้ำ

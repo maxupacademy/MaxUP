@@ -44,6 +44,8 @@ export const SchedulePlannerView: React.FC = () => {
     deleteSchedulePlan,
     toggleSchedulePlanStatus,
     addLesson,
+    deleteLesson,
+    lessons,
     teacherPromptPay,
     setTeacherPromptPay,
     confirmSchedulePayment,
@@ -353,7 +355,19 @@ export const SchedulePlannerView: React.FC = () => {
       setToastMessage('✓ บันทึกคาบเรียนเข้าสู่ประวัติการสอนและอัปเดตความคืบหน้าเรียบร้อยแล้ว!');
       setTimeout(() => setToastMessage(null), 4000);
     } else {
-      setToastMessage(isNowCompleted ? '✓ ปรับสถานะเป็นสอนแล้ว' : 'ปรับสถานะเป็นกำลังจะมาถึง');
+      if (!isNowCompleted && targetStudentId) {
+        const autoLesson = lessons.find(
+          (l) =>
+            l.studentId === targetStudentId &&
+            l.lessonDate === plan.date &&
+            l.startTime === plan.startTime &&
+            l.teacherNote === 'บันทึกอัตโนมัติจากแผนตารางเรียน'
+        );
+        if (autoLesson) {
+          deleteLesson(autoLesson.id);
+        }
+      }
+      setToastMessage('ปรับสถานะเป็นกำลังจะมาถึง (ยกเลิกบันทึกคาบเรียบร้อย)');
       setTimeout(() => setToastMessage(null), 3000);
     }
   };

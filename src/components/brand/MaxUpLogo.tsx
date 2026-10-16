@@ -121,8 +121,8 @@ export const MaxUpLogo: React.FC<MaxUpLogoProps> = ({
       </svg>
 
       {showSubtitle && (
-        <span className="hidden sm:inline-block text-xs font-semibold text-slate-500 border-l border-slate-300 pl-2">
-          TutorHub
+        <span className="hidden sm:inline-block text-xs font-bold text-[#0B48A1] border-l border-slate-300 pl-2 tracking-wide">
+          Academy
         </span>
       )}
     </div>

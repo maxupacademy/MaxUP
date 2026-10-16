@@ -29,9 +29,10 @@ const MainContent: React.FC = () => {
   } = useApp();
   const { tx } = useLanguage();
 
-  const [currentTab, setCurrentTab] = useState<string>(() =>
-    currentUserRole === 'admin' ? 'overview' : 'home'
-  );
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    if (currentUserRole === 'admin') return 'overview';
+    return 'home';
+  });
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -39,17 +40,22 @@ const MainContent: React.FC = () => {
   // Sync default dashboard tab whenever role changes or user logs in
   useEffect(() => {
     if (isLoggedIn) {
-      if (currentUserRole === 'admin' && (currentTab === 'home' || currentTab === 'my-lessons')) {
-        setCurrentTab('overview');
-      } else if (currentUserRole === 'student' && (currentTab === 'overview' || currentTab === 'admin-suite' || currentTab === 'students')) {
-        setCurrentTab('home');
+      if (currentUserRole === 'admin') {
+        if (currentTab === 'home' || currentTab === 'my-lessons' || !currentTab) {
+          setCurrentTab('overview');
+        }
+      } else {
+        if (currentTab === 'overview' || currentTab === 'admin-suite' || currentTab === 'students' || !currentTab) {
+          setCurrentTab('home');
+        }
       }
     }
   }, [isLoggedIn, currentUserRole]);
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
-    setCurrentTab(currentUserRole === 'admin' ? 'overview' : 'home');
+    const targetTab = currentUserRole === 'admin' ? 'overview' : 'home';
+    setCurrentTab(targetTab);
   };
 
   if (!isLoggedIn || showLoginModal) {
@@ -136,8 +142,8 @@ const MainContent: React.FC = () => {
             <span className="text-slate-300">·</span>
             <span>
               {tx(
-                'แพลตฟอร์มการเรียนรู้และติดตามการสอน MaxUp TutorHub',
-                'MaxUp TutorHub Learning & Progress Platform'
+                'แพลตฟอร์มการเรียนรู้และติดตามการสอน MaxUp Academy',
+                'MaxUp Academy Learning & Progress Platform'
               )}
             </span>
           </div>

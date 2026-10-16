@@ -132,28 +132,37 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
-        {/* Header Banner */}
-        <section className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-800 relative overflow-hidden">
+        {/* Header Banner in Royal Navy CI */}
+        <section className="bg-gradient-to-r from-[#001B48] via-[#072B61] to-[#0B48A1] text-white rounded-3xl p-6 sm:p-8 shadow-md border border-blue-800/50 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-slate-800 border border-slate-700 px-3 py-1 rounded-full mb-2">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{tx('สมุดบันทึกการเรียน', 'Personal Study Log')}</span>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400 shrink-0 bg-white/10 shadow-sm">
+                <img
+                  src="/mascot/pumpkin_lab.jpg"
+                  alt="Pumpkin"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                {tx('ประวัติการเรียนทั้งหมด', 'Lesson History')}
-              </h1>
-              <p className="text-slate-300 text-xs sm:text-sm mt-1">
-                {tx(
-                  `บันทึกเนื้อหาการสอนและคำแนะนำจากครูแม็กของ ${activeStudent?.nickname}`,
-                  `Session notes and feedback from Coach Max for ${activeStudent?.nickname}`
-                )}
-              </p>
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-white/10 border border-white/15 px-3 py-1 rounded-full mb-1.5 backdrop-blur-xs">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{tx('สมุดบันทึกการเรียน', 'Personal Study Log')} · MaxUp Academy</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  {tx('ประวัติการเรียนทั้งหมด', 'Lesson History')}
+                </h1>
+                <p className="text-blue-100 text-xs sm:text-sm mt-0.5">
+                  {tx(
+                    `บันทึกเนื้อหาการสอนและคำแนะนำจากครูแม็กของ ${activeStudent?.nickname}`,
+                    `Session notes and feedback from Coach Max for ${activeStudent?.nickname}`
+                  )}
+                </p>
+              </div>
             </div>
 
             <button
               onClick={() => setCurrentTab('home')}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto shrink-0"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto shrink-0 backdrop-blur-xs"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>{tx('กลับหน้าแดชบอร์ด', 'Back to Dashboard')}</span>
@@ -161,20 +170,20 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-800 max-w-sm relative z-10">
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 text-center">
-              <span className="text-[11px] text-slate-400 block">
+          <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-blue-800/40 max-w-sm relative z-10">
+            <div className="bg-white/10 border border-white/15 rounded-xl p-3 text-center backdrop-blur-xs">
+              <span className="text-[11px] text-blue-100 block">
                 {tx('จำนวนคาบทั้งหมด', 'Total Sessions')}
               </span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-white">
                 <NumberTicker value={activeStudentLessons.length} />
               </span>
             </div>
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 text-center">
-              <span className="text-[11px] text-slate-400 block">
+            <div className="bg-white/10 border border-white/15 rounded-xl p-3 text-center backdrop-blur-xs">
+              <span className="text-[11px] text-blue-100 block">
                 {tx('ชั่วโมงเรียนสะสม', 'Study Hours')}
               </span>
-              <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400">
+              <span className="text-xl sm:text-2xl font-bold font-mono text-amber-300">
                 <NumberTicker value={totalHoursNum} decimals={1} />
               </span>
             </div>
@@ -413,87 +422,97 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* 21st.dev Student Hero Banner */}
-      <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-800">
+      {/* Royal Navy & Orange Student Hero Banner with Pumpkin Mascot */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-[#001B48] via-[#072B61] to-[#0B48A1] text-white rounded-3xl p-6 sm:p-8 shadow-md border border-blue-800/50">
         <div
-          className="pointer-events-none absolute inset-0 opacity-20"
+          className="pointer-events-none absolute inset-0 opacity-15"
           style={{
-            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.35) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.4) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }}
         />
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="space-y-3 max-w-xl text-center md:text-left">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{tx('แดชบอร์ดนักเรียน', 'Student Learning Hub')}</span>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left max-w-xl">
+            {/* Pumpkin Mascot Avatar */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md shrink-0 bg-white/10">
+              <img
+                src="/mascot/pumpkin_lab.jpg"
+                alt="น้องพัมคิน (Pumpkin)"
+                className="w-full h-full object-cover"
+              />
             </div>
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-300 bg-white/10 border border-white/15 px-3 py-1 rounded-full backdrop-blur-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{tx('แดชบอร์ดนักเรียน', 'Student Learning Hub')} · MaxUp Academy</span>
+              </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {tx(`สวัสดีครับ ${activeStudent?.nickname}! 🚀`, `Welcome back, ${activeStudent?.nickname}! 🚀`)}
-            </h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                {tx(`สวัสดีครับ ${activeStudent?.nickname}! 🚀`, `Welcome back, ${activeStudent?.nickname}! 🚀`)}
+              </h1>
 
-            <p className="text-slate-300 text-sm leading-relaxed">
-              {tx('เป้าหมาย:', 'Target:')}{' '}
-              <strong className="text-amber-300">
-                {activeStudent?.targetFaculty || activeStudent?.targetExam || '-'}
-              </strong>{' '}
-              · {tx(`ความคืบหน้าวิชา ${activeSubject.name}`, `${activeSubject.name} mastery`)}{' '}
-              <strong className="text-emerald-400">{syllabusPercent}%</strong>
-            </p>
+              <p className="text-blue-100 text-sm leading-relaxed">
+                {tx('เป้าหมาย:', 'Target:')}{' '}
+                <strong className="text-amber-300 font-bold">
+                  {activeStudent?.targetFaculty || activeStudent?.targetExam || '-'}
+                </strong>{' '}
+                · {tx(`ความคืบหน้าวิชา ${activeSubject.name}`, `${activeSubject.name} mastery`)}{' '}
+                <strong className="text-amber-300 font-mono font-black">{syllabusPercent}%</strong>
+              </p>
 
-            <div className="pt-2 flex flex-wrap items-center gap-2 justify-center md:justify-start">
-              <button
-                onClick={() => setCurrentTab('my-lessons')}
-                className="px-3.5 py-2 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
-              >
-                {tx(`ประวัติเรียน (${totalLessons})`, `History (${totalLessons})`)}
-              </button>
-              <button
-                onClick={() => setCurrentTab('my-syllabus')}
-                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-              >
-                {tx(`สารบัญ (${completedCount}/${totalSubtopics})`, `Syllabus (${completedCount}/${totalSubtopics})`)}
-              </button>
-              <button
-                onClick={() => setCurrentTab('schedule')}
-                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-              >
-                {tx('ตารางเรียน', 'Schedule')}
-              </button>
-              <button
-                onClick={() => setCurrentTab('my-materials')}
-                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-              >
-                {tx('เอกสารเรียน', 'Materials')}
-              </button>
-              <button
-                onClick={() => setCurrentTab('my-videos')}
-                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-              >
-                {tx('วิดีโอทบทวน', 'Videos')}
-              </button>
-              <button
-                onClick={() => setCurrentTab('my-homework')}
-                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-              >
-                {tx('การบ้าน', 'Homework')}
-              </button>
+              <div className="pt-2 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                <button
+                  onClick={() => setCurrentTab('my-lessons')}
+                  className="px-3.5 py-2 text-xs font-black text-white bg-gradient-to-r from-[#FF7A00] to-[#F55D00] hover:from-[#F55D00] hover:to-[#E05000] rounded-xl shadow-md transition-all active:scale-98 cursor-pointer"
+                >
+                  {tx(`ประวัติเรียน (${totalLessons})`, `History (${totalLessons})`)}
+                </button>
+                <button
+                  onClick={() => setCurrentTab('my-syllabus')}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  {tx(`สารบัญ (${completedCount}/${totalSubtopics})`, `Syllabus (${completedCount}/${totalSubtopics})`)}
+                </button>
+                <button
+                  onClick={() => setCurrentTab('schedule')}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  {tx('ตารางเรียน', 'Schedule')}
+                </button>
+                <button
+                  onClick={() => setCurrentTab('my-materials')}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  {tx('เอกสารเรียน', 'Materials')}
+                </button>
+                <button
+                  onClick={() => setCurrentTab('my-videos')}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  {tx('วิดีโอ', 'Videos')}
+                </button>
+                <button
+                  onClick={() => setCurrentTab('my-homework')}
+                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                >
+                  {tx('การบ้าน', 'Homework')}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Student Goal Spotlight Badge */}
+          {/* Student Goal Spotlight Badge in Glassmorphism */}
           <SpotlightCard
-            spotlightColor="rgba(251, 191, 36, 0.2)"
-            className="shrink-0 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col items-center justify-center text-center min-w-[210px]"
+            spotlightColor="rgba(251, 191, 36, 0.25)"
+            className="shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col items-center justify-center text-center min-w-[210px]"
           >
-            <div className="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-300 flex items-center justify-center mb-2">
+            <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center mb-2 shadow-xs">
               <Target className="w-6 h-6" />
             </div>
             <div className="text-xs font-bold text-white">
               {activeStudent?.targetExam || tx('เตรียมสอบเข้า', 'Exam Preparation')}
             </div>
-            <div className="text-[11px] text-slate-400 mt-1 max-w-[180px]">
+            <div className="text-[11px] text-blue-200 mt-1 max-w-[180px]">
               {activeStudent?.targetFaculty
                 ? activeStudent.targetFaculty
                 : tx(`สะสมชั่วโมงเรียน ${totalHours} ชม.`, `${totalHours} hours completed`)}

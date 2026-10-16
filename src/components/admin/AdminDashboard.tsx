@@ -72,70 +72,80 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Top 21st.dev Editorial Hero Banner */}
-      <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border border-slate-800">
+      {/* Top Royal Navy & Orange Hero Banner with Pumpkin Mascot */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-[#001B48] via-[#072B61] to-[#0B48A1] text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border border-blue-800/50">
         <div
-          className="pointer-events-none absolute inset-0 opacity-20"
+          className="pointer-events-none absolute inset-0 opacity-15"
           style={{
-            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.35) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.4) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }}
         />
-        <div className="relative z-10 space-y-2.5 max-w-xl text-center md:text-left">
-          <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{tx('แดชบอร์ดผู้สอน', 'Instructor Workspace')}</span>
+        <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left max-w-xl">
+          {/* Pumpkin Mascot Avatar */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md shrink-0 bg-white/10">
+            <img
+              src="/mascot/pumpkin_lab.jpg"
+              alt="น้องพัมคิน (Pumpkin)"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            {tx(`สวัสดีครับ ${adminProfile.fullName}`, `Welcome, ${adminProfile.fullName}`)}
-          </h1>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            {tx(
-              'ติดตามความก้าวหน้านักเรียน บันทึกคาบเรียน และบริหารหลักสูตร',
-              'Monitor student mastery, log sessions, and manage curriculum for'
-            )}{' '}
-            <strong className="text-amber-300">{activeSubject.name}</strong>
-          </p>
-          <div className="pt-2 flex flex-wrap items-center gap-2.5 justify-center md:justify-start">
-            <button
-              onClick={onOpenLessonModal}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4 text-slate-950" />
-              <span>{tx('บันทึกคาบเรียน', 'Log Lesson')}</span>
-            </button>
-            <button
-              onClick={onNavigateToSyllabus}
-              className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
-            >
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-300 bg-white/10 border border-white/15 px-3 py-1 rounded-full backdrop-blur-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{tx('แดชบอร์ดผู้สอน', 'Instructor Workspace')} · MaxUp Academy</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              {tx(`สวัสดีครับ ${adminProfile.fullName}`, `Welcome, ${adminProfile.fullName}`)}
+            </h1>
+            <p className="text-blue-100 text-sm leading-relaxed">
               {tx(
-                `สารบัญวิชา (${activeSubject.topics.length} บท)`,
-                `Syllabus (${activeSubject.topics.length} Units)`
-              )}
-            </button>
-            {onNavigateToSchedule && (
+                'ติดตามความก้าวหน้านักเรียน บันทึกคาบเรียน และบริหารหลักสูตร',
+                'Monitor student mastery, log sessions, and manage curriculum for'
+              )}{' '}
+              <strong className="text-amber-300 font-bold">{activeSubject.name}</strong>
+            </p>
+            <div className="pt-2 flex flex-wrap items-center gap-2.5 justify-center sm:justify-start">
               <button
-                onClick={onNavigateToSchedule}
-                className="px-3.5 py-2 text-xs font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition-all cursor-pointer"
+                onClick={onOpenLessonModal}
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-gradient-to-r from-[#FF7A00] to-[#F55D00] hover:from-[#F55D00] hover:to-[#E05000] rounded-xl shadow-md transition-all active:scale-98 cursor-pointer"
               >
-                {tx('ตารางสอน', 'Schedule')}
+                <PlusCircle className="w-4 h-4 text-white" />
+                <span>{tx('บันทึกคาบเรียน', 'Log Lesson')}</span>
               </button>
-            )}
+              <button
+                onClick={onNavigateToSyllabus}
+                className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+              >
+                {tx(
+                  `สารบัญวิชา (${activeSubject.topics.length} บท)`,
+                  `Syllabus (${activeSubject.topics.length} Units)`
+                )}
+              </button>
+              {onNavigateToSchedule && (
+                <button
+                  onClick={onNavigateToSchedule}
+                  className="px-3.5 py-2 text-xs font-bold text-amber-200 bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/40 rounded-xl transition-all cursor-pointer"
+                >
+                  {tx('ตารางสอน', 'Schedule')}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Active Course Spotlight Badge */}
         <SpotlightCard
-          spotlightColor="rgba(251, 191, 36, 0.2)"
-          className="relative z-10 shrink-0 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 min-w-[210px] text-center"
+          spotlightColor="rgba(251, 191, 36, 0.25)"
+          className="relative z-10 shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 min-w-[210px] text-center"
         >
-          <div className="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-300 flex items-center justify-center mx-auto mb-2.5">
+          <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center mx-auto mb-2.5 shadow-xs">
             <GraduationCap className="w-6 h-6" />
           </div>
           <div className="text-xs font-bold text-white line-clamp-1">
             {activeSubject.name || tx('คอร์สเรียน', 'Active Course')}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-blue-200 mt-1">
             {tx(`นักเรียนทั้งหมด ${students.length} คน`, `${students.length} Enrolled Students`)}
           </div>
         </SpotlightCard>

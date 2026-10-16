@@ -373,7 +373,7 @@ export const SchedulePlannerView: React.FC = () => {
       {/* Printable Sheet Header (Visible only when printed or exported to PDF) */}
       <div className="hidden print:block mb-6 p-4 border-b-2 border-slate-800 text-center">
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-          MaxUp TutorHub · ตารางเรียนและแผนการสอน
+          MaxUp Academy · ตารางเรียนและแผนการสอน
         </h1>
         <p className="text-xs text-slate-600 mt-1">
           ผู้สอน: อาจารย์แม็ก (ครูพี่แม็ก) · สถาบันกวดวิชา MaxUp
@@ -426,7 +426,7 @@ export const SchedulePlannerView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all active:scale-98"
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#0B48A1] hover:bg-[#003580] text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all active:scale-98"
               >
                 <Plus className="w-4 h-4 text-amber-400" />
                 <span>{tx('เพิ่มตารางเรียน', 'Add Session')}</span>

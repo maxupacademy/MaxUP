@@ -39,7 +39,7 @@ export const PdfMaterialReaderModal: React.FC<PdfMaterialReaderModalProps> = ({
       title: material.title.replace('.pdf', ''),
       subtitle: material.description,
       content: [
-        'เอกสารนี้ได้รับการจัดเตรียมโดย ครูพี่แม็ก (MaxUp) สำหรับประกอบการเรียนการสอนในระบบ MaxUp TutorHub',
+        'เอกสารนี้ได้รับการจัดเตรียมโดย ครูพี่แม็ก (MaxUp) สำหรับประกอบการเรียนการสอนในระบบ MaxUp Academy',
         'ครอบคลุมจุดเน้นสำคัญ สรุปทฤษฎี เทคนิคการวิเคราะห์ และแบบฝึกหัดสำหรับเตรียมสอบ',
         'กรุณาทบทวนร่วมกับการทำโจทย์สม่ำเสมอ หากมีข้อสงสัยสามารถสอบถามในคาบเรียนหรือผ่านช่องทางถาม-ตอบได้ตลอดเวลา',
       ],
@@ -270,7 +270,7 @@ export const PdfMaterialReaderModal: React.FC<PdfMaterialReaderModalProps> = ({
 
               {/* Watermark Footer */}
               <div className="mt-10 pt-4 border-t border-dashed border-slate-300 text-[10px] opacity-60 flex items-center justify-between">
-                <span>© MaxUp TutorHub — สถาบันกวดวิชาเคมี คณิต วิทยาศาสตร์</span>
+                <span>© MaxUp Academy — สถาบันกวดวิชาเคมี คณิต วิทยาศาสตร์</span>
                 <span>ผู้เรียน: เอกสารอ่านส่วนบุคคล</span>
               </div>
             </div>

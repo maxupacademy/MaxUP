@@ -1,72 +1,66 @@
-# MaxUp TutorHub — Design System Specification
-
-## 1. Overview
-MaxUp TutorHub is designed with a premium, focused tutoring atmosphere ("Warm Academic Studio") tailored for teachers and students. The interface emphasizes readability, clarity, and friction-free logging.
+# 🎨 MaxUp Academy — Official Brand Design System & CI Guidelines
+**Owner:** Thanadol (Maxnm) — Founder of Maxups Institute  
+**Platform:** MaxUp Academy (Web & Mobile Learning Suite)  
+**Version:** 1.0 (2026 Edition)
 
 ---
 
-## 2. Color Palette
+## 1. Brand Identity & Vision
+- **Brand Name:** **MaxUp Academy** (เดิมคือ MaxUp TutorHub)
+- **Tagline:** ระบบดูแลการเรียนที่ออกแบบเพื่อน้องรายบุคคล (Personalized Learning Workspace)
+- **Voice & Tone:** "พี่สอนน้อง" (อบอุ่น เป็นกันเอง ให้กำลังใจ ชัดเจนตรงประเด็น ไม่กดดันเด็ก)
 
-| Token Name | Hex Code | Usage |
-| :--- | :--- | :--- |
-| **Primary Navy** | `#0B48A1` / `bg-blue-900` | Main CTA buttons, active navigation, brand headers |
-| **Primary Light** | `#EFF6FF` / `bg-blue-50` | Primary callout backgrounds, active badge pills |
-| **Accent Amber** | `#D97706` / `#F59E0B` | Secondary accents, syllabus badges, study streak stars |
-| **Warm Canvas** | `#FFFDF7` | Page background providing eye-friendly, paper-like warmth |
-| **Pure White** | `#FFFFFF` | Card backgrounds, modals, input fields |
-| **Neutral Slate** | `#0F172A` / `#334155` | Primary body typography and headings |
-| **Muted Slate** | `#64748B` / `#94A3B8` | Secondary labels, timestamps, placeholders |
-| **Success Emerald** | `#059669` / `#10B981` | Paid status, completed lessons, verification badges |
-| **Warning Orange** | `#EA580C` | Pending review alerts, slip review badges |
-| **Danger Rose** | `#DC2626` | Delete actions, error banners, cancellation |
+---
+
+## 2. Core CI Color Palette (4 สีหลักของ MaxUp)
+ห้ามใช้สีดำสนิทหรือกล่องทึบสีดำ (`#000000` / `bg-slate-950` ทึบ) โดยให้ใช้โทนสีทางการของสถาบันทั้ง 4 สีนี้ในการคุมโทน:
+
+| สี | ชื่อเฉดสี | HEX Code | Tailwind Utility | บทบาทและตำแหน่งที่ใช้ |
+|---|---|---|---|---|
+| 🔵 **น้ำเงิน (Primary)** | Royal Navy / Deep Ocean | `#001B48`<br/>`#0B48A1`<br/>`#1E3A8A` | `bg-[#001B48]`<br/>`text-[#0B48A1]`<br/>`from-[#001B48] to-[#0B48A1]` | สีหลักของสถาบัน ใช้กับ Banner แดชบอร์ด, Header, ตัวอักษร "Max" ในโลโก้, และโครงสร้างหลัก |
+| 🟠 **ส้ม (Action)** | Energetic Orange / Sunset | `#FF7A00`<br/>`#F55D00` | `bg-[#FF7A00]`<br/>`text-[#FF7A00]`<br/>`hover:bg-[#F55D00]` | สีแอ็กชันหลัก ใช้กับปุ่ม Call-to-Action, ตัวอักษร "UP!" ในโลโก้, ไฮไลต์คะแนน, และความก้าวหน้าสำคัญ |
+| 🟡 **เหลือง (Highlight)** | Sunshine Yellow / Amber | `#FBBF24`<br/>`#F59E0B` | `text-amber-400`<br/>`bg-amber-400/15`<br/>`border-amber-400/40` | สีไฮไลต์ข้อความสำคัญ, ป้ายประกาศ, ติวเตอร์ทิป, ดาวความเข้าใจ, และประกายความคิด |
+| 🟣 **ม่วง (Accent)** | Soft Lavender / Violet | `#7C3AED`<br/>`#8B5CF6`<br/>`#EDE9FE` | `bg-purple-50`<br/>`text-purple-700`<br/>`border-purple-200` | สีแห่งความรู้และการค้นพบ ใช้กับโบว์ไทด์น้อง Pumpkin, หมวดหมู่วิทยาศาสตร์/เคมี, แท็กชีทเรียนพิเศษ |
+
+### Backgrounds & Cards
+- **Light Theme Background:** `#F8FAFC` (Slate-50 นุ่มนวล สบายตา)
+- **Primary Cards:** สีขาว `#FFFFFF` ขอบ `border-slate-200/80` หรือขอบนวลน้ำเงิน `border-blue-100` พร้อมเงาเบา `shadow-2xs`
+- **Hero Banners:** Gradient ลึกหรูหรา `bg-gradient-to-r from-[#001B48] via-[#072B61] to-[#0B48A1]` พร้อมกริดละอองสีทอง `amber-400`
 
 ---
 
 ## 3. Typography
-
-- **Thai Primary Font:** `Prompt` (`font-['Prompt',sans-serif]`) — clean modern geometric Thai typeface with high legibility across mobile and desktop.
-- **English & Numeric:** `Plus Jakarta Sans` (`font-['Plus_Jakarta_Sans',sans-serif]`) — crisp numbers and metric counters.
-- **Math & Formulas:** KaTeX rendering with display math `$$...$$` and inline math `$ ... $`.
-
-### Type Scale & Hierarchy
-- **Page Titles / Headers:** `text-xl` to `text-2xl font-black text-slate-900`
-- **Section Headers:** `text-base` to `text-lg font-bold text-slate-900`
-- **Card Subheadings:** `text-sm font-bold text-slate-800`
-- **Body Text:** `text-xs font-normal text-slate-700 leading-relaxed`
-- **Micro Badges & Metadata:** `text-[10px]` to `text-[11px] font-semibold`
+- **Primary Body & UI Font:** `Prompt`, `sans-serif` (ภาษาไทยและสากล โมเดิร์น อ่านง่าย)
+- **Academic & Formal Notes:** `IBM Plex Sans Thai` (สำหรับข้อสอบ, เอกสารทางการ, และวิธีทำ)
+- **Numbers & Formulas:** `Fira Code`, `monospace` (สำหรับเวลา, รหัสวิชา, สมการ และตัวเลขสถิติ)
 
 ---
 
-## 4. Spacing & Shape Tokens
+## 4. Official Mascot: "Pumpkin" (Professor Meow) 🐱
+**ชื่อ:** น้องพัมคิน (Professor Meow / The Curious Fluffy Cat)  
+**บุคลิก:** แมวส้มขนฟู ใส่แว่นตากลมโต สวมเสื้อกาวน์นักวิจัยตัวน้อย และผูกโบว์ไทด์สีม่วงพาสเทล  
+**นิสัย:** ช่างสงสัย ขี้เล่น อบอุ่น ขยันเรียน ชอบอ่านหนังสือ กินคุกกี้ และดื่มชานมไข่มุก
 
-- **Card Corners:** `rounded-2xl` (`16px`) for primary cards and modals; `rounded-xl` (`12px`) for sub-cards and inputs.
-- **Borders:** Subtle hairline borders: `border border-slate-200/90` or `border border-amber-900/10`.
-- **Shadows:** Subtle modern depth: `shadow-2xs` for cards, `shadow-xl` for overlays and modals.
-- **Touch Target Minimum:** All interactive buttons on mobile and desktop have at least `h-7 px-2.5` to `h-10 px-4` with cursor pointer.
-
----
-
-## 5. Component Standards
-
-### Buttons
-- **Primary:** `bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl px-4 py-2 text-xs transition-all shadow-xs`
-- **Secondary:** `bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 font-bold rounded-xl px-3 py-1.5 text-xs transition-all shadow-2xs`
-- **Danger:** `text-slate-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors`
-
-### Modals & Dialogs
-- Backdrop: `fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto`
-- Shell: `bg-[#FFFDF7] w-full max-w-2xl rounded-2xl shadow-2xl border border-amber-900/15 overflow-hidden my-8`
-- Header: Sticky white header with close button `X` and descriptive subtitle.
-
-### Print Layout (Sheet Mode)
-- **Sheet Header:** Displayed only during `window.print()` with Institute name and date.
-- **Print Hidden:** Navigation bars, action buttons, modals, and edit/delete icons are marked with `print:hidden`.
-- **Page Breaks:** Cards styled with clean borders and page-break avoiding CSS for crisp PDF export.
+### การนำ Pumpkin ไปใช้งานในระบบ Web App:
+1. **หน้าเข้าสู่ระบบ (Login / Welcome):**
+   - รูปภาพห้องทดลองวิจัย (`pumpkin_lab.jpg`) สร้างความรู้สึกอบอุ่น เป็นกันเองตั้งแต่ก้าวแรกที่เข้ามา
+2. **Navbar & Brand Badge:**
+   - มินิไอคอนใบหน้าน้อง Pumpkin ยิ้มหวานข้างชื่อ "MaxUp Academy"
+3. **Empty States (เมื่อยังไม่มีข้อมูล):**
+   - *ทำการบ้านครบทุกข้อแล้ว:* ท่า **Pumpkin นอนหลับปุ๋ยบนเบาะม่วง** (`sleep`) พร้อมข้อความ *"เก่งมากครับน้อง! การบ้านส่งครบหมดแล้ว พักผ่อนให้สบายใจเลยนะ"*
+   - *ยังไม่มีประวัติคาบเรียน:* ท่า **Pumpkin อ่านหนังสือเตรียมสอน** (`study`) พร้อมข้อความ *"เริ่มบันทึกคาบเรียนเพื่อสะสมชั่วโมงและติดตามความรู้กันครับ"*
+   - *สอบผ่าน / ผลลัพธ์ยอดเยี่ยม:* ท่า **Pumpkin ถือใบประกาศ A+ กระโดดดีใจ** (`happy`)
+4. **Loading & Auth State:**
+   - ท่า **Pumpkin กำลังคิด / หลอดไฟปิ๊งแวบ** (`thinking`) หมุนนุ่มนวลระหว่างรอข้อมูล
 
 ---
 
-## 6. Payment & Verification Flow
-- **QR Code Generation:** Pure client-side generation using Thai PromptPay standard CRC16 payload.
-- **Price Input:** Supports arbitrary custom amounts (`step="any"`, e.g., 375 THB for 1.5 hrs) with fast preset chips (`250`, `375`, `500`, `750`, `1000`).
-- **Slip Upload:** Image compression and Base64 storage with offline `localStorage` fallback and Firestore persistence.
-- **Status Badges:** Clearly differentiated `รอชำระเงิน` (slate/amber), `🔔 แนบสลิปแล้ว (รอตรวจ)` (amber pulse), `✓ ชำระแล้ว` (emerald).
+## 5. UI Component Pattern Standards
+- **Buttons:**
+  - *Primary Action (ปุ่มเด่นสุด):* พื้นหลังส้ม `#FF7A00` ข้อความสีขาวหรือน้ำเงินเข้ม โค้งมน `rounded-xl`
+  - *Secondary Action (ปุ่มรอง):* พื้นหลังน้ำเงินเข้ม `#0B48A1` หรือสีกรมท่า `#001B48`
+  - *Ghost / Outline:* พื้นหลังขาว ขอบน้ำเงิน/เทา ข้อความน้ำเงิน `#0B48A1`
+- **Spotlight Cards:**
+  - ใช้ Spotlight แสงสีทอง `rgba(251, 191, 36, 0.15)` หรือแสงสีน้ำเงิน `rgba(11, 72, 161, 0.12)`
+- **No Harsh Pitch Black:**
+  - เลี่ยงการใช้สี `bg-black` หรือ `bg-slate-950` ให้ใช้ `bg-[#001B48]` หรือ `bg-[#072B61]` เพื่อรักษาอัตลักษณ์ CI ตลอดทั้งเว็บไซต์

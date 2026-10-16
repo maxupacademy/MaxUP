@@ -75,15 +75,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Brand Logo */}
+        {/* Left: Brand Logo & Mascot */}
         <div
           onClick={() => setCurrentTab(currentUserRole === 'admin' ? 'overview' : 'home')}
-          className="flex items-center gap-2 shrink-0 cursor-pointer"
+          className="flex items-center gap-2 shrink-0 cursor-pointer group"
         >
           <MaxUpLogo size="sm" showSubtitle={false} />
-          <span className="hidden lg:inline-block text-[11px] font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200/80">
-            TutorHub
+          <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-black text-[#0B48A1] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+            <span className="w-2 h-2 rounded-full bg-[#FF7A00]" />
+            Academy
           </span>
+          {/* Mini Pumpkin Mascot Avatar */}
+          <div
+            className="w-7 h-7 rounded-full overflow-hidden border border-amber-300 shadow-2xs shrink-0 transition-transform group-hover:scale-110"
+            style={{
+              backgroundImage: 'url(/mascot/pumpkin_poses.png)',
+              backgroundSize: '200% 200%',
+              backgroundPosition: '0% 0%',
+            }}
+            title="น้องพัมคิน (Pumpkin)"
+          />
         </div>
 
         {/* Center: 21st.dev Tubelight Animated Navigation Pills */}

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { SpotlightCard } from '../ui/SpotlightCard';
+import { NumberTicker } from '../ui/NumberTicker';
 import {
   Clock,
   BookOpen,
@@ -10,13 +13,13 @@ import {
   ChevronRight,
   Sparkles,
   KeyRound,
-  Plus,
   Check,
   ExternalLink,
   FolderOpen,
   CalendarDays,
   ChevronLeft,
   CreditCard,
+  Target,
 } from 'lucide-react';
 import { PromptPayPaymentModal } from '../payment/PromptPayPaymentModal';
 import { StudySchedulePlan } from '../../types';
@@ -44,6 +47,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     schedulePlans,
   } = useApp();
 
+  const { lang, tx } = useLanguage();
+
   const [expandedLessonId, setExpandedLessonId] = useState<string | null>(
     activeStudentLessons[0]?.id || null
   );
@@ -58,7 +63,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [enrollSuccess, setEnrollSuccess] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  // Lesson History Search & Course Filter state (for 'my-lessons' tab)
   const [lessonSearch, setLessonSearch] = useState('');
   const [lessonCourseFilter, setLessonCourseFilter] = useState('all');
 
@@ -71,10 +75,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
     try {
       const addedCourse = await enrollByPasscode(passcodeInput.trim());
-      setEnrollSuccess(`เพิ่มคอร์ส "${addedCourse.name}" เข้าโปรไฟล์เรียบร้อยแล้ว!`);
+      setEnrollSuccess(
+        tx(
+          `เพิ่มคอร์ส "${addedCourse.name}" เข้าโปรไฟล์เรียบร้อยแล้ว`,
+          `Added "${addedCourse.name}" to your courses`
+        )
+      );
       setPasscodeInput('');
     } catch (err: any) {
-      setEnrollError(err.message || 'รหัสเข้าคอร์สไม่ถูกต้อง');
+      setEnrollError(err.message || tx('รหัสเข้าคอร์สไม่ถูกต้อง', 'Invalid course passcode'));
     } finally {
       setIsEnrolling(false);
     }
@@ -82,7 +91,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Statistics
   const totalMinutes = activeStudentLessons.reduce((acc, l) => acc + (l.durationMinutes || 0), 0);
-  const totalHours = (totalMinutes / 60).toFixed(1);
+  const totalHoursNum = totalMinutes / 60;
+  const totalHours = totalHoursNum.toFixed(1);
   const totalLessons = activeStudentLessons.length;
 
   const totalSubtopics =
@@ -98,7 +108,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     .filter((l) => l.homework && l.homework.status === 'pending')
     .map((l) => l.homework!);
 
-  // Dedicated View for 'my-lessons' (ประวัติการเรียนรายบุคคล)
+  // Dedicated View for 'my-lessons'
   if (currentTab === 'my-lessons') {
     const query = lessonSearch.trim().toLowerCase();
     const filteredLessons = activeStudentLessons.filter((les) => {
@@ -123,58 +133,66 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Header Banner */}
-        <section className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <section className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-800 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 bg-white/10 px-3 py-1 rounded-full mb-2">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-slate-800 border border-slate-700 px-3 py-1 rounded-full mb-2">
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>สมุดประวัติการเรียนรายบุคคล</span>
+                <span>{tx('สมุดบันทึกการเรียน', 'Personal Study Log')}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                ประวัติการเรียนทั้งหมด (Lesson Logs)
+                {tx('ประวัติการเรียนทั้งหมด', 'Lesson History')}
               </h1>
-              <p className="text-blue-100 text-xs sm:text-sm mt-1">
-                บันทึกเนื้อหาการสอนรายคาบ คะแนนประเมิน และคำแนะนำจากอาจารย์แม็ก ของน้อง {activeStudent?.nickname} ({activeStudent?.fullName})
+              <p className="text-slate-300 text-xs sm:text-sm mt-1">
+                {tx(
+                  `บันทึกเนื้อหาการสอนและคำแนะนำจากครูแม็กของ ${activeStudent?.nickname}`,
+                  `Session notes and feedback from Coach Max for ${activeStudent?.nickname}`
+                )}
               </p>
             </div>
 
             <button
               onClick={() => setCurrentTab('home')}
-              className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-2xs"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto shrink-0"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>กลับหน้าแดชบอร์ด</span>
+              <span>{tx('กลับหน้าแดชบอร์ด', 'Back to Dashboard')}</span>
             </button>
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-white/15 max-w-sm">
-            <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
-              <span className="text-[11px] text-blue-200 block">จำนวนคาบทั้งหมด</span>
+          <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-slate-800 max-w-sm relative z-10">
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 text-center">
+              <span className="text-[11px] text-slate-400 block">
+                {tx('จำนวนคาบทั้งหมด', 'Total Sessions')}
+              </span>
               <span className="text-xl sm:text-2xl font-bold font-mono text-white">
-                {activeStudentLessons.length}
+                <NumberTicker value={activeStudentLessons.length} />
               </span>
-              <span className="text-[10px] text-blue-200 block">คาบเรียน</span>
             </div>
-            <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
-              <span className="text-[11px] text-blue-200 block">ชั่วโมงเรียนสะสม</span>
-              <span className="text-xl sm:text-2xl font-bold font-mono text-amber-300">
-                {totalHours}
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 text-center">
+              <span className="text-[11px] text-slate-400 block">
+                {tx('ชั่วโมงเรียนสะสม', 'Study Hours')}
               </span>
-              <span className="text-[10px] text-blue-200 block">ชั่วโมง</span>
+              <span className="text-xl sm:text-2xl font-bold font-mono text-amber-400">
+                <NumberTicker value={totalHoursNum} decimals={1} />
+              </span>
             </div>
           </div>
         </section>
 
         {/* Search & Filter Controls */}
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative flex-1 w-full">
             <input
               type="text"
-              placeholder="ค้นหาตามวันที่ เช่น 2026-10, หัวข้อ, หรือเนื้อหาการสอน..."
+              placeholder={tx(
+                'ค้นหาตามวันที่ หัวข้อ หรือเนื้อหาที่เรียน...',
+                'Search by date, topic, or lesson notes...'
+              )}
               value={lessonSearch}
               onChange={(e) => setLessonSearch(e.target.value)}
-              className="w-full bg-[#FFFDF7] border border-amber-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             />
             <BookOpen className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             {lessonSearch && (
@@ -191,9 +209,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <select
               value={lessonCourseFilter}
               onChange={(e) => setLessonCourseFilter(e.target.value)}
-              className="w-full sm:w-auto bg-[#FFFDF7] border border-amber-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs cursor-pointer"
+              className="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
             >
-              <option value="all">ทุกคอร์สวิชา ({courses.length})</option>
+              <option value="all">
+                {tx(`ทุกคอร์สเรียน (${courses.length})`, `All Courses (${courses.length})`)}
+              </option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -204,44 +224,48 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </div>
 
         {/* Full Lesson Timeline */}
-        <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+        <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-900" />
-              <span>บันทึกการเรียนตามลำดับเวลา</span>
+              <span>{tx('บันทึกการเรียนตามลำดับเวลา', 'Chronological Sessions')}</span>
             </h2>
             <span className="text-xs font-semibold text-slate-500">
-              พบ {filteredLessons.length} จาก {activeStudentLessons.length} คาบ
+              {tx(
+                `แสดง ${filteredLessons.length} จาก ${activeStudentLessons.length} คาบ`,
+                `Showing ${filteredLessons.length} of ${activeStudentLessons.length}`
+              )}
             </span>
           </div>
 
           {filteredLessons.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-amber-50/20 space-y-2">
-              <BookOpen className="w-10 h-10 text-amber-800/40 mx-auto" />
+            <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-slate-50/40 space-y-2">
+              <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-xs font-semibold text-slate-600">
-                {lessonSearch ? 'ไม่พบบันทึกคาบเรียนที่ตรงกับคำค้นหา' : 'ยังไม่มีประวัติบันทึกการเรียน'}
+                {lessonSearch
+                  ? tx('ไม่พบบันทึกคาบเรียนที่ตรงกับคำค้นหา', 'No matching sessions found')
+                  : tx('ยังไม่มีประวัติบันทึกการเรียน', 'No recorded sessions yet')}
               </p>
               {lessonSearch && (
                 <button
                   onClick={() => setLessonSearch('')}
                   className="text-xs text-blue-900 hover:underline cursor-pointer"
                 >
-                  ล้างคำค้นหา
+                  {tx('ล้างคำค้นหา', 'Clear search')}
                 </button>
               )}
             </div>
           ) : (
-            <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-blue-200">
+            <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
               {filteredLessons.map((les) => {
                 const isExpanded = expandedLessonId === les.id;
                 const durationHours = (les.durationMinutes / 60).toFixed(1);
 
                 return (
                   <div key={les.id} className="relative group">
-                    {/* Timeline dot */}
-                    <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-white border-4 border-blue-900 shadow-xs flex items-center justify-center" />
+                    <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-white border-4 border-slate-900 shadow-xs flex items-center justify-center" />
 
-                    <div className="bg-[#FFFDF7]/80 border border-amber-900/10 rounded-xl p-4 sm:p-5 transition-all hover:border-blue-400 space-y-3">
+                    <div className="bg-slate-50/60 border border-slate-200/90 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-300 space-y-3">
                       <div
                         onClick={() => setExpandedLessonId(isExpanded ? null : les.id)}
                         className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none"
@@ -253,7 +277,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </span>
                           <span className="text-slate-300">·</span>
                           <span className="text-xs text-slate-600 font-mono tabular-nums">
-                            {les.startTime}–{les.endTime} ({durationHours} ชม.)
+                            {les.startTime}–{les.endTime} ({durationHours} {tx('ชม.', 'h')})
                           </span>
                         </div>
 
@@ -266,15 +290,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
                       </div>
 
-                      {/* Content Detail */}
-                      <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white/70 p-3 rounded-lg border border-slate-100">
+                      <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
                         {les.contentDetail}
                       </p>
 
-                      {/* Covered Subtopics */}
                       {(les.subtopicIds || []).length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span className="text-slate-400 font-medium">หัวข้อที่สอน:</span>
+                          <span className="text-slate-400 font-medium">
+                            {tx('หัวข้อที่เรียน:', 'Topics:')}
+                          </span>
                           {(les.subtopicIds || []).map((subId) => {
                             let subName = subId;
                             activeSubject?.topics?.forEach((t) => {
@@ -293,7 +317,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
                       )}
 
-                      {/* Action buttons: Handwritten solution & Google Drive */}
                       {(les.handwrittenSolutionUrl || les.googleDriveUrl) && (
                         <div className="flex items-center gap-2 flex-wrap pt-1">
                           {les.handwrittenSolutionUrl && (
@@ -301,9 +324,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               href={les.handwrittenSolutionUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-xl transition-all"
                             >
-                              <span>✍️ ดูเฉลยลายมือ</span>
+                              <span>✍️ {tx('ดูเฉลยลายมือ', 'Handwritten Notes')}</span>
                               <ExternalLink className="w-3 h-3 text-amber-700" />
                             </a>
                           )}
@@ -312,24 +335,25 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               href={les.googleDriveUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1.5 rounded-xl transition-all shadow-2xs"
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1.5 rounded-xl transition-all"
                             >
-                              <span>📂 ชีทเรียน (Google Drive)</span>
+                              <span>📂 {tx('เอกสารประกอบการเรียน', 'Study Sheet')}</span>
                               <ExternalLink className="w-3 h-3 text-emerald-700" />
                             </a>
                           )}
                         </div>
                       )}
 
-                      {/* Expanded details (Teacher Note & Homework) */}
                       {isExpanded && (
-                        <div className="pt-2 border-t border-amber-100 space-y-3 text-xs animate-in fade-in duration-150">
+                        <div className="pt-2 border-t border-slate-200/70 space-y-3 text-xs animate-in fade-in duration-150">
                           {les.teacherNote && (
                             <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80 text-slate-700 space-y-1">
                               <strong className="text-amber-900 block font-bold">
-                                💬 คำแนะนำจากอาจารย์แม็ก:
+                                💬 {tx('คำแนะนำจากครูแม็ก:', 'Coach Max Note:')}
                               </strong>
-                              <p className="italic text-slate-800 leading-relaxed">{les.teacherNote}</p>
+                              <p className="italic text-slate-800 leading-relaxed">
+                                {les.teacherNote}
+                              </p>
                             </div>
                           )}
 
@@ -338,7 +362,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-slate-900">
-                                    การบ้าน: {les.homework.title}
+                                    {tx('การบ้าน:', 'Homework:')} {les.homework.title}
                                   </span>
                                   <span
                                     className={`text-[11px] px-2 py-0.5 rounded font-medium ${
@@ -348,8 +372,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                     }`}
                                   >
                                     {les.homework.status === 'submitted'
-                                      ? 'ส่งเรียบร้อย ✅'
-                                      : 'ยังไม่ได้ส่ง ⏳'}
+                                      ? tx('ส่งแล้ว ✅', 'Submitted ✅')
+                                      : tx('รอส่ง ⏳', 'Pending ⏳')}
                                   </span>
                                 </div>
 
@@ -359,18 +383,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                       updateHomeworkStatus(
                                         les.homework!.id,
                                         'submitted',
-                                        'ส่งผ่านเว็บแล้ว'
+                                        tx('ส่งผ่านเว็บแล้ว', 'Submitted via web')
                                       )
                                     }
-                                    className="text-[11px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors"
+                                    className="text-[11px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors cursor-pointer"
                                   >
-                                    ติ๊กส่งการบ้านแล้ว
+                                    {tx('ทำเครื่องหมายว่าส่งแล้ว', 'Mark as Submitted')}
                                   </button>
                                 )}
                               </div>
                               <p className="text-slate-600">{les.homework.description}</p>
                               <div className="text-[11px] text-slate-500 font-mono">
-                                กำหนดส่ง: {les.homework.dueDate}
+                                {tx('กำหนดส่ง:', 'Due:')} {les.homework.dueDate}
                               </div>
                             </div>
                           )}
@@ -389,129 +413,161 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Student Mascot Header Banner */}
-      <section className="bg-gradient-to-br from-amber-50 via-[#FFF9EE] to-blue-50 border border-amber-900/15 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
+      {/* 21st.dev Student Hero Banner */}
+      <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-800">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.35) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="space-y-3 max-w-xl text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 bg-amber-100/80 px-3 py-1 rounded-lg">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>ยินดีต้อนรับสู่ MaxUp TutorHub</span>
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{tx('แดชบอร์ดนักเรียน', 'Student Learning Hub')}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              สู้ๆ นะครับ {activeStudent?.nickname}! 🚀
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {tx(`สวัสดีครับ ${activeStudent?.nickname}! 🚀`, `Welcome back, ${activeStudent?.nickname}! 🚀`)}
             </h1>
 
-            <p className="text-slate-600 text-sm leading-relaxed">
-              เป้าหมาย: <strong className="text-blue-900">{activeStudent?.targetFaculty || activeStudent?.targetExam}</strong>{' '}
-              ({activeStudent?.school}) ความคืบหน้าในวิชา {activeSubject.name} สำเร็จไปแล้ว{' '}
-              <strong className="text-amber-700">{syllabusPercent}%</strong>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              {tx('เป้าหมาย:', 'Target:')}{' '}
+              <strong className="text-amber-300">
+                {activeStudent?.targetFaculty || activeStudent?.targetExam || '-'}
+              </strong>{' '}
+              · {tx(`ความคืบหน้าวิชา ${activeSubject.name}`, `${activeSubject.name} mastery`)}{' '}
+              <strong className="text-emerald-400">{syllabusPercent}%</strong>
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-2 justify-center md:justify-start">
               <button
                 onClick={() => setCurrentTab('my-lessons')}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
+                className="px-3.5 py-2 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
               >
-                ประวัติเรียน ({totalLessons} คาบ)
+                {tx(`ประวัติเรียน (${totalLessons})`, `History (${totalLessons})`)}
               </button>
               <button
                 onClick={() => setCurrentTab('my-syllabus')}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs transition-all"
+                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                สารบัญคอร์ส ({completedCount}/{totalSubtopics})
+                {tx(`สารบัญ (${completedCount}/${totalSubtopics})`, `Syllabus (${completedCount}/${totalSubtopics})`)}
               </button>
               <button
                 onClick={() => setCurrentTab('schedule')}
-                className="px-3 py-1.5 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                📅 ตารางเรียนล่วงหน้า
+                {tx('ตารางเรียน', 'Schedule')}
               </button>
               <button
                 onClick={() => setCurrentTab('my-materials')}
-                className="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                📥 โหลดไฟล์เรียน
+                {tx('เอกสารเรียน', 'Materials')}
               </button>
               <button
                 onClick={() => setCurrentTab('my-videos')}
-                className="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                ▶️ วิดีโอ YouTube
+                {tx('วิดีโอทบทวน', 'Videos')}
               </button>
               <button
                 onClick={() => setCurrentTab('my-homework')}
-                className="px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
               >
-                📝 การบ้าน & ส่งงาน
+                {tx('การบ้าน', 'Homework')}
               </button>
             </div>
           </div>
 
-          {/* Student Goal & Encouragement Badge */}
-          <div className="flex-shrink-0 bg-white/90 border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col items-center justify-center text-center min-w-[200px]">
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-800 flex items-center justify-center font-bold text-xl mb-2">
-              🎯
+          {/* Student Goal Spotlight Badge */}
+          <SpotlightCard
+            spotlightColor="rgba(251, 191, 36, 0.2)"
+            className="shrink-0 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col items-center justify-center text-center min-w-[210px]"
+          >
+            <div className="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-300 flex items-center justify-center mb-2">
+              <Target className="w-6 h-6" />
             </div>
-            <div className="text-xs font-bold text-slate-800">
-              เป้าหมาย: {activeStudent?.targetExam || 'เตรียมสอบ A-Level / ม.ปลาย'}
+            <div className="text-xs font-bold text-white">
+              {activeStudent?.targetExam || tx('เตรียมสอบเข้า', 'Exam Preparation')}
             </div>
-            <div className="text-[11px] text-slate-500 mt-1 max-w-[180px]">
+            <div className="text-[11px] text-slate-400 mt-1 max-w-[180px]">
               {activeStudent?.targetFaculty
-                ? `คณะ ${activeStudent.targetFaculty}`
-                : `สะสมชั่วโมงเรียนไปแล้ว ${totalHours} ชม.`}
+                ? activeStudent.targetFaculty
+                : tx(`สะสมชั่วโมงเรียน ${totalHours} ชม.`, `${totalHours} hours completed`)}
+            </div>
+          </SpotlightCard>
+        </div>
+      </section>
+
+      {/* 21st.dev Quantitative Metric Cards with Spotlight & NumberTicker */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <SpotlightCard
+          spotlightColor="rgba(245, 158, 11, 0.12)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-amber-300"
+        >
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-xs font-semibold">{tx('ชั่วโมงเรียนสะสม', 'Study Hours')}</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-amber-600" />
             </div>
           </div>
-        </div>
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={totalHoursNum} decimals={1} />
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            <span>{tx('ชั่วโมงเรียนทั้งหมด', 'Total hours logged')}</span>
+          </div>
+        </SpotlightCard>
+
+        <SpotlightCard
+          spotlightColor="rgba(30, 58, 138, 0.1)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-blue-300"
+        >
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-xs font-semibold">{tx('จำนวนคาบที่เรียน', 'Sessions Attended')}</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-blue-900" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={totalLessons} />
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            <span>{tx('คาบเรียนที่บันทึกแล้ว', 'Recorded sessions')}</span>
+          </div>
+        </SpotlightCard>
+
+        <SpotlightCard
+          spotlightColor="rgba(16, 185, 129, 0.12)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300"
+        >
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <span className="text-xs font-semibold">{tx('สารบัญที่ครอบคลุม', 'Syllabus Mastery')}</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={syllabusPercent} suffix="%" />
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            <span>
+              {tx(
+                `${completedCount} จาก ${totalSubtopics} หัวข้อย่อย`,
+                `${completedCount} of ${totalSubtopics} subtopics`
+              )}
+            </span>
+          </div>
+        </SpotlightCard>
       </section>
 
-      {/* Quantitative Metric Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">ชั่วโมงเรียนสะสม</span>
-            <Clock className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {totalHours}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>ชั่วโมงกับอาจารย์แม็ก</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">จำนวนคาบที่เรียน</span>
-            <BookOpen className="w-4 h-4 text-blue-900" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {totalLessons}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>คาบเรียนเข้มข้น</span>
-          </div>
-        </div>
-
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">สารบัญที่ครอบคลุม</span>
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {syllabusPercent}%
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>{completedCount} จาก {totalSubtopics} หัวข้อย่อย</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Split: Lessons Timeline + Pending Homework / Syllabus Checklist */}
+      {/* Main Content Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Upcoming Lesson Calendar & Lesson History Timeline */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Student Dashboard Calendar & Planned Syllabus Topics */}
           {(() => {
             const myPlans = schedulePlans
               .filter((plan) => {
@@ -534,98 +590,107 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
             const todayStr = new Date().toISOString().split('T')[0];
 
-            const focusedDate = selectedCalDate || myPlans.find((p) => p.status === 'upcoming')?.date || todayStr;
+            const focusedDate =
+              selectedCalDate || myPlans.find((p) => p.status === 'upcoming')?.date || todayStr;
             const focusedPlans = myPlans.filter((p) => p.date === focusedDate);
 
+            const thaiMonths = [
+              'มกราคม',
+              'กุมภาพันธ์',
+              'มีนาคม',
+              'เมษายน',
+              'พฤษภาคม',
+              'มิถุนายน',
+              'กรกฎาคม',
+              'สิงหาคม',
+              'กันยายน',
+              'ตุลาคม',
+              'พฤศจิกายน',
+              'ธันวาคม',
+            ];
+            const enMonths = [
+              'January',
+              'February',
+              'March',
+              'April',
+              'May',
+              'June',
+              'July',
+              'August',
+              'September',
+              'October',
+              'November',
+              'December',
+            ];
+
             return (
-              <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+              <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
                     <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-md mb-1">
                       <CalendarDays className="w-3.5 h-3.5 text-blue-700" />
-                      <span>ปฏิทินตารางเรียน & แผนการสอน (Lesson Calendar)</span>
+                      <span>{tx('ปฏิทินตารางเรียน', 'Study Calendar')}</span>
                     </div>
                     <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                      ตารางเรียนล่วงหน้า & หัวข้อที่ต้องเตรียมตัว
+                      {tx('ตารางเรียนล่วงหน้าและหัวข้อที่เตรียมสอน', 'Upcoming Schedule & Planned Topics')}
                     </h2>
-                    <p className="text-xs text-slate-500">
-                      กำหนดการเรียนและหัวข้อ Syllabus ที่คุณครู Max วางแผนจะสอนในแต่ละคาบ
-                    </p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60">
-                      ตามแผน {upcomingCount} คาบ
+                      {tx(`ตามแผน ${upcomingCount} คาบ`, `${upcomingCount} Upcoming`)}
                     </span>
                     <button
                       onClick={() => setCurrentTab('schedule')}
-                      className="px-3 py-1 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                      className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
                     >
-                      <span>ดูเต็มจอ</span>
+                      <span>{tx('ดูเต็มจอ', 'Full View')}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                {/* Calendar Layout: Month Grid + Scheduled Slot Details */}
+                {/* Calendar Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                   {/* Left Column: Mini Month Calendar Grid */}
-                  <div className="md:col-span-6 bg-[#FFFDF7] border border-amber-200/70 rounded-2xl p-4 space-y-3">
-                    {/* Month Nav */}
+                  <div className="md:col-span-6 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <button
                         onClick={() => setCalViewDate(new Date(calYear, calMonth - 1, 1))}
-                        className="p-1 rounded-lg hover:bg-amber-100 text-slate-600 transition-colors cursor-pointer"
-                        title="เดือนก่อนหน้า"
+                        className="p-1 rounded-lg hover:bg-slate-200/70 text-slate-600 transition-colors cursor-pointer"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
 
                       <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                        <Calendar className="w-3.5 h-3.5 text-amber-600" />
                         <span>
-                          {[
-                            'มกราคม',
-                            'กุมภาพันธ์',
-                            'มีนาคม',
-                            'เมษายน',
-                            'พฤษภาคม',
-                            'มิถุนายน',
-                            'กรกฎาคม',
-                            'สิงหาคม',
-                            'กันยายน',
-                            'ตุลาคม',
-                            'พฤศจิกายน',
-                            'ธันวาคม',
-                          ][calMonth]}{' '}
-                          {calYear + 543}
+                          {lang === 'th'
+                            ? `${thaiMonths[calMonth]} ${calYear + 543}`
+                            : `${enMonths[calMonth]} ${calYear}`}
                         </span>
                       </div>
 
                       <button
                         onClick={() => setCalViewDate(new Date(calYear, calMonth + 1, 1))}
-                        className="p-1 rounded-lg hover:bg-amber-100 text-slate-600 transition-colors cursor-pointer"
-                        title="เดือนถัดไป"
+                        className="p-1 rounded-lg hover:bg-slate-200/70 text-slate-600 transition-colors cursor-pointer"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
 
-                    {/* Weekday headers */}
-                    <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-500 pb-1 border-b border-amber-100">
-                      <span className="text-red-500">อา.</span>
-                      <span>จ.</span>
-                      <span>อ.</span>
-                      <span>พ.</span>
-                      <span>พฤ.</span>
-                      <span>ศ.</span>
-                      <span className="text-blue-600">ส.</span>
+                    <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-500 pb-1 border-b border-slate-200/70">
+                      <span className="text-red-500">{tx('อา.', 'Su')}</span>
+                      <span>{tx('จ.', 'Mo')}</span>
+                      <span>{tx('อ.', 'Tu')}</span>
+                      <span>{tx('พ.', 'We')}</span>
+                      <span>{tx('พฤ.', 'Th')}</span>
+                      <span>{tx('ศ.', 'Fr')}</span>
+                      <span className="text-blue-600">{tx('ส.', 'Sa')}</span>
                     </div>
 
-                    {/* Days Grid */}
                     <div className="grid grid-cols-7 gap-1">
-                      {/* Leading days from previous month */}
                       {Array.from({ length: firstDayIdx }).map((_, idx) => {
                         const dayNum = daysInPrevMonth - firstDayIdx + 1 + idx;
                         return (
@@ -638,7 +703,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         );
                       })}
 
-                      {/* Current month days */}
                       {Array.from({ length: daysInMonth }).map((_, idx) => {
                         const day = idx + 1;
                         const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -654,19 +718,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             onClick={() => setSelectedCalDate(dateStr)}
                             className={`h-8 rounded-lg text-xs font-semibold flex flex-col items-center justify-center relative transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-blue-900 text-white shadow-2xs ring-2 ring-amber-400'
+                                ? 'bg-slate-900 text-white shadow-2xs ring-2 ring-amber-400'
                                 : isToday
                                 ? 'bg-amber-100 text-amber-950 font-bold'
                                 : hasPlans
                                 ? 'bg-blue-50 text-blue-900 hover:bg-blue-100 font-bold'
-                                : 'text-slate-700 hover:bg-amber-50/80'
+                                : 'text-slate-700 hover:bg-slate-200/50'
                             }`}
                           >
                             <span>{day}</span>
                             {hasPlans && (
                               <span
                                 className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
-                                  isSelected ? 'bg-amber-300' : 'bg-blue-600'
+                                  isSelected ? 'bg-amber-400' : 'bg-blue-600'
                                 }`}
                               />
                             )}
@@ -675,23 +739,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       })}
                     </div>
 
-                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1 border-t border-amber-100">
+                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200/70">
                       <span className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                        <span>วันที่มีคาบเรียน</span>
+                        <span>{tx('วันที่มีคาบเรียน', 'Scheduled day')}</span>
                       </span>
                       {selectedCalDate && (
                         <button
                           onClick={() => setSelectedCalDate(null)}
                           className="text-blue-900 hover:underline cursor-pointer"
                         >
-                          แสดงทั้งหมด
+                          {tx('แสดงทั้งหมด', 'Show all')}
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Right Column: Scheduled Lesson Slot Details & Syllabus Topics */}
+                  {/* Right Column: Scheduled Lesson Slot Details */}
                   <div className="md:col-span-6 space-y-3 flex flex-col justify-between">
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
@@ -699,30 +763,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           <Clock className="w-3.5 h-3.5 text-blue-900" />
                           <span>
                             {selectedCalDate
-                              ? `คาบเรียนวันที่ ${new Date(selectedCalDate).toLocaleDateString('th-TH', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}`
-                              : 'คาบเรียนตามแผนที่กำลังจะถึง'}
+                              ? tx(`ตารางวันที่ ${selectedCalDate}`, `Schedule for ${selectedCalDate}`)
+                              : tx('คาบเรียนที่กำลังจะถึง', 'Upcoming Sessions')}
                           </span>
                         </span>
                         <span className="text-[11px] text-slate-500">
-                          {selectedCalDate ? `${focusedPlans.length} คาบ` : `${myPlans.length} คาบทั้งหมด`}
+                          {selectedCalDate
+                            ? tx(`${focusedPlans.length} คาบ`, `${focusedPlans.length} slots`)
+                            : tx(`${myPlans.length} คาบทั้งหมด`, `${myPlans.length} total`)}
                         </span>
                       </div>
 
-                      {/* Display Focused Plans or Upcoming Plans */}
                       {(selectedCalDate ? focusedPlans : myPlans.slice(0, 3)).length === 0 ? (
                         <div className="p-6 bg-slate-50/70 border border-dashed border-slate-200 rounded-xl text-center space-y-2">
-                          <div className="text-2xl">📅</div>
                           <p className="text-xs text-slate-600 font-semibold">
                             {selectedCalDate
-                              ? 'ไม่มีคาบเรียนในวันที่เลือก'
-                              : 'ยังไม่มีตารางเรียนที่กำหนดไว้'}
-                          </p>
-                          <p className="text-[11px] text-slate-500">
-                            คุณครู Max จะอัปเดตวันเวลาและหัวข้อที่จะสอนล่วงหน้าให้น้องทราบที่นี่ครับ
+                              ? tx('ไม่มีคาบเรียนในวันที่เลือก', 'No sessions on selected date')
+                              : tx('ยังไม่มีตารางเรียนที่กำหนดไว้', 'No upcoming sessions scheduled')}
                           </p>
                         </div>
                       ) : (
@@ -731,10 +788,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             const isDone = plan.status === 'completed';
                             const course = courses.find((c) => c.id === plan.courseId);
 
-                            // Find planned subtopics from course
-                            const allCourseSubtopics = (course || activeSubject)?.topics?.flatMap(
-                              (t) => t.subtopics
-                            ) || [];
+                            const allCourseSubtopics =
+                              (course || activeSubject)?.topics?.flatMap((t) => t.subtopics) || [];
                             const matchedSubtopics = allCourseSubtopics.filter((sub) =>
                               plan.plannedSubtopicIds?.includes(sub.id)
                             );
@@ -745,55 +800,51 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 className={`p-3.5 rounded-xl border transition-all space-y-2 ${
                                   isDone
                                     ? 'bg-emerald-50/30 border-emerald-200'
-                                    : 'bg-[#FFFDF7] border-amber-200/80 hover:border-amber-400'
+                                    : 'bg-slate-50/70 border-slate-200 hover:border-amber-400'
                                 }`}
                               >
-                                {/* Top Badge: Date, Time & Status */}
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-900 border border-blue-200 flex items-center gap-1">
                                       <Calendar className="w-3 h-3 text-blue-700" />
-                                      {new Date(plan.date).toLocaleDateString('th-TH', {
-                                        weekday: 'short',
-                                        day: 'numeric',
-                                        month: 'short',
-                                      })}
+                                      {plan.date}
                                     </span>
                                     <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200 flex items-center gap-1">
                                       <Clock className="w-3 h-3 text-amber-700" />
-                                      {plan.startTime} - {plan.endTime} ({plan.durationHours} ชม.)
+                                      {plan.startTime} - {plan.endTime} ({plan.durationHours}{' '}
+                                      {tx('ชม.', 'h')})
                                     </span>
                                   </div>
 
                                   <span
-                                    className={`px-2 py-0.2 rounded-full text-[10px] font-bold shrink-0 ${
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                                       isDone
                                         ? 'bg-emerald-100 text-emerald-800'
                                         : 'bg-amber-100 text-amber-900'
                                     }`}
                                   >
-                                    {isDone ? '✓ เรียนแล้ว' : '⏳ ตามแผน'}
+                                    {isDone
+                                      ? tx('✓ เรียนแล้ว', '✓ Completed')
+                                      : tx('⏳ ตามแผน', '⏳ Planned')}
                                   </span>
                                 </div>
 
-                                {/* Title */}
                                 <div>
                                   <h4 className="text-xs sm:text-sm font-bold text-slate-900">
                                     {plan.title}
                                   </h4>
                                   {course && (
                                     <span className="text-[10px] text-slate-500 font-medium">
-                                      วิชา: {course.name}
+                                      {course.name}
                                     </span>
                                   )}
                                 </div>
 
-                                {/* Assigned Syllabus Topics from Active Course */}
                                 {(matchedSubtopics.length > 0 || plan.plannedContentDescription) && (
-                                  <div className="bg-white border border-amber-100 rounded-lg p-2 space-y-1">
+                                  <div className="bg-white border border-slate-200/80 rounded-lg p-2 space-y-1">
                                     <div className="text-[10px] font-bold text-blue-900 flex items-center gap-1">
                                       <BookOpen className="w-3 h-3 text-blue-800" />
-                                      <span>หัวข้อ Syllabus ที่ต้องเตรียมตัว:</span>
+                                      <span>{tx('หัวข้อที่เตรียมเรียน:', 'Planned Topics:')}</span>
                                     </div>
 
                                     {matchedSubtopics.length > 0 && (
@@ -818,45 +869,42 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                   </div>
                                 )}
 
-                                {/* Preparation Note */}
                                 {plan.preparationNote && (
                                   <div className="text-[11px] text-amber-900 bg-amber-50/90 border border-amber-200/60 rounded-lg p-2 flex items-start gap-1.5">
                                     <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                                     <div>
                                       <span className="font-semibold block text-[10px]">
-                                        เตือนเตรียมตัวก่อนเข้าเรียน:
+                                        {tx('การเตรียมตัว:', 'Preparation:')}
                                       </span>
                                       <span>{plan.preparationNote}</span>
                                     </div>
                                   </div>
                                 )}
 
-                                {/* Google Drive Study Material Link */}
                                 {plan.googleDriveUrl && (
                                   <div>
                                     <a
                                       href={plan.googleDriveUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                     >
                                       <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
-                                      <span>เปิดเอกสารชีทเรียนใน Google Drive</span>
+                                      <span>{tx('เปิดเอกสารประกอบการเรียน', 'Open Study Sheet')}</span>
                                       <ExternalLink className="w-3 h-3 text-emerald-500 ml-0.5" />
                                     </a>
                                   </div>
                                 )}
 
-                                {/* Payment & PromptPay Strip */}
                                 {plan.priceAmount !== undefined && plan.priceAmount > 0 && (
-                                  <div className="flex items-center justify-between p-2.5 bg-gradient-to-r from-blue-50/70 to-amber-50/50 border border-blue-200/80 rounded-xl text-xs gap-2">
+                                  <div className="flex items-center justify-between p-2.5 bg-blue-50/50 border border-blue-200/80 rounded-xl text-xs gap-2">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <CreditCard className="w-3.5 h-3.5 text-blue-900 shrink-0" />
                                       <span className="font-bold text-slate-900 font-mono text-xs">
                                         ฿{plan.priceAmount.toLocaleString()}
                                       </span>
                                       <span
-                                        className={`px-2 py-0.2 rounded-full text-[10px] font-bold shrink-0 ${
+                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                                           plan.paymentStatus === 'paid'
                                             ? 'bg-emerald-100 text-emerald-800'
                                             : plan.paymentStatus === 'slip_uploaded'
@@ -865,10 +913,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                         }`}
                                       >
                                         {plan.paymentStatus === 'paid'
-                                          ? '✓ ชำระแล้ว'
+                                          ? tx('✓ ชำระแล้ว', '✓ Paid')
                                           : plan.paymentStatus === 'slip_uploaded'
-                                          ? '🔔 แนบสลิปแล้ว (รอครูตรวจ)'
-                                          : 'รอชำระเงิน'}
+                                          ? tx('🔔 รอครูตรวจสลิป', '🔔 Verifying Slip')
+                                          : tx('รอชำระเงิน', 'Unpaid')}
                                       </span>
                                     </div>
 
@@ -878,13 +926,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                         setSelectedPaymentPlan(plan);
                                         setIsPaymentModalOpen(true);
                                       }}
-                                      className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0 flex items-center gap-1"
+                                      className="px-2.5 py-1 text-[11px] font-bold text-blue-900 hover:text-white bg-white hover:bg-blue-900 border border-blue-200 rounded-lg transition-all cursor-pointer shrink-0"
                                     >
                                       {plan.paymentStatus === 'paid'
-                                        ? 'ดูสลิปที่ยืนยันแล้ว'
+                                        ? tx('ดูสลิป', 'View Slip')
                                         : plan.paymentStatus === 'slip_uploaded'
-                                        ? 'ดูสลิป / ส่งใหม่'
-                                        : 'สแกน QR จ่าย / แนบสลิป'}
+                                        ? tx('แก้ไขสลิป', 'Update Slip')
+                                        : tx('ชำระเงิน / แนบสลิป', 'Pay / Attach Slip')}
                                     </button>
                                   </div>
                                 )}
@@ -898,9 +946,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     <div className="pt-2 border-t border-slate-100">
                       <button
                         onClick={() => setCurrentTab('schedule')}
-                        className="w-full py-2 text-center text-xs font-bold text-blue-900 hover:text-blue-800 bg-blue-50/60 hover:bg-blue-100/60 border border-blue-200/60 rounded-xl transition-all cursor-pointer"
+                        className="w-full py-2 text-center text-xs font-bold text-slate-800 hover:text-slate-950 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-all cursor-pointer"
                       >
-                        เปิดดูตารางเรียนทั้งหมดแบบเต็มจอ (Schedule Planner) →
+                        {tx('ดูตารางเรียนทั้งหมด →', 'Open Full Schedule →')}
                       </button>
                     </div>
                   </div>
@@ -909,55 +957,65 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             );
           })()}
 
-          {/* Recent Lesson Logs (Showing latest 3 lessons with link to view full history) */}
-          <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+          {/* Recent Lesson Logs */}
+          <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-slate-900">คาบเรียนล่าสุด (Recent Lessons)</h2>
-                <p className="text-xs text-slate-500">สรุปเนื้อหาและคำแนะนำ 3 คาบล่าสุด</p>
+                <h2 className="text-base font-bold text-slate-900">
+                  {tx('คาบเรียนล่าสุด', 'Recent Sessions')}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {tx('สรุปเนื้อหาและคำแนะนำ 3 คาบล่าสุด', 'Summary and feedback from your latest 3 sessions')}
+                </p>
               </div>
               {activeStudentLessons.length > 0 && (
                 <button
                   onClick={() => setCurrentTab('my-lessons')}
-                  className="text-xs font-bold text-blue-900 hover:text-blue-700 hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-xs font-bold text-blue-900 hover:text-blue-700 cursor-pointer flex items-center gap-1"
                 >
-                  <span>ดูทั้งหมด ({activeStudentLessons.length} คาบ)</span>
+                  <span>
+                    {tx(
+                      `ดูทั้งหมด (${activeStudentLessons.length})`,
+                      `View All (${activeStudentLessons.length})`
+                    )}
+                  </span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
             {activeStudentLessons.length === 0 ? (
-              <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl bg-amber-50/20">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-2">
+              <div className="text-center py-10 border border-dashed border-slate-200 rounded-xl bg-slate-50/40">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-2">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">ยังไม่มีบันทึกคาบเรียนสำหรับคุณ</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {tx('ยังไม่มีบันทึกคาบเรียน', 'No recorded sessions yet')}
+                </p>
               </div>
             ) : (
-              <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-amber-200">
+              <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
                 {activeStudentLessons.slice(0, 3).map((les) => {
                   const isExpanded = expandedLessonId === les.id;
                   const durationHours = (les.durationMinutes / 60).toFixed(1);
 
                   return (
                     <div key={les.id} className="relative group">
-                      {/* Timeline dot */}
-                      <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-white border-4 border-amber-600 shadow-xs flex items-center justify-center" />
+                      <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full bg-white border-4 border-slate-900 shadow-xs flex items-center justify-center" />
 
-                      <div className="bg-[#FFFDF7]/70 border border-amber-900/10 rounded-xl p-4 transition-all hover:border-amber-400 space-y-2.5">
+                      <div className="bg-slate-50/60 border border-slate-200/90 rounded-2xl p-4 transition-all hover:border-slate-300 space-y-2.5">
                         <div
                           onClick={() => setExpandedLessonId(isExpanded ? null : les.id)}
                           className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-slate-900 font-mono tabular-nums flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                              <Calendar className="w-3.5 h-3.5 text-amber-600" />
                               {les.lessonDate}
                             </span>
                             <span className="text-slate-300">·</span>
                             <span className="text-xs text-slate-600 font-mono tabular-nums">
-                              {les.startTime}–{les.endTime} ({durationHours} ชม.)
+                              {les.startTime}–{les.endTime} ({durationHours} {tx('ชม.', 'h')})
                             </span>
                           </div>
 
@@ -970,7 +1028,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </div>
                         </div>
 
-                        {/* Covered Subtopics */}
                         {(les.subtopicIds || []).length > 0 && (
                           <div className="flex flex-wrap items-center gap-1 text-xs">
                             {(les.subtopicIds || []).map((subId) => {
@@ -982,7 +1039,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               return (
                                 <span
                                   key={subId}
-                                  className="bg-blue-50 text-blue-900 border border-blue-200/60 px-2 py-0.5 rounded text-[11px]"
+                                  className="bg-blue-50 text-blue-900 border border-blue-200/60 px-2 py-0.5 rounded-md text-[11px] font-medium"
                                 >
                                   {subName}
                                 </span>
@@ -991,12 +1048,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </div>
                         )}
 
-                        {/* Content Detail */}
-                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-100">
+                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
                           {les.contentDetail}
                         </p>
 
-                        {/* Handwritten Solution & Google Drive Buttons */}
                         {(les.handwrittenSolutionUrl || les.googleDriveUrl) && (
                           <div className="flex flex-wrap items-center gap-2 pt-0.5">
                             {les.handwrittenSolutionUrl && (
@@ -1004,9 +1059,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 href={les.handwrittenSolutionUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-2xs"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all"
                               >
-                                <span>✍️ เฉลยลายมือประจำคาบ (เปิดดูวิธีคิด)</span>
+                                <span>✍️ {tx('ดูเฉลยลายมือ', 'Handwritten Notes')}</span>
                                 <ExternalLink className="w-3.5 h-3.5 text-amber-700" />
                               </a>
                             )}
@@ -1015,23 +1070,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 href={les.googleDriveUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all shadow-2xs"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
                               >
                                 <FolderOpen className="w-3.5 h-3.5 text-emerald-700" />
-                                <span>ชีทเรียน Google Drive</span>
+                                <span>{tx('เอกสารประกอบการเรียน', 'Study Sheet')}</span>
                                 <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
                               </a>
                             )}
                           </div>
                         )}
 
-                        {/* Expanded details (Homework & Teacher Note) */}
                         {isExpanded && (
-                          <div className="pt-2 border-t border-amber-100 space-y-3 text-xs animate-in fade-in duration-150">
+                          <div className="pt-2 border-t border-slate-200/70 space-y-3 text-xs animate-in fade-in duration-150">
                             {les.teacherNote && (
                               <div className="bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60 text-slate-700">
                                 <strong className="text-amber-900 block mb-0.5">
-                                  คำแนะนำจากครูพี่แม็ก:
+                                  {tx('คำแนะนำจากครูแม็ก:', 'Coach Max Note:')}
                                 </strong>
                                 <p className="italic">{les.teacherNote}</p>
                               </div>
@@ -1042,7 +1096,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-slate-900">
-                                      การบ้าน: {les.homework.title}
+                                      {tx('การบ้าน:', 'Homework:')} {les.homework.title}
                                     </span>
                                     <span
                                       className={`text-[11px] px-2 py-0.5 rounded font-medium ${
@@ -1052,8 +1106,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                       }`}
                                     >
                                       {les.homework.status === 'submitted'
-                                        ? 'ส่งเรียบร้อย ✅'
-                                        : 'ยังไม่ได้ส่ง ⏳'}
+                                        ? tx('ส่งแล้ว ✅', 'Submitted ✅')
+                                        : tx('รอส่ง ⏳', 'Pending ⏳')}
                                     </span>
                                   </div>
 
@@ -1063,18 +1117,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                         updateHomeworkStatus(
                                           les.homework!.id,
                                           'submitted',
-                                          'ส่งผ่านเว็บแล้ว'
+                                          tx('ส่งผ่านเว็บแล้ว', 'Submitted via web')
                                         )
                                       }
-                                      className="text-[11px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors"
+                                      className="text-[11px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors cursor-pointer"
                                     >
-                                      ติ๊กส่งการบ้านแล้ว
+                                      {tx('ทำเครื่องหมายว่าส่งแล้ว', 'Mark as Submitted')}
                                     </button>
                                   )}
                                 </div>
                                 <p className="text-slate-600">{les.homework.description}</p>
                                 <div className="text-[11px] text-slate-500 font-mono">
-                                  กำหนดส่ง: {les.homework.dueDate}
+                                  {tx('กำหนดส่ง:', 'Due:')} {les.homework.dueDate}
                                 </div>
                               </div>
                             )}
@@ -1083,9 +1137,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               <div className="flex items-center gap-2 text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200">
                                 <FileText className="w-4 h-4 text-slate-400" />
                                 <span>{les.attachments[0].name}</span>
-                                <span className="text-[11px] text-slate-400">
-                                  ({les.attachments[0].size || 'PDF'})
-                                </span>
                               </div>
                             )}
                           </div>
@@ -1101,9 +1152,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               <div className="pt-2 border-t border-slate-100">
                 <button
                   onClick={() => setCurrentTab('my-lessons')}
-                  className="w-full py-2.5 bg-blue-50/80 hover:bg-blue-100 text-blue-900 font-bold text-xs rounded-xl border border-blue-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>เปิดดูประวัติการเรียนทั้งหมด ({activeStudentLessons.length} คาบ) →</span>
+                  <span>
+                    {tx(
+                      `ดูประวัติการเรียนทั้งหมด (${activeStudentLessons.length} คาบ) →`,
+                      `View All Sessions (${activeStudentLessons.length}) →`
+                    )}
+                  </span>
                 </button>
               </div>
             )}
@@ -1113,15 +1169,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         {/* Right 1 Col: Enrolled Courses / Passcode + Homework To-do & Syllabus Snapshot */}
         <div className="space-y-6">
           {/* Enrolled Courses & Add Course with Passcode */}
-          <section className="bg-white border border-amber-900/10 rounded-2xl p-5 shadow-2xs space-y-4">
+          <section className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-blue-900" />
-                คอร์สเรียนของฉัน ({courses.length} คอร์ส)
+                <span>{tx(`คอร์สเรียนของฉัน (${courses.length})`, `My Courses (${courses.length})`)}</span>
               </h3>
             </div>
 
-            {/* List of enrolled courses */}
             <div className="space-y-2">
               {courses
                 .filter((c) => {
@@ -1142,14 +1197,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       onClick={() => setActiveCourseId(c.id)}
                       className={`p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs cursor-pointer ${
                         isActive
-                          ? 'bg-blue-50/70 border-blue-300 font-bold text-blue-950 shadow-2xs'
-                          : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-amber-50 hover:border-amber-300'
+                          ? 'bg-slate-900 border-slate-900 font-bold text-white shadow-2xs'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <span
                           className={`w-6 h-6 rounded-lg text-[10px] font-bold flex items-center justify-center shrink-0 ${
-                            isActive ? 'bg-blue-900 text-white' : 'bg-slate-200 text-slate-700'
+                            isActive ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 text-slate-700'
                           }`}
                         >
                           {c.code.slice(0, 2)}
@@ -1157,8 +1212,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         <span className="truncate">{c.name}</span>
                       </div>
                       {isActive && (
-                        <span className="text-[10px] font-semibold text-blue-900 bg-white px-2 py-0.5 rounded-md border border-blue-200 shrink-0">
-                          กำลังเรียน
+                        <span className="text-[10px] font-bold text-amber-300 shrink-0">
+                          {tx('กำลังเลือก', 'Active')}
                         </span>
                       )}
                     </div>
@@ -1169,20 +1224,20 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             {/* Form to enter new course passcode */}
             <form onSubmit={handleEnrollPasscode} className="pt-2 border-t border-slate-100 space-y-2">
               <label className="block text-[11px] font-semibold text-slate-700">
-                🔑 เพิ่มคอร์สใหม่ด้วยรหัส (ถามจากครู Max)
+                🔑 {tx('เพิ่มคอร์สด้วยรหัสผ่าน', 'Add Course with Passcode')}
               </label>
 
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
                   <input
                     type="text"
-                    placeholder="รหัส เช่น CHEM68"
+                    placeholder={tx('กรอกรหัสคอร์ส', 'Passcode')}
                     value={passcodeInput}
                     onChange={(e) => {
                       setPasscodeInput(e.target.value);
                       if (enrollError) setEnrollError(null);
                     }}
-                    className="w-full bg-[#FFFDF7] border border-amber-200 rounded-xl pl-7 pr-2 py-1.5 text-xs font-mono font-bold uppercase text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-2 py-1.5 text-xs font-mono font-bold uppercase text-slate-800 focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
                   />
                   <KeyRound className="w-3.5 h-3.5 text-amber-600 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -1190,9 +1245,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 <button
                   type="submit"
                   disabled={isEnrolling || !passcodeInput.trim()}
-                  className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 shadow-2xs"
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0"
                 >
-                  {isEnrolling ? 'กำลังตรวจ...' : '+ แอดเข้าโปรไฟล์'}
+                  {isEnrolling ? tx('รอสักครู่...', 'Adding...') : tx('+ เพิ่มคอร์ส', '+ Add')}
                 </button>
               </div>
 
@@ -1213,11 +1268,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </section>
 
           {/* Homework To-do List */}
-          <section className="bg-white border border-amber-900/10 rounded-2xl p-5 shadow-2xs space-y-3">
+          <section className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                 <AlertCircle className="w-4 h-4 text-amber-600" />
-                การบ้านที่ต้องส่ง ({pendingHomeworkList.length})
+                <span>
+                  {tx(
+                    `การบ้านที่ต้องส่ง (${pendingHomeworkList.length})`,
+                    `Pending Homework (${pendingHomeworkList.length})`
+                  )}
+                </span>
               </h3>
             </div>
 
@@ -1225,7 +1285,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               <div className="text-center py-6 bg-emerald-50/50 rounded-xl border border-emerald-200/50">
                 <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto" />
                 <p className="text-xs font-semibold text-emerald-900 mt-1">
-                  ทำการบ้านครบหมดแล้ว! เก่งมากครับ
+                  {tx('ส่งการบ้านครบทุกชิ้นแล้ว!', 'All homework completed!')}
                 </p>
               </div>
             ) : (
@@ -1239,13 +1299,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     <p className="text-slate-600 leading-snug">{hw.description}</p>
                     <div className="flex items-center justify-between pt-1 border-t border-amber-100">
                       <span className="text-amber-800 font-mono text-[11px]">
-                        ส่งภายใน: {hw.dueDate}
+                        {tx('กำหนดส่ง:', 'Due:')} {hw.dueDate}
                       </span>
                       <button
                         onClick={() => setCurrentTab('my-homework')}
-                        className="text-[11px] font-semibold text-white bg-blue-900 hover:bg-blue-800 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                        className="text-[11px] font-semibold text-white bg-slate-900 hover:bg-slate-800 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
                       >
-                        ส่งการบ้าน →
+                        {tx('ส่งงาน →', 'Submit →')}
                       </button>
                     </div>
                   </div>
@@ -1255,24 +1315,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </section>
 
           {/* Syllabus Progress Explorer */}
-          <section className="bg-white border border-amber-900/10 rounded-2xl p-5 shadow-2xs space-y-3">
+          <section className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setCurrentTab('learning-hub')}
                 className="font-bold text-slate-900 text-sm flex items-center gap-1.5 hover:text-blue-900 transition-colors cursor-pointer text-left"
-                title="คลิกเพื่อเปิดสารบัญคอร์ส"
               >
                 <BookOpen className="w-4 h-4 text-blue-900 shrink-0" />
-                <span>สารบัญหลักสูตร {activeSubject.name}</span>
+                <span>{tx(`สารบัญ ${activeSubject.name}`, `${activeSubject.name} Syllabus`)}</span>
               </button>
-              <span className="text-xs font-mono text-slate-500 font-semibold">
+              <span className="text-xs font-mono text-slate-700 font-bold">
                 {syllabusPercent}%
               </span>
             </div>
 
             <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-amber-500 to-blue-900 h-2 rounded-full"
+                className="bg-slate-900 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${syllabusPercent}%` }}
               />
             </div>
@@ -1304,7 +1363,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     <div className="pl-2 mt-1 space-y-1">
                       {subs.map((sub) => {
                         const prog = activeStudentProgress.find((p) => p.subtopicId === sub.id);
-                        const isDone = prog && (prog.status === 'completed' || prog.status === 'mastered');
+                        const isDone =
+                          prog && (prog.status === 'completed' || prog.status === 'mastered');
                         const isLv2 = sub.level === 2;
                         const isLv3 = sub.level === 3;
 
@@ -1312,7 +1372,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           <div
                             key={sub.id}
                             className={`flex items-center justify-between text-[11px] text-slate-600 py-0.5 ${
-                              isLv3 ? 'pl-5 text-slate-500' : isLv2 ? 'pl-2.5 text-slate-700' : 'pl-0 font-medium'
+                              isLv3
+                                ? 'pl-5 text-slate-500'
+                                : isLv2
+                                ? 'pl-2.5 text-slate-700'
+                                : 'pl-0 font-medium'
                             }`}
                           >
                             <span className="truncate pr-2 flex items-center gap-1">
@@ -1324,11 +1388,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               <span>{sub.name}</span>
                             </span>
                             <span
-                              className={`flex-shrink-0 text-[10px] ${
+                              className={`shrink-0 text-[10px] ${
                                 isDone ? 'text-emerald-600 font-semibold' : 'text-slate-300'
                               }`}
                             >
-                              {isDone ? 'เรียนแล้ว ✓' : 'ยังไม่เรียน'}
+                              {isDone ? tx('เรียนแล้ว ✓', 'Done ✓') : tx('รอเรียน', 'Pending')}
                             </span>
                           </div>
                         );

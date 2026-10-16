@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserProfile } from '../../types';
 import { Users, UserPlus, GraduationCap, School, Target, Clock, Trash2, User, Lock } from 'lucide-react';
 
@@ -14,6 +15,7 @@ export const StudentManager: React.FC = () => {
     progressMap,
     activeSubject,
   } = useApp();
+  const { tx } = useLanguage();
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingStudent, setEditingStudent] = useState<UserProfile | null>(null);
@@ -100,13 +102,16 @@ export const StudentManager: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-900 bg-blue-50 px-2.5 py-0.5 rounded mb-1">
             <Users className="w-3.5 h-3.5" />
-            <span>การจัดการนักเรียน (Student Management)</span>
+            <span>{tx('จัดการนักเรียน', 'Student Directory')}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-            รายชื่อนักเรียน ({students.length} คน)
+            {tx(`รายชื่อนักเรียน (${students.length} คน)`, `Students (${students.length})`)}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            สร้างบัญชี กำหนดเป้าหมายการสอบ และติดตามพัฒนาการของนักเรียนแต่ละคน
+            {tx(
+              'สร้างบัญชี กำหนดเป้าหมายการสอบ และติดตามพัฒนาการของนักเรียนแต่ละคน',
+              'Manage student accounts, exam goals, and individual syllabus progress.'
+            )}
           </p>
         </div>
 
@@ -115,7 +120,7 @@ export const StudentManager: React.FC = () => {
           className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap self-start sm:self-auto"
         >
           <UserPlus className="w-4 h-4 text-amber-300" />
-          <span>เพิ่มนักเรียนใหม่</span>
+          <span>{tx('เพิ่มนักเรียนใหม่', 'Add Student')}</span>
         </button>
       </div>
 
@@ -123,18 +128,18 @@ export const StudentManager: React.FC = () => {
       {isAdding && (
         <div className="bg-[#FFFDF7] border border-amber-200 rounded-2xl p-6 shadow-md animate-in fade-in duration-200">
           <h3 className="text-sm font-bold text-slate-900 mb-4">
-            {editingStudent ? 'แก้ไขข้อมูลนักเรียน' : 'ลงทะเบียนนักเรียนใหม่'}
+            {editingStudent ? tx('แก้ไขข้อมูลนักเรียน', 'Edit Student') : tx('ลงทะเบียนนักเรียนใหม่', 'Register New Student')}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ชื่อ-นามสกุลจริง *
+                  {tx('ชื่อ-นามสกุลจริง *', 'Full Name *')}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น กานต์ รัตนเมธา"
+                  placeholder={tx('เช่น กานต์ รัตนเมธา', 'Full Name')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -143,12 +148,12 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ชื่อเล่น *
+                  {tx('ชื่อเล่น *', 'Nickname *')}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น น้องกานต์"
+                  placeholder={tx('เช่น น้องกานต์', 'Nickname')}
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -157,27 +162,27 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ระดับชั้น
+                  {tx('ระดับชั้น', 'Grade Level')}
                 </label>
                 <select
                   value={grade}
                   onChange={(e) => setGrade(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
                 >
-                  <option value="มัธยมศึกษาปีที่ 4">มัธยมศึกษาปีที่ 4</option>
-                  <option value="มัธยมศึกษาปีที่ 5">มัธยมศึกษาปีที่ 5</option>
-                  <option value="มัธยมศึกษาปีที่ 6">มัธยมศึกษาปีที่ 6</option>
-                  <option value="ซิ่ว / เตรียมสอบใหม่">ซิ่ว / เตรียมสอบใหม่</option>
+                  <option value="มัธยมศึกษาปีที่ 4">{tx('มัธยมศึกษาปีที่ 4', 'Grade 10')}</option>
+                  <option value="มัธยมศึกษาปีที่ 5">{tx('มัธยมศึกษาปีที่ 5', 'Grade 11')}</option>
+                  <option value="มัธยมศึกษาปีที่ 6">{tx('มัธยมศึกษาปีที่ 6', 'Grade 12')}</option>
+                  <option value="ซิ่ว / เตรียมสอบใหม่">{tx('เตรียมสอบใหม่', 'Gap Year / Retake')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  โรงเรียน
+                  {tx('โรงเรียน', 'School')}
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น โรงเรียนเตรียมอุดมศึกษา"
+                  placeholder={tx('เช่น โรงเรียนเตรียมอุดมศึกษา', 'School Name')}
                   value={school}
                   onChange={(e) => setSchool(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -186,11 +191,11 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  สนามสอบเป้าหมาย
+                  {tx('สนามสอบเป้าหมาย', 'Target Exam')}
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น A-Level 68 / กสพท"
+                  placeholder="A-Level 68 / กสพท"
                   value={targetExam}
                   onChange={(e) => setTargetExam(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -199,11 +204,11 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  คณะ/มหาวิทยาลัยในฝัน
+                  {tx('คณะ/มหาวิทยาลัยเป้าหมาย', 'Target Faculty / University')}
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น คณะแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย"
+                  placeholder={tx('เช่น คณะแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย', 'e.g., Faculty of Medicine')}
                   value={targetFaculty}
                   onChange={(e) => setTargetFaculty(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -212,12 +217,12 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  ชื่อผู้ใช้งาน (Username) *
+                  {tx('ชื่อผู้ใช้งาน *', 'Username *')}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น somchai, nonny"
+                  placeholder="somchai, nonny"
                   value={studentUsername}
                   onChange={(e) => setStudentUsername(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
@@ -226,12 +231,12 @@ export const StudentManager: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  รหัสผ่าน (Password) *
+                  {tx('รหัสผ่าน *', 'Password *')}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น 1234"
+                  placeholder="1234"
                   value={studentPassword}
                   onChange={(e) => setStudentPassword(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono"
@@ -245,13 +250,13 @@ export const StudentManager: React.FC = () => {
                 onClick={() => setIsAdding(false)}
                 className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
               >
-                ยกเลิก
+                {tx('ยกเลิก', 'Cancel')}
               </button>
               <button
                 type="submit"
                 className="px-5 py-2 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-lg shadow-xs"
               >
-                {editingStudent ? 'บันทึกการแก้ไข' : 'เพิ่มนักเรียน'}
+                {editingStudent ? tx('บันทึกการแก้ไข', 'Save Changes') : tx('เพิ่มนักเรียน', 'Add Student')}
               </button>
             </div>
           </form>
@@ -264,9 +269,12 @@ export const StudentManager: React.FC = () => {
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
             <Users className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">ยังไม่มีนักเรียนลงทะเบียนในระบบ</h3>
+          <h3 className="text-base font-bold text-slate-800">{tx('ยังไม่มีนักเรียนลงทะเบียน', 'No registered students yet')}</h3>
           <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            ข้อมูลนักเรียนถูกล้างเรียบร้อยตามคำสั่ง คุณครูสามารถแจ้งรหัสเข้าคอร์ส (เช่น <code className="font-mono font-bold text-blue-900 bg-blue-50 px-1 py-0.5 rounded">CHEM68</code>) ให้นักเรียนสมัครสมาชิกได้เองที่หน้าแรก หรือกดปุ่ม <strong>"เพิ่มนักเรียนใหม่"</strong> ด้านบน
+            {tx(
+              'คุณครูสามารถแจ้งรหัสเข้าคอร์สให้นักเรียนสมัครสมาชิกได้เอง หรือกดปุ่มเพิ่มนักเรียนใหม่ด้านบน',
+              'Share the course passcode with students to sign up, or click Add Student above.'
+            )}
           </p>
         </div>
       ) : (
@@ -286,7 +294,7 @@ export const StudentManager: React.FC = () => {
             const enrolledNames =
               (st.enrolledCourseIds || [])
                 .map((id) => courses.find((c) => c.id === id)?.name || id)
-                .join(', ') || 'ยังไม่ได้ระบุคอร์ส';
+                .join(', ') || tx('ยังไม่ได้ระบุคอร์ส', 'No course assigned');
 
             return (
               <div
@@ -312,7 +320,7 @@ export const StudentManager: React.FC = () => {
                   {/* Course & Username Info */}
                   <div className="mt-3 p-2 bg-amber-50/70 border border-amber-200/70 rounded-xl text-xs space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500">Username:</span>
+                      <span className="text-slate-500">{tx('ชื่อผู้ใช้:', 'Username:')}</span>
                       <strong className="font-mono text-slate-900">{st.username || st.nickname}</strong>
                     </div>
                     <div className="text-[11px] text-slate-600 line-clamp-1">
@@ -334,19 +342,15 @@ export const StudentManager: React.FC = () => {
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-slate-600">
-                      <User className="w-3.5 h-3.5 text-blue-900 flex-shrink-0" />
-                      <span>ชื่อผู้ใช้: <strong className="font-mono text-slate-800">{st.username || st.nickname}</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-600">
                       <Lock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                      <span>รหัสผ่าน: <strong className="font-mono text-slate-800">{st.password || '1234'}</strong></span>
+                      <span>{tx('รหัสผ่าน:', 'Password:')} <strong className="font-mono text-slate-800">{st.password || '1234'}</strong></span>
                     </div>
                   </div>
 
                 {/* Progress bar */}
                 <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
                   <div className="flex justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าสารบัญ</span>
+                    <span>{tx('ความคืบหน้าสารบัญ', 'Syllabus Progress')}</span>
                     <span className="font-mono tabular-nums font-bold text-slate-800">
                       {percent}% ({completedCount}/{totalSubtopics})
                     </span>
@@ -363,23 +367,23 @@ export const StudentManager: React.FC = () => {
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span className="text-slate-500 font-mono tabular-nums flex items-center gap-1">
                   <Clock className="w-3 h-3 text-amber-600" />
-                  {stHours} ชม. ({stLessons.length} คาบ)
+                  {stHours} {tx('ชม.', 'hrs')} ({stLessons.length} {tx('คาบ', 'lessons')})
                 </span>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleOpenEdit(st)}
                     className="font-medium text-blue-900 hover:text-blue-700 underline underline-offset-2 cursor-pointer"
                   >
-                    แก้ไขข้อมูล
+                    {tx('แก้ไข', 'Edit')}
                   </button>
                   <button
                     onClick={() => {
-                      if (window.confirm(`ยืนยันการลบนักเรียน "${st.nickname}" (${st.fullName}) หรือไม่?`)) {
+                      if (window.confirm(tx(`ยืนยันการลบนักเรียน "${st.nickname}" หรือไม่?`, `Delete student "${st.nickname}"?`))) {
                         deleteStudent(st.id);
                       }
                     }}
                     className="text-slate-400 hover:text-red-600 p-1 rounded-lg transition-colors cursor-pointer"
-                    title="ลบบัญชีนักเรียนนี้"
+                    title={tx('ลบบัญชีนักเรียน', 'Delete student')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

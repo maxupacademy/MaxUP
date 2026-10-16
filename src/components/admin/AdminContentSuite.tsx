@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Course, Topic, Subtopic, VideoLesson, CourseMaterial } from '../../types';
 import { HomeworkSuite } from '../homework/HomeworkSuite';
 import {
@@ -47,6 +49,7 @@ export const AdminContentSuite: React.FC = () => {
     deleteMaterial,
     resetToDefaultMathJuniorCourse,
   } = useApp();
+  const { tx } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<
     'courses' | 'syllabus' | 'videos' | 'materials' | 'homework'
@@ -234,29 +237,32 @@ export const AdminContentSuite: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
-      <div className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-md mb-1">
               <Settings className="w-3.5 h-3.5 text-blue-800" />
-              <span>ศูนย์ควบคุม & จัดการเนื้อหาเว็บ (Tutor Management Studio)</span>
+              <span>{tx('ศูนย์จัดการเนื้อหา', 'Content Management Studio')}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              จัดการและปรับแต่งเนื้อหาทุกส่วน
+              {tx('จัดการคอร์ส สารบัญ และสื่อการเรียน', 'Manage Courses, Syllabus & Materials')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
-              ปรับปรุงชื่อคอร์ส สารบัญ วิดีโอ แฟลชการ์ด ควิซ เอกสาร และการบ้านได้เองบนเว็บทันที
+              {tx(
+                'ปรับปรุงคอร์ส สารบัญ วิดีโอ เอกสาร และการบ้านได้ทันที',
+                'Update courses, syllabus topics, videos, PDF sheets, and homework in real time.'
+              )}
             </p>
           </div>
 
           {/* Course Selector */}
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
-              คอร์สที่กำลังแก้ไข:
+              {tx('คอร์สที่แก้ไข:', 'Active Course:')}
             </span>
             {courses.length === 0 ? (
               <span className="text-xs text-amber-800 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200 font-semibold">
-                ยังไม่มีคอร์ส (เริ่มร่างใหม่)
+                {tx('ยังไม่มีคอร์ส', 'No courses yet')}
               </span>
             ) : (
               <select
@@ -266,7 +272,7 @@ export const AdminContentSuite: React.FC = () => {
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.code})
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -275,13 +281,13 @@ export const AdminContentSuite: React.FC = () => {
         </div>
 
         {/* Suite Category Navigation Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-3 border-t border-slate-100">
           {[
-            { id: 'courses', label: '1. คอร์สเรียน', icon: BookOpen },
-            { id: 'syllabus', label: '2. สารบัญ & บทเรียน', icon: BookOpen },
-            { id: 'videos', label: '3. วิดีโอ YouTube', icon: Play },
-            { id: 'materials', label: '4. ไฟล์เรียน & Google Drive', icon: Download },
-            { id: 'homework', label: '5. การบ้าน & ตรวจงาน', icon: ClipboardList },
+            { id: 'courses', label: tx('คอร์สเรียน', 'Courses'), icon: BookOpen },
+            { id: 'syllabus', label: tx('สารบัญบทเรียน', 'Syllabus'), icon: BookOpen },
+            { id: 'videos', label: tx('วิดีโอทบทวน', 'Videos'), icon: Play },
+            { id: 'materials', label: tx('เอกสารประกอบ', 'Materials'), icon: Download },
+            { id: 'homework', label: tx('การบ้าน', 'Homework'), icon: ClipboardList },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -289,14 +295,21 @@ export const AdminContentSuite: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-blue-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                    ? 'text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="admin-content-suite-tab"
+                    className="absolute inset-0 bg-slate-950 rounded-xl shadow-xs"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <Icon className={`relative z-10 w-3.5 h-3.5 ${isActive ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span className="relative z-10">{tab.label}</span>
               </button>
             );
           })}
@@ -309,10 +322,13 @@ export const AdminContentSuite: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                รายการคอร์สเรียนทั้งหมดในระบบ ({courses.length} คอร์ส)
+                {tx(`คอร์สเรียนทั้งหมด (${courses.length})`, `All Courses (${courses.length})`)}
               </h2>
               <p className="text-xs text-slate-500">
-                สามารถเพิ่มคอร์สใหม่ กำหนดรหัสคอร์สและรหัสผ่านเข้าเรียน (Passcode) ได้ตามต้องการ
+                {tx(
+                  'สามารถเพิ่มคอร์สใหม่ กำหนดรหัสคอร์สและรหัสเข้าเรียนได้ตามต้องการ',
+                  'Add new courses and configure course codes and access passcodes.'
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -320,17 +336,19 @@ export const AdminContentSuite: React.FC = () => {
                 onClick={async () => {
                   if (
                     window.confirm(
-                      'คุณต้องการล้างวิชาอื่นและรีเซ็ตโครงสร้างวิชาเป็น "คณิตศาสตร์ พื้นฐาน ม.ต้น" (มาตรฐาน สสวท. 10 บทหลัก ครบถ้วน) หรือไม่?'
+                      tx(
+                        'คุณต้องการรีเซ็ตโครงสร้างวิชาเป็น "คณิตศาสตร์ พื้นฐาน ม.ต้น" (มาตรฐาน สสวท. 10 บทหลัก) หรือไม่?',
+                        'Reset courses to the default Junior High Mathematics (10 IPST chapters)?'
+                      )
                     )
                   ) {
                     await resetToDefaultMathJuniorCourse();
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl shadow-2xs transition-all cursor-pointer"
-                title="รีเซ็ตและโหลดโครงสร้างวิชาคณิตศาสตร์ ม.ต้น สสวท. 10 บทใหม่ทั้งหมด"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
-                <span>รีเซ็ตวิชาคณิต ม.ต้น</span>
+                <span>{tx('รีเซ็ตวิชาคณิต ม.ต้น', 'Reset Default Math')}</span>
               </button>
               <button
                 onClick={() => {
@@ -343,7 +361,7 @@ export const AdminContentSuite: React.FC = () => {
                 className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-300" />
-                <span>+ เพิ่มคอร์สใหม่</span>
+                <span>+ {tx('เพิ่มคอร์สใหม่', 'New Course')}</span>
               </button>
             </div>
           </div>
@@ -354,9 +372,12 @@ export const AdminContentSuite: React.FC = () => {
                 📚
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ</h3>
+                <h3 className="text-lg font-bold text-slate-800">{tx('ยังไม่มีคอร์สเรียนในระบบ', 'No courses yet')}</h3>
                 <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                  คุณครู Max สามารถกดปุ่มโหลด <strong>"คณิตศาสตร์ พื้นฐาน ม.ต้น"</strong> ตามมาตรฐาน สสวท. 10 บทได้ทันที หรือกดเพิ่มคอร์สใหม่
+                  {tx(
+                    'กดปุ่มโหลดวิชาคณิตศาสตร์พื้นฐาน ม.ต้น ตามมาตรฐาน สสวท. 10 บทได้ทันที หรือกดเพิ่มคอร์สใหม่',
+                    'Load the default Junior High Mathematics syllabus or create a new custom course.'
+                  )}
                 </p>
               </div>
               <div className="flex items-center justify-center gap-3">
@@ -365,7 +386,7 @@ export const AdminContentSuite: React.FC = () => {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
                 >
                   <RotateCcw className="w-4 h-4 text-slate-950" />
-                  <span>โหลดวิชาคณิตศาสตร์ ม.ต้น ทันที</span>
+                  <span>{tx('โหลดวิชาคณิตศาสตร์ ม.ต้น', 'Load Default Math Course')}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -378,7 +399,7 @@ export const AdminContentSuite: React.FC = () => {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer transition-all"
                 >
                   <Plus className="w-4 h-4 text-amber-300" />
-                  <span>+ สร้างคอร์สใหม่</span>
+                  <span>+ {tx('สร้างคอร์สใหม่', 'Create Course')}</span>
                 </button>
               </div>
             </div>
@@ -399,7 +420,7 @@ export const AdminContentSuite: React.FC = () => {
                         {course.code}
                       </span>
                       <span className="text-xs font-semibold text-slate-500">
-                        {course.gradeLevel || 'ม.ปลาย'}
+                        {course.gradeLevel || tx('ม.ปลาย', 'High School')}
                       </span>
                     </div>
 
@@ -409,7 +430,7 @@ export const AdminContentSuite: React.FC = () => {
                     <div className="p-2 bg-emerald-50/80 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
                         <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>รหัสเข้าคอร์ส:</span>
+                        <span>{tx('รหัสเข้าคอร์ส:', 'Passcode:')}</span>
                       </div>
                       <span className="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-300">
                         {course.passcode || course.code}
@@ -417,7 +438,7 @@ export const AdminContentSuite: React.FC = () => {
                     </div>
 
                     <div className="text-[11px] text-slate-500 font-mono pt-1">
-                      • จำนวนบทในสารบัญ: {course.topics.length} บท
+                      • {tx(`จำนวนบทเรียน: ${course.topics.length} บท`, `${course.topics.length} chapters`)}
                     </div>
                   </div>
 
@@ -430,7 +451,7 @@ export const AdminContentSuite: React.FC = () => {
                       className="text-blue-900 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
-                      <span>แก้ไขข้อมูล</span>
+                      <span>{tx('แก้ไข', 'Edit')}</span>
                     </button>
 
                     <button
@@ -438,7 +459,7 @@ export const AdminContentSuite: React.FC = () => {
                       className="text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>ลบ</span>
+                      <span>{tx('ลบ', 'Delete')}</span>
                     </button>
                   </div>
                 </div>
@@ -454,10 +475,13 @@ export const AdminContentSuite: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                สารบัญคอร์ส: {activeCourse.name} ({activeCourse.topics.length} บท)
+                {tx(`สารบัญคอร์ส: ${activeCourse.name}`, `Syllabus: ${activeCourse.name}`)} ({activeCourse.topics.length})
               </h2>
               <p className="text-xs text-slate-500">
-                เพิ่มหัวข้อหลัก (Topic) และหัวข้อย่อย (Subtopic) พร้อมกำหนดเวลาเรียน
+                {tx(
+                  'เพิ่มบทเรียนหลักและหัวข้อย่อยสำหรับติดตามความก้าวหน้า',
+                  'Add main chapters and subtopics to track student progression.'
+                )}
               </p>
             </div>
             {courses.length > 0 && (
@@ -466,7 +490,7 @@ export const AdminContentSuite: React.FC = () => {
                 className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-300" />
-                <span>+ เพิ่มบทใหม่ (Topic)</span>
+                <span>+ {tx('เพิ่มบทใหม่', 'New Chapter')}</span>
               </button>
             )}
           </div>
@@ -474,14 +498,14 @@ export const AdminContentSuite: React.FC = () => {
           {courses.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-amber-200 rounded-2xl bg-[#FFFDF7] space-y-2">
               <BookOpen className="w-10 h-10 text-amber-600/50 mx-auto" />
-              <p className="text-sm font-bold text-slate-800">ยังไม่มีคอร์สเรียนในระบบ</p>
-              <p className="text-xs text-slate-500">กรุณาสร้างคอร์สแรกที่แท็บ "1. คอร์สเรียน" ก่อนเริ่มกำหนดสารบัญ</p>
+              <p className="text-sm font-bold text-slate-800">{tx('ยังไม่มีคอร์สเรียนในระบบ', 'No courses yet')}</p>
+              <p className="text-xs text-slate-500">{tx('กรุณาสร้างคอร์สแรกก่อนเริ่มกำหนดสารบัญ', 'Create a course first before adding syllabus chapters.')}</p>
             </div>
           ) : activeCourse.topics.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-amber-200 rounded-2xl bg-[#FFFDF7] space-y-2">
               <BookOpen className="w-10 h-10 text-amber-600/50 mx-auto" />
-              <p className="text-sm font-bold text-slate-800">ยังไม่มีบทเรียนในสารบัญวิชา {activeCourse.name}</p>
-              <p className="text-xs text-slate-500">กดปุ่ม "+ เพิ่มบทใหม่ (Topic)" ด้านบนเพื่อเริ่มร่างบทเรียนแรก</p>
+              <p className="text-sm font-bold text-slate-800">{tx(`ยังไม่มีบทเรียนในวิชา ${activeCourse.name}`, `No chapters in ${activeCourse.name}`)}</p>
+              <p className="text-xs text-slate-500">{tx('กดปุ่ม "+ เพิ่มบทใหม่" ด้านบนเพื่อเริ่มร่างบทเรียนแรก', 'Click "+ New Chapter" above to add the first chapter.')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -493,10 +517,10 @@ export const AdminContentSuite: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm">
-                      {tIdx + 1}. {topic.name} {topic.nameEn && <span className="text-slate-400 font-normal">({topic.nameEn})</span>}
+                      {tIdx + 1}. {topic.name}
                     </h3>
                     <span className="text-[11px] text-slate-500">
-                      มีหัวข้อย่อย {topic.subtopics.length} เรื่อง
+                      {tx(`หัวข้อย่อย ${topic.subtopics.length} เรื่อง`, `${topic.subtopics.length} subtopics`)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -505,16 +529,16 @@ export const AdminContentSuite: React.FC = () => {
                       className="flex items-center gap-1 text-xs text-blue-900 hover:text-blue-700 font-semibold bg-blue-50 px-2.5 py-1 rounded-lg cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>เพิ่มหัวข้อย่อย</span>
+                      <span>{tx('เพิ่มหัวข้อย่อย', 'Add Subtopic')}</span>
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm(`ยืนยันการลบบทเรียน "${topic.name}" หรือไม่?`)) {
+                        if (window.confirm(tx(`ยืนยันการลบบทเรียน "${topic.name}" หรือไม่?`, `Delete chapter "${topic.name}"?`))) {
                           deleteTopic(activeCourseId, topic.id);
                         }
                       }}
                       className="p-1 text-slate-400 hover:text-red-600 rounded-lg transition-colors cursor-pointer"
-                      title="ลบบทเรียนนี้"
+                      title={tx('ลบบทเรียนนี้', 'Delete chapter')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -555,21 +579,18 @@ export const AdminContentSuite: React.FC = () => {
                                 : 'bg-blue-50 text-blue-800'
                             }`}
                           >
-                            ขั้นที่ {sub.level || 1}
+                            {tx(`ขั้นที่ ${sub.level || 1}`, `Lv.${sub.level || 1}`)}
                           </span>
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {sub.difficulty || 'intermediate'}
-                          </span>
                           <button
                             onClick={() => {
-                              if (window.confirm(`ยืนยันการลบหัวข้อย่อย "${sub.name}" หรือไม่?`)) {
+                              if (window.confirm(tx(`ยืนยันการลบหัวข้อย่อย "${sub.name}" หรือไม่?`, `Delete subtopic "${sub.name}"?`))) {
                                 deleteSubtopic(activeCourseId, topic.id, sub.id);
                               }
                             }}
                             className="p-0.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
-                            title="ลบหัวข้อย่อย"
+                            title={tx('ลบหัวข้อย่อย', 'Delete subtopic')}
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -591,16 +612,16 @@ export const AdminContentSuite: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                วิดีโอ YouTube ในคอร์ส: {activeCourse.name} ({courseVideos.length} คลิป)
+                {tx(`วิดีโอในคอร์ส: ${activeCourse.name}`, `Videos: ${activeCourse.name}`)} ({courseVideos.length})
               </h2>
-              <p className="text-xs text-slate-500">คลิปทบทวนและเนื้อหาการสอนที่ฝังในระบบ</p>
+              <p className="text-xs text-slate-500">{tx('คลิปทบทวนและเนื้อหาการสอนที่ฝังในระบบ', 'Embedded YouTube review lessons')}</p>
             </div>
             <button
               onClick={() => setIsAddVideoModalOpen(true)}
               className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ เพิ่มคลิปใหม่</span>
+              <span>+ {tx('เพิ่มคลิปใหม่', 'Add Video')}</span>
             </button>
           </div>
 
@@ -614,7 +635,7 @@ export const AdminContentSuite: React.FC = () => {
                   <div>
                     <h4 className="font-bold text-slate-900">{idx + 1}. {vid.title}</h4>
                     <p className="text-slate-500 text-[11px] font-mono">
-                      YouTube ID: {vid.youtubeId} · {vid.durationMinutes} นาที
+                      YouTube ID: {vid.youtubeId} · {vid.durationMinutes} {tx('นาที', 'min')}
                     </p>
                   </div>
                 </div>
@@ -631,24 +652,22 @@ export const AdminContentSuite: React.FC = () => {
         </div>
       )}
 
-
-
       {/* Tab 6: Materials Management (PDFs) */}
       {activeTab === 'materials' && (
         <div className="bg-white border border-amber-900/10 rounded-2xl p-6 shadow-2xs space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                ไฟล์เรียน & ชีทสรุปในคอร์ส: {activeCourse.name} ({courseMaterials.length} ไฟล์)
+                {tx(`เอกสารประกอบการเรียน: ${activeCourse.name}`, `Materials: ${activeCourse.name}`)} ({courseMaterials.length})
               </h2>
-              <p className="text-xs text-slate-500">อัปโหลด PDF ฝังลงในระบบให้อ่านได้ทันที</p>
+              <p className="text-xs text-slate-500">{tx('อัปโหลดไฟล์ PDF ให้อ่านและดาวน์โหลดได้ทันที', 'Upload PDF study sheets for students')}</p>
             </div>
             <button
               onClick={() => setIsAddMatModalOpen(true)}
               className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ อัปโหลดไฟล์ PDF ใหม่</span>
+              <span>+ {tx('อัปโหลด PDF', 'Upload PDF')}</span>
             </button>
           </div>
 
@@ -658,7 +677,7 @@ export const AdminContentSuite: React.FC = () => {
                 <div>
                   <h4 className="font-bold text-slate-900">{mat.title}</h4>
                   <p className="text-slate-500 text-[11px]">
-                    หมวด: {mat.category} · ขนาด: {mat.fileSize} · อ่านแล้ว {mat.downloadCount} ครั้ง
+                    {mat.category} · {mat.fileSize}
                   </p>
                 </div>
                 <button
@@ -683,18 +702,18 @@ export const AdminContentSuite: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">เพิ่มคอร์สเรียนใหม่</h3>
+              <h3 className="font-bold text-slate-900 text-base">{tx('เพิ่มคอร์สเรียนใหม่', 'Add New Course')}</h3>
               <button onClick={() => setIsAddCourseModalOpen(false)} className="p-1 text-slate-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleCreateCourse} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อคอร์ส *</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อคอร์ส *', 'Course Name *')}</label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น ฟิสิกส์ ม.ปลาย ตะลุยโจทย์ A-Level"
+                  placeholder={tx('เช่น ฟิสิกส์ ม.ปลาย ตะลุยโจทย์ A-Level', 'e.g., A-Level Physics')}
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
@@ -702,17 +721,17 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">รหัสคอร์ส</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{tx('รหัสคอร์ส', 'Course Code')}</label>
                   <input
                     type="text"
-                    placeholder="เช่น PHYS-01"
+                    placeholder="PHYS-01"
                     value={courseCode}
                     onChange={(e) => setCourseCode(e.target.value)}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ระดับชั้น</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{tx('ระดับชั้น', 'Grade Level')}</label>
                   <input
                     type="text"
                     value={courseGrade}
@@ -723,22 +742,22 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>รหัสเข้าคอร์สสำหรับนักเรียน (Passcode) *</span>
-                  <span className="text-[10px] text-emerald-700">ให้นักเรียนใช้สมัครหรือเข้าเรียน</span>
+                  <span>{tx('รหัสเข้าคอร์ส *', 'Course Passcode *')}</span>
+                  <span className="text-[10px] text-emerald-700">{tx('สำหรับนักเรียนใช้เข้าเรียน', 'Used by students to enroll')}</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น CHEM68, MATH101"
+                  placeholder="CHEM68, MATH101"
                   value={coursePasscode}
                   onChange={(e) => setCoursePasscode(e.target.value)}
                   className="w-full border border-emerald-300 rounded-lg px-3 py-2 font-mono font-bold uppercase text-slate-800"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำอธิบาย</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('คำอธิบาย', 'Description')}</label>
                 <textarea
                   rows={2}
-                  placeholder="เนื้อหาหลักและเป้าหมายของคอร์ส..."
+                  placeholder={tx('เนื้อหาหลักและเป้าหมายของคอร์ส...', 'Course overview and goals...')}
                   value={courseDesc}
                   onChange={(e) => setCourseDesc(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
@@ -746,10 +765,10 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setIsAddCourseModalOpen(false)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
+                  {tx('ยกเลิก', 'Cancel')}
                 </button>
                 <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกคอร์สใหม่
+                  {tx('บันทึกคอร์สใหม่', 'Create Course')}
                 </button>
               </div>
             </form>
@@ -762,14 +781,14 @@ export const AdminContentSuite: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">แก้ไขข้อมูลคอร์สเรียน</h3>
+              <h3 className="font-bold text-slate-900 text-base">{tx('แก้ไขข้อมูลคอร์สเรียน', 'Edit Course')}</h3>
               <button onClick={() => setEditingCourse(null)} className="p-1 text-slate-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveCourse} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อคอร์ส *</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อคอร์ส *', 'Course Name *')}</label>
                 <input
                   type="text"
                   required
@@ -780,7 +799,7 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">รหัสคอร์ส</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{tx('รหัสคอร์ส', 'Course Code')}</label>
                   <input
                     type="text"
                     value={courseCode}
@@ -789,7 +808,7 @@ export const AdminContentSuite: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ระดับชั้น</label>
+                  <label className="block font-semibold text-slate-700 mb-1">{tx('ระดับชั้น', 'Grade Level')}</label>
                   <input
                     type="text"
                     value={courseGrade}
@@ -800,19 +819,19 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div>
                 <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>รหัสเข้าคอร์สสำหรับนักเรียน (Passcode) *</span>
-                  <span className="text-[10px] text-emerald-700">ให้นักเรียนใช้สมัครหรือเข้าเรียน</span>
+                  <span>{tx('รหัสเข้าคอร์ส *', 'Course Passcode *')}</span>
+                  <span className="text-[10px] text-emerald-700">{tx('สำหรับนักเรียนใช้เข้าเรียน', 'Used by students to enroll')}</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="เช่น CHEM68, MATH101"
+                  placeholder="CHEM68, MATH101"
                   value={coursePasscode}
                   onChange={(e) => setCoursePasscode(e.target.value)}
                   className="w-full border border-emerald-300 rounded-lg px-3 py-2 font-mono font-bold uppercase text-slate-800"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำอธิบายคอร์ส</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('คำอธิบายคอร์ส', 'Description')}</label>
                 <textarea
                   rows={2}
                   value={courseDesc}
@@ -822,10 +841,10 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setEditingCourse(null)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
+                  {tx('ยกเลิก', 'Cancel')}
                 </button>
                 <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกการแก้ไข
+                  {tx('บันทึกการแก้ไข', 'Save Changes')}
                 </button>
               </div>
             </form>
@@ -838,25 +857,25 @@ export const AdminContentSuite: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">เพิ่มบทเรียนหลัก (Topic)</h3>
+              <h3 className="font-bold text-slate-900 text-base">{tx('เพิ่มบทเรียนหลัก', 'Add Main Chapter')}</h3>
               <button onClick={() => setIsAddTopicModalOpen(false)} className="p-1 text-slate-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddTopicSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อบทเรียน (ไทย) *</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อบทเรียน *', 'Chapter Name *')}</label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น อัตราการเกิดปฏิกิริยาเคมี"
+                  placeholder={tx('เช่น อัตราการเกิดปฏิกิริยาเคมี', 'e.g., Chemical Kinetics')}
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อภาษาอังกฤษ (ถ้ามี)</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อภาษาอังกฤษ', 'English Subtitle')}</label>
                 <input
                   type="text"
                   placeholder="Chemical Kinetics"
@@ -867,10 +886,10 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setIsAddTopicModalOpen(false)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
+                  {tx('ยกเลิก', 'Cancel')}
                 </button>
                 <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกบทเรียน
+                  {tx('บันทึกบทเรียน', 'Save Chapter')}
                 </button>
               </div>
             </form>
@@ -883,14 +902,14 @@ export const AdminContentSuite: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">เพิ่มหัวข้อย่อย (Subtopic)</h3>
+              <h3 className="font-bold text-slate-900 text-base">{tx('เพิ่มหัวข้อย่อย', 'Add Subtopic')}</h3>
               <button onClick={() => setSelectedTopicForSubtopic(null)} className="p-1 text-slate-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddSubtopicSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ระดับขั้น (Hierarchy Level)</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ระดับชั้นของหัวข้อ', 'Hierarchy Level')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
@@ -902,7 +921,7 @@ export const AdminContentSuite: React.FC = () => {
                       subLevel === 1 ? 'bg-blue-900 text-white border-blue-900' : 'bg-slate-50 text-slate-700 border-slate-200'
                     }`}
                   >
-                    ขั้นที่ 1 (หลัก)
+                    {tx('ขั้นที่ 1', 'Level 1')}
                   </button>
                   <button
                     type="button"
@@ -916,7 +935,7 @@ export const AdminContentSuite: React.FC = () => {
                       subLevel === 2 ? 'bg-amber-500 text-white border-amber-600' : 'bg-slate-50 text-slate-700 border-slate-200'
                     }`}
                   >
-                    ขั้นที่ 2 (ย่อย)
+                    {tx('ขั้นที่ 2', 'Level 2')}
                   </button>
                   <button
                     type="button"
@@ -930,7 +949,7 @@ export const AdminContentSuite: React.FC = () => {
                       subLevel === 3 ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-700 border-slate-200'
                     }`}
                   >
-                    ขั้นที่ 3 (ย่อยลึก)
+                    {tx('ขั้นที่ 3', 'Level 3')}
                   </button>
                 </div>
               </div>
@@ -938,19 +957,19 @@ export const AdminContentSuite: React.FC = () => {
               {subLevel > 1 && (
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {subLevel === 2 ? 'เลือกหัวข้อหลัก (ขั้นที่ 1)' : 'เลือกข้อย่อยแม่ (ขั้นที่ 2 หรือ 1)'}
+                    {tx('เลือกหัวข้อหลัก', 'Parent Topic')}
                   </label>
                   <select
                     value={subParentId}
                     onChange={(e) => setSubParentId(e.target.value)}
                     className="w-full border border-amber-300 rounded-lg px-3 py-2 text-slate-800 bg-[#FFFDF7]"
                   >
-                    <option value="">-- กรุณาเลือกหัวข้อแม่ --</option>
+                    <option value="">{tx('-- เลือกหัวข้อหลัก --', '-- Select Parent --')}</option>
                     {(activeCourse.topics.find((t) => t.id === selectedTopicForSubtopic)?.subtopics || [])
                       .filter((s) => (subLevel === 2 ? (!s.parentId || s.level === 1) : true))
                       .map((pSub) => (
                         <option key={pSub.id} value={pSub.id}>
-                          {pSub.level === 2 ? '↳ ' : ''}{pSub.name} ({pSub.level ? `ขั้นที่ ${pSub.level}` : 'ขั้นที่ 1'})
+                          {pSub.level === 2 ? '↳ ' : ''}{pSub.name}
                         </option>
                       ))}
                   </select>
@@ -958,21 +977,21 @@ export const AdminContentSuite: React.FC = () => {
               )}
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อหัวข้อย่อย *</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อหัวข้อย่อย *', 'Subtopic Name *')}</label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น ปัจจัยที่มีผลต่ออัตราการเกิดปฏิกิริยา"
+                  placeholder={tx('เช่น ปัจจัยที่มีผลต่ออัตราการเกิดปฏิกิริยา', 'e.g., Factors affecting reaction rate')}
                   value={newSubtopicName}
                   onChange={(e) => setNewSubtopicName(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">รายละเอียดหัวข้อ</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('รายละเอียดหัวข้อ', 'Description')}</label>
                 <textarea
                   rows={2}
-                  placeholder="คำอธิบายสั้นๆ เกี่ยวกับเนื้อหาหัวข้อย่อยนี้..."
+                  placeholder={tx('คำอธิบายสั้นๆ เกี่ยวกับเนื้อหาหัวข้อย่อยนี้...', 'Brief description...')}
                   value={newSubtopicDesc}
                   onChange={(e) => setNewSubtopicDesc(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
@@ -980,10 +999,10 @@ export const AdminContentSuite: React.FC = () => {
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setSelectedTopicForSubtopic(null)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
+                  {tx('ยกเลิก', 'Cancel')}
                 </button>
                 <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกหัวข้อย่อย
+                  {tx('บันทึกหัวข้อย่อย', 'Save Subtopic')}
                 </button>
               </div>
             </form>

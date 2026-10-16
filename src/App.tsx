@@ -1,10 +1,11 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LessonLoggerModal } from './components/admin/LessonLoggerModal';
@@ -25,36 +26,41 @@ const MainContent: React.FC = () => {
     currentUser,
     currentUserRole,
     isLoggedIn,
-    logout,
   } = useApp();
+  const { tx } = useLanguage();
 
-  const [currentTab, setCurrentTab] = useState<string>('overview');
+  const [currentTab, setCurrentTab] = useState<string>(() =>
+    currentUserRole === 'admin' ? 'overview' : 'home'
+  );
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Called immediately after successful login โ€” navigate to correct dashboard
+  // Sync default dashboard tab whenever role changes or user logs in
+  useEffect(() => {
+    if (isLoggedIn) {
+      if (currentUserRole === 'admin' && (currentTab === 'home' || currentTab === 'my-lessons')) {
+        setCurrentTab('overview');
+      } else if (currentUserRole === 'student' && (currentTab === 'overview' || currentTab === 'admin-suite' || currentTab === 'students')) {
+        setCurrentTab('home');
+      }
+    }
+  }, [isLoggedIn, currentUserRole]);
+
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
-    // Navigate to appropriate start tab based on role
-    const role = currentUserRole;
-    if (role === 'admin') {
-      setCurrentTab('overview');
-    } else {
-      setCurrentTab('home');
-    }
+    setCurrentTab(currentUserRole === 'admin' ? 'overview' : 'home');
   };
 
-  // If not logged in โ€” show full-page login
   if (!isLoggedIn || showLoginModal) {
     return (
       <div className="relative">
         {showLoginModal && isLoggedIn && (
           <button
             onClick={() => setShowLoginModal(false)}
-            className="fixed top-4 right-4 z-50 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition-all border border-slate-700"
+            className="fixed top-4 left-4 z-50 px-3.5 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition-all border border-slate-700 backdrop-blur-xs"
           >
-            โ เธเธฅเธฑเธเธชเธนเนเธฃเธฐเธเธ ({currentUser?.nickname || 'เนเธ”เธเธเธญเธฃเนเธ”'})
+            ← {tx('กลับสู่แดชบอร์ด', 'Back to Dashboard')} ({currentUser?.nickname || tx('ผู้ใช้', 'User')})
           </button>
         )}
         <LoginView onLoginSuccess={handleLoginSuccess} />
@@ -73,7 +79,7 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFFDF7] text-slate-800 font-['Prompt',sans-serif]">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 font-['Prompt',sans-serif]">
       {/* Top Navbar */}
       <Navbar
         currentTab={currentTab}
@@ -123,23 +129,31 @@ const MainContent: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-amber-900/10 bg-white/70 py-6 mt-12 text-xs text-slate-500">
+      <footer className="border-t border-slate-200/80 bg-white py-6 mt-12 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <MaxUpLogo size="sm" />
-            <span className="text-slate-400">ยท</span>
-            <span>เนเธเธฅเธ•เธเธญเธฃเนเธกเธเธฒเธฃเน€เธฃเธตเธขเธเธฃเธนเนเนเธฅเธฐเธเธฑเธเธ—เธถเธเธเธฒเธฃเธชเธญเธ MaxUp TutorHub</span>
+            <span className="text-slate-300">·</span>
+            <span>
+              {tx(
+                'แพลตฟอร์มการเรียนรู้และติดตามการสอน MaxUp TutorHub',
+                'MaxUp TutorHub Learning & Progress Platform'
+              )}
+            </span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-500">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-blue-900" />
               <span>
-                เธฅเนเธญเธเธญเธดเธเนเธเธเธทเนเธญ: {currentUserRole === 'admin' ? 'เธเธฃเธนเธเธตเนเนเธกเนเธ (Admin)' : currentUser?.nickname}
+                {tx('ผู้ใช้งาน:', 'Signed in as:')}{' '}
+                <strong className="text-slate-700">
+                  {currentUserRole === 'admin'
+                    ? tx('ครูพี่แม็ก', 'Coach Max')
+                    : currentUser?.nickname}
+                </strong>
               </span>
             </span>
-            <span className="text-slate-400">ยท</span>
-            <span>เธฃเธฐเธเธเธเธฃเธดเธซเธฒเธฃเธเธฑเธ”เธเธฒเธฃเธซเธฅเธฑเธเธเนเธฒเธเธเธฃเธเธงเธเธเธฃ</span>
           </div>
         </div>
       </footer>
@@ -150,10 +164,11 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppProvider>
-        <MainContent />
-      </AppProvider>
+      <LanguageProvider>
+        <AppProvider>
+          <MainContent />
+        </AppProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }
-

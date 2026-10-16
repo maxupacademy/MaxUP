@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Lesson } from '../../types';
+import { SpotlightCard } from '../ui/SpotlightCard';
+import { NumberTicker } from '../ui/NumberTicker';
 import {
   Clock,
   BookOpen,
@@ -12,9 +15,10 @@ import {
   Trash2,
   Edit2,
   ChevronRight,
-  Sparkles,
   ExternalLink,
   FolderOpen,
+  ArrowUpRight,
+  GraduationCap,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -41,12 +45,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     adminProfile,
   } = useApp();
 
+  const { tx } = useLanguage();
+
   const [studentFilter, setStudentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Analytics
   const totalMinutes = lessons.reduce((acc, l) => acc + (l.durationMinutes || 0), 0);
-  const totalHours = (totalMinutes / 60).toFixed(1);
+  const totalHoursNum = totalMinutes / 60;
   const totalLessons = lessons.length;
 
   // Total subtopics in subject
@@ -66,190 +72,243 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Top Welcome Banner with Professor Meow mascot */}
-      <section className="bg-gradient-to-r from-amber-500/10 via-amber-100/40 to-blue-900/10 border border-amber-900/10 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
-        <div className="space-y-2 max-w-xl text-center md:text-left">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-900 bg-white/80 border border-blue-900/15 px-3 py-1 rounded-lg">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>ระบบบันทึกและติดตามการสอน MaxUp TutorHub</span>
+      {/* Top 21st.dev Editorial Hero Banner */}
+      <section className="relative overflow-hidden bg-slate-900 text-white rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border border-slate-800">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.35) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="relative z-10 space-y-2.5 max-w-xl text-center md:text-left">
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{tx('แดชบอร์ดผู้สอน', 'Instructor Workspace')}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            สวัสดีครับ {adminProfile.fullName}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            {tx(`สวัสดีครับ ${adminProfile.fullName}`, `Welcome, ${adminProfile.fullName}`)}
           </h1>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            ติดตามประวัติการสอน บันทึกคาบเรียนแบบ Real-time และดูภาพรวมการติวของนักเรียนทุกคนในหลักสูตร{' '}
-            <strong className="text-blue-900">{activeSubject.name}</strong>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            {tx(
+              'ติดตามความก้าวหน้านักเรียน บันทึกคาบเรียน และบริหารหลักสูตร',
+              'Monitor student mastery, log sessions, and manage curriculum for'
+            )}{' '}
+            <strong className="text-amber-300">{activeSubject.name}</strong>
           </p>
-          <div className="pt-2 flex flex-wrap items-center gap-3 justify-center md:justify-start">
+          <div className="pt-2 flex flex-wrap items-center gap-2.5 justify-center md:justify-start">
             <button
               onClick={onOpenLessonModal}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-xs transition-all active:scale-98 cursor-pointer"
             >
-              <PlusCircle className="w-4 h-4 text-amber-300" />
-              <span>บันทึกคาบเรียนใหม่</span>
+              <PlusCircle className="w-4 h-4 text-slate-950" />
+              <span>{tx('บันทึกคาบเรียน', 'Log Lesson')}</span>
             </button>
             <button
               onClick={onNavigateToSyllabus}
-              className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+              className="px-3.5 py-2 text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all cursor-pointer"
             >
-              ดูสารบัญวิชา ({activeSubject.topics.length} บท)
+              {tx(
+                `สารบัญวิชา (${activeSubject.topics.length} บท)`,
+                `Syllabus (${activeSubject.topics.length} Units)`
+              )}
             </button>
             {onNavigateToSchedule && (
               <button
                 onClick={onNavigateToSchedule}
-                className="px-3.5 py-2 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl shadow-2xs transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition-all cursor-pointer"
               >
-                📅 วางแผนตารางเรียน
+                {tx('ตารางสอน', 'Schedule')}
               </button>
             )}
           </div>
         </div>
 
-        {/* Quick Summary Pill */}
-        <div className="flex-shrink-0 bg-white/90 border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col items-center justify-center text-center min-w-[200px]">
-          <div className="w-12 h-12 rounded-2xl bg-blue-900 text-white flex items-center justify-center font-bold text-xl mb-2 shadow-xs">
-            🎓
+        {/* Active Course Spotlight Badge */}
+        <SpotlightCard
+          spotlightColor="rgba(251, 191, 36, 0.2)"
+          className="relative z-10 shrink-0 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 min-w-[210px] text-center"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-300 flex items-center justify-center mx-auto mb-2.5">
+            <GraduationCap className="w-6 h-6" />
           </div>
-          <div className="text-xs font-bold text-slate-800">
-            {activeSubject.name || 'คอร์สเรียน'}
+          <div className="text-xs font-bold text-white line-clamp-1">
+            {activeSubject.name || tx('คอร์สเรียน', 'Active Course')}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">
-            นักเรียนในระบบ: {students.length} คน
+          <div className="text-[11px] text-slate-400 mt-1">
+            {tx(`นักเรียนทั้งหมด ${students.length} คน`, `${students.length} Enrolled Students`)}
           </div>
-        </div>
+        </SpotlightCard>
       </section>
 
-      {/* 3 Quantitative Metric Cards (Tabular numerals, zero-pill discipline) */}
+      {/* 21st.dev Stats Bento Grid with SpotlightCard & NumberTicker */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
+        <SpotlightCard
+          spotlightColor="rgba(245, 158, 11, 0.12)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-amber-300"
+        >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">ชั่วโมงสอนสะสม</span>
-            <Clock className="w-4 h-4 text-amber-600" />
+            <span className="text-xs font-semibold">{tx('ชั่วโมงสอนสะสม', 'Teaching Hours')}</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-amber-600" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {totalHours}
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={totalHoursNum} decimals={1} />
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            <span>คำนวณจากบันทึกเวลาจริง</span>
+            <span>{tx('คำนวณจากเวลาเรียนจริง', 'Calculated from logged sessions')}</span>
           </div>
-        </div>
+        </SpotlightCard>
 
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
+        <SpotlightCard
+          spotlightColor="rgba(30, 58, 138, 0.1)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-blue-300"
+        >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">จำนวนคาบที่สอน</span>
-            <BookOpen className="w-4 h-4 text-blue-900" />
+            <span className="text-xs font-semibold">{tx('จำนวนคาบที่สอน', 'Completed Sessions')}</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-blue-900" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {totalLessons}
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={totalLessons} />
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            <span>ทุกวิชาและนักเรียน</span>
+            <span>{tx('บันทึกในระบบทั้งหมด', 'Total recorded lessons')}</span>
           </div>
-        </div>
+        </SpotlightCard>
 
-        <div className="bg-white border border-amber-900/10 rounded-2xl p-4 sm:p-5 shadow-2xs">
+        <SpotlightCard
+          spotlightColor="rgba(16, 185, 129, 0.12)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300"
+        >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">นักเรียนในความดูแล</span>
-            <Users className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-semibold">{tx('นักเรียนในความดูแล', 'Active Students')}</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center">
+              <Users className="w-4 h-4 text-emerald-600" />
+            </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono tabular-nums">
-            {students.length}
+          <div className="text-3xl font-black text-slate-900 font-mono">
+            <NumberTicker value={students.length} />
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            <span>กำลังติวอย่างต่อเนื่อง</span>
+            <span>{tx('กำลังเรียนอย่างต่อเนื่อง', 'Currently enrolled')}</span>
           </div>
-        </div>
+        </SpotlightCard>
       </section>
 
-      {/* Student Roster & Quick Progress */}
-      <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+      {/* Student Roster & Quick Progress (21st.dev Course Design Cards) */}
+      <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">นักเรียนในหลักสูตร (Student Progress)</h2>
-            <p className="text-xs text-slate-500">ความคืบหน้าตามสารบัญเคมี A-Level</p>
+            <h2 className="text-base font-bold text-slate-900">
+              {tx('ความคืบหน้านักเรียน', 'Student Progress')}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {tx(`อ้างอิงตามสารบัญวิชา ${activeSubject.name}`, `Based on ${activeSubject.name} syllabus`)}
+            </p>
           </div>
           <button
             onClick={onNavigateToStudents}
-            className="text-xs font-semibold text-blue-900 hover:text-blue-700 flex items-center gap-1"
+            className="text-xs font-bold text-blue-900 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
           >
-            <span>จัดการนักเรียนทั้งหมด</span>
+            <span>{tx('จัดการนักเรียน', 'Manage Students')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {students.map((st) => {
-            const stProgress = progressMap[st.id] || [];
-            const completedCount = stProgress.filter(
-              (p) => p.status === 'completed' || p.status === 'mastered'
-            ).length;
-            const percent =
-              totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;
-            const stLessons = lessons.filter((l) => l.studentId === st.id);
-            const stHours = (
-              stLessons.reduce((acc, l) => acc + l.durationMinutes, 0) / 60
-            ).toFixed(1);
+        {students.length === 0 ? (
+          <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-xs text-slate-500">
+            {tx('ยังไม่มีรายชื่อนักเรียนในระบบ', 'No students enrolled yet')}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {students.map((st) => {
+              const stProgress = progressMap[st.id] || [];
+              const completedCount = stProgress.filter(
+                (p) => p.status === 'completed' || p.status === 'mastered'
+              ).length;
+              const percent =
+                totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;
+              const stLessons = lessons.filter((l) => l.studentId === st.id);
+              const stHours = (
+                stLessons.reduce((acc, l) => acc + l.durationMinutes, 0) / 60
+              ).toFixed(1);
 
-            return (
-              <div
-                key={st.id}
-                className="border border-slate-200/80 rounded-xl p-4 hover:border-amber-400 transition-all bg-[#FFFDF7]/50 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm">{st.nickname}</h3>
-                      <p className="text-xs text-slate-500">{st.fullName}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-md">
-                      {st.grade}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-600 mt-2">
-                    เป้าหมาย: <span className="font-medium text-amber-900">{st.targetFaculty || st.targetExam}</span>
-                  </p>
-
-                  {/* Progress bar */}
-                  <div className="mt-3 space-y-1">
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>ครอบคลุมสารบัญ</span>
-                      <span className="font-mono tabular-nums font-semibold text-slate-700">
-                        {completedCount}/{totalSubtopics} ({percent}%)
+              return (
+                <SpotlightCard
+                  key={st.id}
+                  spotlightColor="rgba(59, 130, 246, 0.1)"
+                  className="border border-slate-200/90 rounded-2xl p-4 hover:border-blue-300 bg-slate-50/40 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm">{st.nickname}</h3>
+                        <p className="text-xs text-slate-500">{st.fullName}</p>
+                      </div>
+                      <span className="text-[11px] font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-lg">
+                        {st.grade}
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-amber-500 to-blue-900 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${percent}%` }}
-                      />
+
+                    <p className="text-xs text-slate-600 mt-2">
+                      {tx('เป้าหมาย:', 'Goal:')}{' '}
+                      <span className="font-semibold text-slate-800">
+                        {st.targetFaculty || st.targetExam || '-'}
+                      </span>
+                    </p>
+
+                    {/* Progress bar */}
+                    <div className="mt-3.5 space-y-1.5">
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>{tx('ความคืบหน้าสารบัญ', 'Syllabus Mastery')}</span>
+                        <span className="font-mono tabular-nums font-bold text-slate-800">
+                          {completedCount}/{totalSubtopics} ({percent}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-slate-900 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-mono tabular-nums">
-                    เรียนแล้ว {stHours} ชม. ({stLessons.length} คาบ)
-                  </span>
-                  <button
-                    onClick={onNavigateToStudents}
-                    className="font-medium text-blue-900 hover:text-blue-700 underline underline-offset-2 cursor-pointer"
-                  >
-                    จัดการข้อมูลนักเรียน →
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-mono tabular-nums">
+                      {tx(
+                        `${stHours} ชม. · ${stLessons.length} คาบ`,
+                        `${stHours} hrs · ${stLessons.length} sessions`
+                      )}
+                    </span>
+                    <button
+                      onClick={onNavigateToStudents}
+                      className="font-bold text-blue-900 hover:text-blue-700 inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>{tx('ดูข้อมูล', 'Details')}</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </SpotlightCard>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Recent Lesson Logs Table */}
-      <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+      <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-slate-900">ประวัติบันทึกคาบเรียน (Lesson Logs)</h2>
-            <p className="text-xs text-slate-500">รายการบันทึกการสอนทั้งหมด พร้อมคะแนนและการบ้าน</p>
+            <h2 className="text-base font-bold text-slate-900">
+              {tx('ประวัติบันทึกคาบเรียน', 'Lesson History')}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {tx('รายการบันทึกการสอนและเอกสารประกอบรายคาบ', 'All recorded sessions and attached study materials')}
+            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -257,9 +316,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={studentFilter}
               onChange={(e) => setStudentFilter(e.target.value)}
-              className="bg-white border border-slate-200 text-xs rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="bg-slate-50 border border-slate-200 text-xs font-medium rounded-xl px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
-              <option value="all">นักเรียนทุกคน</option>
+              <option value="all">{tx('นักเรียนทุกคน', 'All Students')}</option>
               {students.map((st) => (
                 <option key={st.id} value={st.id}>
                   {st.nickname}
@@ -271,23 +330,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="ค้นหาเนื้อหา/บันทึก..."
+                placeholder={tx('ค้นหาบันทึก...', 'Search logs...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white border border-slate-200 text-xs rounded-lg pl-7 pr-3 py-1.5 text-slate-700 w-36 sm:w-48 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="bg-slate-50 border border-slate-200 text-xs rounded-xl pl-8 pr-3 py-1.5 text-slate-700 w-36 sm:w-48 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
               />
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
 
         {filteredLessons.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-amber-200 rounded-xl bg-amber-50/20">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-2">
+          <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-slate-50/40">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center mx-auto mb-2">
               <BookOpen className="w-6 h-6" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mt-2">ยังไม่มีบันทึกคาบเรียนที่ตรงกับเงื่อนไข</p>
-            <p className="text-xs text-slate-500 mt-1">สามารถกดปุ่ม "บันทึกคาบเรียนใหม่" เพื่อเริ่มต้นบันทึก</p>
+            <p className="text-sm font-semibold text-slate-700 mt-2">
+              {tx('ยังไม่มีบันทึกคาบเรียน', 'No lesson logs found')}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {tx('กดปุ่ม "บันทึกคาบเรียน" ด้านบนเพื่อเพิ่มข้อมูล', 'Click "Log Lesson" above to record a session')}
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -298,50 +361,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               return (
                 <div
                   key={les.id}
-                  className="py-4 hover:bg-slate-50/70 rounded-xl px-3 transition-colors space-y-2"
+                  className="py-4 hover:bg-slate-50/80 rounded-xl px-3 transition-colors space-y-2"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-900 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-xs shrink-0">
                         {student?.nickname ? student.nickname.slice(0, 2) : 'ST'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="font-bold text-slate-900 text-sm">
-                            {student?.nickname || 'นักเรียน'}
+                            {student?.nickname || tx('นักเรียน', 'Student')}
                           </h4>
-                          <span className="text-slate-400">·</span>
+                          <span className="text-slate-300">·</span>
                           <span className="text-xs text-slate-500 font-mono tabular-nums flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
                             {les.lessonDate}
                           </span>
-                          <span className="text-slate-400">·</span>
+                          <span className="text-slate-300">·</span>
                           <span className="text-xs text-slate-500 font-mono tabular-nums">
-                            {les.startTime}–{les.endTime} ({durationHours} ชม.)
+                            {les.startTime}–{les.endTime} ({durationHours} {tx('ชม.', 'h')})
                           </span>
                         </div>
                         <p className="text-xs text-slate-500">{student?.fullName || '-'}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-
-
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
                       <button
                         onClick={() => onEditLesson(les)}
-                        className="p-1.5 text-slate-400 hover:text-blue-900 rounded-lg hover:bg-slate-100 transition-colors"
-                        title="แก้ไข"
+                        className="p-1.5 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                        title={tx('แก้ไข', 'Edit')}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {
-                          if (window.confirm('ยืนยันการลบบันทึกการสอนคาบนี้หรือไม่?')) {
+                          if (
+                            window.confirm(
+                              tx('ยืนยันการลบบันทึกคาบเรียนนี้?', 'Delete this lesson log?')
+                            )
+                          ) {
                             deleteLesson(les.id);
                           }
                         }}
                         className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-                        title="ลบคาบเรียนนี้"
+                        title={tx('ลบ', 'Delete')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -349,14 +414,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
 
                   {/* Content Detail */}
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white/70 p-3 rounded-lg border border-slate-100">
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
                     {les.contentDetail}
                   </p>
 
-                  {/* Covered Subtopics Badges (clean unboxed text or soft tags) */}
+                  {/* Covered Subtopics Badges */}
                   {(les.subtopicIds || []).length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
-                      <span className="text-slate-400 font-medium">หัวข้อที่สอน:</span>
+                      <span className="text-slate-400 font-medium">
+                        {tx('หัวข้อที่เรียน:', 'Covered topics:')}
+                      </span>
                       {(les.subtopicIds || []).map((subId) => {
                         let subName = subId;
                         activeSubject?.topics?.forEach((t) => {
@@ -366,7 +433,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         return (
                           <span
                             key={subId}
-                            className="bg-amber-50 text-amber-900 border border-amber-200/60 px-2 py-0.5 rounded text-[11px]"
+                            className="bg-amber-50 text-amber-900 border border-amber-200/60 px-2 py-0.5 rounded-md text-[11px] font-medium"
                           >
                             {subName}
                           </span>
@@ -375,7 +442,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   )}
 
-                  {/* Links & Resources (Handwritten Solution & Google Drive) */}
+                  {/* Links & Resources */}
                   {(les.handwrittenSolutionUrl || les.googleDriveUrl) && (
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       {les.handwrittenSolutionUrl && (
@@ -383,9 +450,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           href={les.handwrittenSolutionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition-all shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition-all"
                         >
-                          <span>✍️ เฉลยลายมือประจำคาบ</span>
+                          <span>✍️ {tx('เฉลยลายมือ', 'Handwritten Notes')}</span>
                           <ExternalLink className="w-3 h-3 text-amber-700" />
                         </a>
                       )}
@@ -394,10 +461,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           href={les.googleDriveUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-all shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-all"
                         >
                           <FolderOpen className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>ชีทเรียน Google Drive</span>
+                          <span>{tx('เอกสารประกอบการเรียน', 'Study Sheet')}</span>
                           <ExternalLink className="w-3 h-3 text-emerald-700" />
                         </a>
                       )}
@@ -409,8 +476,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {les.homework && (
                       <span className="flex items-center gap-1.5 text-blue-900 font-medium">
                         <span className="w-2 h-2 rounded-full bg-blue-600" />
-                        การบ้าน: {les.homework.title} (กำหนดส่ง {les.homework.dueDate} —{' '}
-                        {les.homework.status === 'submitted' ? 'ส่งแล้ว ✅' : 'ยังไม่ส่ง ⏳'})
+                        {tx('การบ้าน:', 'Homework:')} {les.homework.title} (
+                        {les.homework.status === 'submitted'
+                          ? tx('ส่งแล้ว ✅', 'Submitted ✅')
+                          : tx('รอส่ง ⏳', 'Pending ⏳')}
+                        )
                       </span>
                     )}
 
@@ -423,7 +493,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     {les.teacherNote && (
                       <span className="text-slate-500 italic">
-                        โน้ตครู: "{les.teacherNote}"
+                        {tx('โน้ตครู:', 'Note:')} "{les.teacherNote}"
                       </span>
                     )}
                   </div>

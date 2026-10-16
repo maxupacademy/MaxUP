@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Homework, HomeworkSubmission } from '../../types';
 import {
   ClipboardList,
@@ -37,6 +38,7 @@ export const HomeworkSuite: React.FC = () => {
     submitHomework,
     gradeHomeworkSubmission,
   } = useApp();
+  const { tx } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<'student_list' | 'admin_grading' | 'admin_list'>(
     currentUserRole === 'admin' ? 'admin_grading' : 'student_list'
@@ -214,15 +216,23 @@ export const HomeworkSuite: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/60 px-2.5 py-0.5 rounded-md mb-1">
               <ClipboardList className="w-3.5 h-3.5 text-amber-600" />
-              <span>ระบบการบ้าน & ส่งงานออนไลน์ (Homework & Assignments)</span>
+              <span>{tx('ระบบการบ้านออนไลน์', 'Homework & Assignments')}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {currentUserRole === 'admin' ? 'ศูนย์จัดการและตรวจการบ้าน' : `การบ้านของ ${currentStudentName}`}
+              {currentUserRole === 'admin'
+                ? tx('จัดการและตรวจการบ้าน', 'Homework & Grading')
+                : tx(`การบ้านของ ${currentStudentName}`, `${currentStudentName}'s Homework`)}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
               {currentUserRole === 'admin'
-                ? 'สร้างโจทย์การบ้านใหม่ ตรวจงานนักเรียน และให้คะแนนพร้อมคำแนะนำแบบรายบุคคล'
-                : 'ส่งการบ้านได้ทั้งแบบอัปโหลด PDF, แนบรูปถ่ายสมุด หรือพิมพ์คำตอบพร้อมสูตรคณิต-เคมีในระบบ'}
+                ? tx(
+                    'สร้างโจทย์การบ้านใหม่ ตรวจงานนักเรียน และให้คะแนนพร้อมคำแนะนำรายบุคคล',
+                    'Create assignments, review submissions, and provide personalized feedback.'
+                  )
+                : tx(
+                    'ส่งการบ้านได้ทั้งแบบอัปโหลด PDF แนบรูปถ่ายสมุด หรือพิมพ์คำตอบในระบบ',
+                    'Submit homework via PDF upload, notebook photo, or rich equation text.'
+                  )}
             </p>
           </div>
 
@@ -233,7 +243,7 @@ export const HomeworkSuite: React.FC = () => {
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
               >
                 <Plus className="w-4 h-4 text-amber-300" />
-                <span>+ สร้างโจทย์การบ้านใหม่</span>
+                <span>+ {tx('สร้างการบ้านใหม่', 'New Assignment')}</span>
               </button>
             )}
           </div>
@@ -241,7 +251,7 @@ export const HomeworkSuite: React.FC = () => {
 
         {/* Course Switcher Pills */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
-          <span className="text-xs font-bold text-slate-500 whitespace-nowrap">เลือกคอร์ส:</span>
+          <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{tx('เลือกคอร์ส:', 'Course:')}</span>
           {courses.map((course) => (
             <button
               key={course.id}
@@ -270,7 +280,12 @@ export const HomeworkSuite: React.FC = () => {
             }`}
           >
             <Award className="w-4 h-4 text-amber-300" />
-            <span>ตรวจการบ้านนักเรียน ({allSubmissions.filter((s) => s.sub.status === 'submitted').length} รอตรวจ)</span>
+            <span>
+              {tx(
+                `ตรวจการบ้าน (${allSubmissions.filter((s) => s.sub.status === 'submitted').length} รอตรวจ)`,
+                `Review Submissions (${allSubmissions.filter((s) => s.sub.status === 'submitted').length} pending)`
+              )}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('admin_list')}
@@ -281,7 +296,7 @@ export const HomeworkSuite: React.FC = () => {
             }`}
           >
             <ClipboardList className="w-4 h-4 text-amber-300" />
-            <span>รายการโจทย์ทั้งหมดในคอร์ส ({courseHomeworks.length})</span>
+            <span>{tx(`รายการการบ้านทั้งหมด (${courseHomeworks.length})`, `All Assignments (${courseHomeworks.length})`)}</span>
           </button>
         </div>
       )}

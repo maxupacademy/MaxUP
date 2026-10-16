@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { SpotlightCard } from '../ui/SpotlightCard';
+import { NumberTicker } from '../ui/NumberTicker';
 import { StudySchedulePlan } from '../../types';
 import {
   Calendar,
@@ -51,6 +54,8 @@ export const SchedulePlannerView: React.FC = () => {
     setTeacherPromptPay,
     confirmSchedulePayment,
   } = useApp();
+
+  const { tx } = useLanguage();
 
   const [filterCourseId, setFilterCourseId] = useState<string>(activeCourseId || 'all');
   const [filterStudentId, setFilterStudentId] = useState<string>('all');
@@ -379,26 +384,32 @@ export const SchedulePlannerView: React.FC = () => {
       </div>
 
       {/* Header & Planning Overview */}
-      <section className="bg-white border border-amber-900/10 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 print:border-none print:shadow-none print:p-0">
+      <section className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 print:border-none print:shadow-none print:p-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-md mb-1.5">
               <Calendar className="w-3.5 h-3.5 text-blue-700" />
               <span>
                 {currentUserRole === 'admin'
-                  ? 'ระบบวางแผนตารางเรียนและเนื้อหาล่วงหน้า'
-                  : 'ตารางเรียนและเนื้อหาล่วงหน้าของคุณ'}
+                  ? tx('ระบบจัดการตารางสอน', 'Schedule Management')
+                  : tx('ตารางเรียนของคุณ', 'Your Study Schedule')}
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
               {currentUserRole === 'admin'
-                ? 'ตารางเรียน & วางแผนเนื้อหาล่วงหน้า (Lesson Schedule & Plan)'
-                : 'ตารางเรียนล่วงหน้า & เนื้อหาที่ต้องเตรียมตัว'}
+                ? tx('ตารางเรียนและแผนการสอน', 'Lesson Schedule & Planning')
+                : tx('ตารางเรียนล่วงหน้าและหัวข้อที่เตรียมสอน', 'Upcoming Schedule & Topics')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
               {currentUserRole === 'admin'
-                ? 'คุณครู Max สามารถกำหนดวันเวลา ชั่วโมงเรียน และเลือกหัวข้อใน Syllabus ที่จะสอนล่วงหน้า เพื่อให้นักเรียนทราบและเตรียมตัวก่อนเข้าเรียน'
-                : 'ดูวันเวลาเรียนล่วงหน้า ชั่วโมงเรียน และหัวข้อในหลักสูตรที่ครู Max วางแผนจะสอน พร้อมลิงก์เอกสาร Google Drive'}
+                ? tx(
+                    'กำหนดวันเวลา เลือกหัวข้อในสารบัญ และกดบันทึกเป็นคาบเรียนจริงพร้อมอัปเดตความก้าวหน้าได้ในคลิกเดียว',
+                    'Schedule sessions, assign syllabus topics, and convert completed slots into logged lessons in one click.'
+                  )
+                : tx(
+                    'ตรวจสอบวันเวลาเรียนล่วงหน้า หัวข้อที่จะเรียน และเอกสารประกอบการสอน',
+                    'Check upcoming study times, assigned syllabus topics, and attached worksheets.'
+                  )}
             </p>
           </div>
 
@@ -407,64 +418,91 @@ export const SchedulePlannerView: React.FC = () => {
               type="button"
               onClick={() => window.print()}
               className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs cursor-pointer transition-all active:scale-98"
-              title="พิมพ์ตารางเรียนออกเป็นชีท หรือบันทึกเป็น PDF"
             >
-              <Printer className="w-4 h-4 text-amber-700" />
-              <span>🖨️ พิมพ์ตารางเรียน (PDF)</span>
+              <Printer className="w-4 h-4 text-slate-700" />
+              <span>{tx('พิมพ์ตารางเรียน', 'Print Schedule')}</span>
             </button>
             {currentUserRole === 'admin' && (
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs cursor-pointer transition-all active:scale-98"
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all active:scale-98"
               >
-                <Plus className="w-4 h-4 text-amber-300" />
-                <span>เพิ่มตารางเรียนล่วงหน้า</span>
+                <Plus className="w-4 h-4 text-amber-400" />
+                <span>{tx('เพิ่มตารางเรียน', 'Add Session')}</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Quantitative Metric Strip */}
+        {/* 21st.dev Quantitative Metric Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100 print:hidden">
-          <div className="bg-[#FFFDF7] p-3 rounded-xl border border-amber-200/60">
-            <span className="text-[11px] text-slate-500 block">คาบที่กำลังจะมาถึง</span>
-            <span className="text-lg font-bold text-blue-900">{upcomingCount} คาบ</span>
-          </div>
-          <div className="bg-[#FFFDF7] p-3 rounded-xl border border-amber-200/60">
-            <span className="text-[11px] text-slate-500 block">ชั่วโมงเรียนตามแผน</span>
-            <span className="text-lg font-bold text-amber-700">{totalPlannedHours} ชม.</span>
-          </div>
-          <div className="bg-[#FFFDF7] p-3 rounded-xl border border-amber-200/60">
-            <span className="text-[11px] text-slate-500 block">สลิปที่รอตรวจสอบ</span>
+          <SpotlightCard
+            spotlightColor="rgba(30, 58, 138, 0.1)"
+            className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80"
+          >
+            <span className="text-[11px] text-slate-500 block">
+              {tx('คาบที่กำลังจะมาถึง', 'Upcoming Sessions')}
+            </span>
+            <span className="text-xl font-black text-slate-900 font-mono">
+              <NumberTicker value={upcomingCount} /> {tx('คาบ', '')}
+            </span>
+          </SpotlightCard>
+          <SpotlightCard
+            spotlightColor="rgba(245, 158, 11, 0.12)"
+            className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80"
+          >
+            <span className="text-[11px] text-slate-500 block">
+              {tx('ชั่วโมงเรียนตามแผน', 'Planned Hours')}
+            </span>
+            <span className="text-xl font-black text-amber-700 font-mono">
+              <NumberTicker value={parseFloat(totalPlannedHours) || 0} decimals={1} /> {tx('ชม.', 'h')}
+            </span>
+          </SpotlightCard>
+          <SpotlightCard
+            spotlightColor="rgba(239, 68, 68, 0.1)"
+            className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80"
+          >
+            <span className="text-[11px] text-slate-500 block">
+              {tx('สลิปที่รอตรวจสอบ', 'Pending Slips')}
+            </span>
             <div className="flex items-center gap-1.5">
-              <span className={`text-lg font-bold ${pendingSlipsCount > 0 ? 'text-red-600' : 'text-slate-700'}`}>
-                {pendingSlipsCount} สลิป
+              <span
+                className={`text-xl font-black font-mono ${
+                  pendingSlipsCount > 0 ? 'text-red-600' : 'text-slate-700'
+                }`}
+              >
+                <NumberTicker value={pendingSlipsCount} />
               </span>
               {pendingSlipsCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-red-600 text-white text-[9px] font-bold animate-pulse">
-                  ตรวจด่วน
+                <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-bold animate-pulse">
+                  {tx('รอตรวจ', 'Review')}
                 </span>
               )}
             </div>
-          </div>
-          <div className="bg-[#FFFDF7] p-3 rounded-xl border border-amber-200/60">
-            <span className="text-[11px] text-slate-500 block">ยอดชำระแล้วทั้งหมด</span>
-            <span className="text-lg font-bold text-emerald-700 font-mono">
+          </SpotlightCard>
+          <SpotlightCard
+            spotlightColor="rgba(16, 185, 129, 0.12)"
+            className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80"
+          >
+            <span className="text-[11px] text-slate-500 block">
+              {tx('ยอดชำระแล้วทั้งหมด', 'Total Verified')}
+            </span>
+            <span className="text-xl font-black text-emerald-700 font-mono">
               ฿{totalPaidAmount.toLocaleString()}
             </span>
-          </div>
+          </SpotlightCard>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 pt-2 text-xs print:hidden">
           {courses.length > 1 && (
             <select
               value={filterCourseId}
               onChange={(e) => setFilterCourseId(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
-              <option value="all">ทุกคอร์สเรียน</option>
+              <option value="all">{tx('ทุกคอร์สเรียน', 'All Courses')}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -477,50 +515,54 @@ export const SchedulePlannerView: React.FC = () => {
             <select
               value={filterStudentId}
               onChange={(e) => setFilterStudentId(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
-              <option value="all">นักเรียนทุกคน</option>
+              <option value="all">{tx('นักเรียนทุกคน', 'All Students')}</option>
               {students.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nickname} ({s.fullName})
+                  {s.nickname}
                 </option>
               ))}
             </select>
           )}
 
           {/* Lesson Status Filter */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             {(['all', 'upcoming', 'completed'] as const).map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                   filterStatus === st
                     ? 'bg-white text-slate-900 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                {st === 'all' ? 'ทุกสถานะคาบ' : st === 'upcoming' ? 'ตามแผน' : 'สอนแล้ว'}
+                {st === 'all'
+                  ? tx('ทั้งหมด', 'All')
+                  : st === 'upcoming'
+                  ? tx('ตามแผน', 'Planned')
+                  : tx('สอนแล้ว', 'Completed')}
               </button>
             ))}
           </div>
 
           {/* Payment Status Filter */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             {(['all', 'slip_uploaded', 'paid', 'pending'] as const).map((ps) => (
               <button
                 key={ps}
                 onClick={() => setFilterPayment(ps)}
-                className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                   filterPayment === ps
                     ? 'bg-white text-slate-900 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                {ps === 'all' && <span>การเงิน: ทั้งหมด</span>}
+                {ps === 'all' && <span>{tx('การเงินทั้งหมด', 'All Payments')}</span>}
                 {ps === 'slip_uploaded' && (
                   <>
-                    <span>รอตรวจสลิป</span>
+                    <span>{tx('รอตรวจสลิป', 'Verifying')}</span>
                     {pendingSlipsCount > 0 && (
                       <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] flex items-center justify-center font-bold">
                         {pendingSlipsCount}
@@ -528,35 +570,43 @@ export const SchedulePlannerView: React.FC = () => {
                     )}
                   </>
                 )}
-                {ps === 'paid' && <span>ชำระแล้ว</span>}
-                {ps === 'pending' && <span>รอชำระ</span>}
+                {ps === 'paid' && <span>{tx('ชำระแล้ว', 'Paid')}</span>}
+                {ps === 'pending' && <span>{tx('รอชำระ', 'Unpaid')}</span>}
               </button>
             ))}
           </div>
 
           {/* View Mode Toggle: Calendar Grid vs Card Timeline */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg ml-auto">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl ml-auto">
             <button
               onClick={() => setViewMode('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                 viewMode === 'calendar'
-                  ? 'bg-white text-blue-900 shadow-2xs'
+                  ? 'bg-slate-900 text-white shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <CalendarDays className="w-3.5 h-3.5 text-blue-700" />
-              <span>ปฏิทินรายเดือน (Calendar)</span>
+              <CalendarDays
+                className={`w-3.5 h-3.5 ${
+                  viewMode === 'calendar' ? 'text-amber-400' : 'text-slate-500'
+                }`}
+              />
+              <span>{tx('ปฏิทิน', 'Calendar')}</span>
             </button>
             <button
               onClick={() => setViewMode('cards')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                 viewMode === 'cards'
-                  ? 'bg-white text-blue-900 shadow-2xs'
+                  ? 'bg-slate-900 text-white shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5 text-slate-600" />
-              <span>รายการการ์ด (Cards)</span>
+              <LayoutGrid
+                className={`w-3.5 h-3.5 ${
+                  viewMode === 'cards' ? 'text-amber-400' : 'text-slate-500'
+                }`}
+              />
+              <span>{tx('การ์ด', 'Cards')}</span>
             </button>
           </div>
         </div>

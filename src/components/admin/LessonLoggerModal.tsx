@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Lesson, Homework } from '../../types';
 import {
   X,
@@ -37,6 +38,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     schedulePlans,
     toggleSchedulePlanStatus,
   } = useApp();
+  const { tx } = useLanguage();
 
   const [studentId, setStudentId] = useState<string>('');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
@@ -313,10 +315,15 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         <div className="px-6 py-4 bg-white border-b border-amber-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              {editLesson ? 'แก้ไขบันทึกคาบเรียน' : 'บันทึกคาบเรียนใหม่ (Lesson Log)'}
+              {editLesson
+                ? tx('แก้ไขบันทึกคาบเรียน', 'Edit Lesson Log')
+                : tx('บันทึกคาบเรียนใหม่', 'New Lesson Log')}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              เลือกหัวข้อที่เรียนตาม Course Syllabus คำนวณชั่วโมงอัตโนมัติ และแนบลิงก์ Google Drive
+              {tx(
+                'เลือกหัวข้อที่เรียนตามสารบัญ คำนวณชั่วโมงอัตโนมัติ และแนบลิงก์ Google Drive',
+                'Select syllabus topics, auto-calculate hours, and attach Google Drive links.'
+              )}
             </p>
           </div>
           <button
@@ -338,10 +345,13 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 </div>
                 <div>
                   <span className="font-bold text-slate-900 text-xs block">
-                    📅 ดึงข้อมูลจากตารางเรียนล่วงหน้า (Import from Schedule)
+                    📅 {tx('ดึงข้อมูลจากตารางเรียน', 'Import from Schedule')}
                   </span>
                   <span className="text-[11px] text-slate-600 block">
-                    เลือกคาบเพื่อกรอกนักเรียน วิชา เวลา และหัวข้อในสารบัญให้อัตโนมัติ
+                    {tx(
+                      'เลือกคาบเพื่อกรอกนักเรียน วิชา เวลา และหัวข้อให้อัตโนมัติ',
+                      'Select a planned slot to auto-fill student, course, time, and syllabus topics.'
+                    )}
                   </span>
                 </div>
               </div>
@@ -351,13 +361,13 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 onChange={(e) => handleSelectSchedulePlan(e.target.value)}
                 className="bg-white border border-blue-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs cursor-pointer max-w-sm"
               >
-                <option value="">-- คลิกเพื่อเลือกคาบจากตารางเรียน --</option>
+                <option value="">{tx('-- เลือกคาบจากตารางเรียน --', '-- Select from schedule --')}</option>
                 {schedulePlans
                   .slice()
                   .sort((a, b) => b.date.localeCompare(a.date))
                   .map((p) => {
                     const st = students.find((s) => s.id === p.studentId);
-                    const stName = st ? st.nickname : p.studentId === 'all' ? 'ทุกคน' : 'นักเรียน';
+                    const stName = st ? st.nickname : p.studentId === 'all' ? tx('ทุกคน', 'All') : tx('นักเรียน', 'Student');
                     const isDone = p.status === 'completed';
                     return (
                       <option key={p.id} value={p.id}>
@@ -381,7 +391,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  เลือกนักเรียนที่เรียนในคาบนี้ *
+                  {tx('นักเรียน *', 'Student *')}
                 </label>
                 <button
                   type="button"
@@ -389,24 +399,24 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                   className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <UserPlus className="w-3 h-3" />
-                  <span>+ เพิ่มนักเรียนด่วน</span>
+                  <span>+ {tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</span>
                 </button>
               </div>
 
               {showQuickAddStudent && (
                 <div className="mb-2 p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
-                  <div className="text-[11px] font-bold text-blue-900">เพิ่มนักเรียนด่วน</div>
+                  <div className="text-[11px] font-bold text-blue-900">{tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</div>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="text"
-                      placeholder="ชื่อเล่น เช่น น้องภูมิ"
+                      placeholder={tx('ชื่อเล่น เช่น น้องภูมิ', 'Nickname')}
                       value={quickStudentNickname}
                       onChange={(e) => setQuickStudentNickname(e.target.value)}
                       className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
                     />
                     <input
                       type="text"
-                      placeholder="ชื่อ-นามสกุลจริง"
+                      placeholder={tx('ชื่อ-นามสกุลจริง', 'Full Name')}
                       value={quickStudentFullName}
                       onChange={(e) => setQuickStudentFullName(e.target.value)}
                       className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
@@ -417,14 +427,14 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                     onClick={handleQuickCreateStudent}
                     className="w-full py-1 bg-blue-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
                   >
-                    ยืนยันเพิ่มนักเรียน
+                    {tx('ยืนยันเพิ่มนักเรียน', 'Confirm Student')}
                   </button>
                 </div>
               )}
 
               {students.length === 0 ? (
                 <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-                  <span>ยังไม่มีนักเรียนในระบบ กรุณากดปุ่ม <strong>"+ เพิ่มนักเรียนด่วน"</strong> ด้านบน</span>
+                  <span>{tx('ยังไม่มีนักเรียนในระบบ กรุณากดปุ่มเพิ่มนักเรียนด่วนด้านบน', 'No students yet. Use Quick Add Student above.')}</span>
                 </div>
               ) : (
                 <select
@@ -435,7 +445,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 >
                   {students.map((st) => (
                     <option key={st.id} value={st.id}>
-                      {st.nickname} ({st.fullName || st.grade || 'นักเรียน'})
+                      {st.nickname} {st.fullName ? `— ${st.fullName}` : ''}
                     </option>
                   ))}
                 </select>
@@ -445,7 +455,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700">
-                  คอร์สเรียน / วิชาที่สอน *
+                  {tx('คอร์สเรียน *', 'Course *')}
                 </label>
                 <button
                   type="button"
@@ -453,7 +463,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                   className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>+ เพิ่มคอร์สด่วน</span>
+                  <span>+ {tx('เพิ่มคอร์สด่วน', 'Quick Add Course')}</span>
                 </button>
               </div>
 
@@ -461,7 +471,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 <div className="mb-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
                   <input
                     type="text"
-                    placeholder="ชื่อคอร์ส เช่น เคมี ม.5 เล่ม 3"
+                    placeholder={tx('ชื่อคอร์ส เช่น เคมี ม.5 เล่ม 3', 'Course Name')}
                     value={quickCourseName}
                     onChange={(e) => setQuickCourseName(e.target.value)}
                     className="w-full bg-white border border-amber-200 rounded-lg px-2 py-1 text-xs"
@@ -471,14 +481,14 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                     onClick={handleQuickCreateCourse}
                     className="w-full py-1 bg-amber-600 text-white rounded-lg text-xs font-semibold cursor-pointer"
                   >
-                    ยืนยันสร้างคอร์ส
+                    {tx('ยืนยันสร้างคอร์ส', 'Create Course')}
                   </button>
                 </div>
               )}
 
               {courses.length === 0 ? (
                 <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-                  <span>ยังไม่มีคอร์สเรียนในระบบ กรุณากดปุ่ม <strong>"+ เพิ่มคอร์สด่วน"</strong> ด้านบน</span>
+                  <span>{tx('ยังไม่มีคอร์สเรียนในระบบ กรุณากดปุ่มเพิ่มคอร์สด่วนด้านบน', 'No courses yet. Use Quick Add Course above.')}</span>
                 </div>
               ) : (
                 <select
@@ -505,7 +515,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  วันที่เรียน *
+                  {tx('วันที่เรียน *', 'Lesson Date *')}
                 </label>
                 <div className="relative">
                   <input
@@ -521,7 +531,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  เวลาเริ่ม
+                  {tx('เวลาเริ่ม', 'Start Time')}
                 </label>
                 <input
                   type="time"
@@ -533,7 +543,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  เวลาสิ้นสุด
+                  {tx('เวลาสิ้นสุด', 'End Time')}
                 </label>
                 <input
                   type="time"
@@ -545,33 +555,30 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             </div>
 
             <div className="mt-2 pt-2 border-t border-amber-200/40 flex items-center justify-between text-xs">
-              <span className="text-slate-500">คำนวณชั่วโมงสอนสะสมอัตโนมัติ:</span>
+              <span className="text-slate-500">{tx('ระยะเวลาเรียน:', 'Duration:')}</span>
               <span className="inline-flex items-center gap-1.5 font-bold text-amber-900">
                 <Clock className="w-3.5 h-3.5 text-amber-600" />
-                {durationHours} ชม. ({durationMinutes} นาที)
+                {durationHours} {tx('ชม.', 'hrs')} ({durationMinutes} {tx('นาที', 'mins')})
               </span>
             </div>
           </div>
 
-          {/* Row 3: Course Syllabus Selection ("วันนี้เรียนอะไรไปตาม Course syllabus") */}
+          {/* Row 3: Course Syllabus Selection */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-blue-900" />
-                <span>วันนี้เรียนอะไรไปตาม Course Syllabus (เลือกหัวข้อ):</span>
+                <span>{tx('หัวข้อที่เรียนในคาบนี้:', 'Syllabus Topics Covered:')}</span>
               </label>
               <span className="text-xs text-slate-500 font-medium">
-                เลือกแล้ว {selectedSubtopicIds.length} หัวข้อ
+                {tx(`เลือกแล้ว ${selectedSubtopicIds.length} หัวข้อ`, `${selectedSubtopicIds.length} selected`)}
               </span>
             </div>
 
             <div className="max-h-52 overflow-y-auto border border-amber-200 bg-white rounded-xl p-3 space-y-3">
               {currentCourse?.topics.length === 0 ? (
                 <div className="text-center py-6 text-xs text-slate-400 space-y-1">
-                  <p>คอร์สนี้ยังไม่มีการใส่สารบัญบทเรียน</p>
-                  <p className="text-[11px] text-slate-500">
-                    คุณครูสามารถพิมพ์รายละเอียดเนื้อหาที่เรียนในช่องด้านล่างได้โดยตรง หรือไปที่เมนู "จัดการเนื้อหา" เพื่อร่างสารบัญ
-                  </p>
+                  <p>{tx('คอร์สนี้ยังไม่มีการใส่สารบัญบทเรียน', 'No syllabus topics defined for this course yet.')}</p>
                 </div>
               ) : (
                 (currentCourse?.topics || []).map((top) => {
@@ -579,9 +586,9 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                   return (
                     <div key={top.id} className="text-xs border-b border-slate-100 pb-2 last:border-b-0 last:pb-0">
                       <div className="font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                        <span>{top.sortOrder}. {top.name} {top.nameEn ? `(${top.nameEn})` : ''}</span>
+                        <span>{top.sortOrder}. {top.name}</span>
                         <span className="text-[10px] text-slate-400 font-normal">
-                          {subs.length} ข้อย่อย
+                          {subs.length} {tx('ข้อย่อย', 'subtopics')}
                         </span>
                       </div>
 
@@ -623,24 +630,24 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
           {/* Row 4: Detailed Content */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              สรุปรายละเอียดเนื้อหาที่เรียนในคาบนี้ *
+              {tx('สรุปเนื้อหาที่เรียน *', 'Lesson Summary *')}
             </label>
             <textarea
               rows={2}
               value={contentDetail}
               onChange={(e) => setContentDetail(e.target.value)}
-              placeholder="คลิกเลือกหัวข้อจาก Syllabus ด้านบน หรือพิมพ์สรุปเนื้อหาที่สอนในคาบนี้"
+              placeholder={tx('คลิกเลือกหัวข้อด้านบน หรือพิมพ์สรุปเนื้อหาที่สอนในคาบนี้', 'Select topics above or summarize what was covered')}
               required
               className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
             />
           </div>
 
-          {/* Row 5: Google Drive Link (เก็บ Google Drive แทน วางลิงก์เอง) */}
+          {/* Row 5: Google Drive Link */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
                 <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>ลิงก์ Google Drive ชีทเรียน (Optional):</span>
+                <span>{tx('ลิงก์ชีทเรียน Google Drive:', 'Google Drive Sheet Link:')}</span>
               </label>
               <input
                 type="url"
@@ -649,40 +656,34 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 placeholder="https://drive.google.com/file/d/..."
                 className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
               />
-              <p className="text-[10px] text-slate-500 mt-0.5">
-                วางลิงก์ Google Drive ชีทเรียนเพื่อให้นักเรียนกดเปิดอ่าน
-              </p>
             </div>
 
-            {/* Handwritten Solution File Link (เฉลยจากการเขียนลายมือ) */}
+            {/* Handwritten Solution File Link */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
                 <span className="text-amber-600 font-bold">✍️</span>
-                <span>ลิงก์เฉลยจากการเขียนลายมือครู Max (Optional):</span>
+                <span>{tx('ลิงก์เฉลยลายมือครู Max:', 'Handwritten Notes Link:')}</span>
               </label>
               <input
                 type="url"
                 value={handwrittenSolutionUrl}
                 onChange={(e) => setHandwrittenSolutionUrl(e.target.value)}
-                placeholder="https://drive.google.com/... (ไฟล์เฉลยลายมือ)"
+                placeholder="https://drive.google.com/..."
                 className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
               />
-              <p className="text-[10px] text-slate-500 mt-0.5">
-                แปะลิงก์เฉลยที่ครู Max เขียนลายมือให้น้องเปิดทบทวนวิธีคิด
-              </p>
             </div>
           </div>
 
           {/* Row 6: Teacher Note */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              โน้ตถึงผู้ปกครอง / นักเรียน (Optional)
+              {tx('โน้ตถึงผู้ปกครอง / นักเรียน', 'Feedback for Student / Parent')}
             </label>
             <input
               type="text"
               value={teacherNote}
               onChange={(e) => setTeacherNote(e.target.value)}
-              placeholder="เช่น ทำความเข้าใจได้ดีมาก แนะนำให้ทำโจทย์ข้อ 4 เพิ่ม"
+              placeholder={tx('เช่น ทำความเข้าใจได้ดีมาก แนะนำให้ทำโจทย์ข้อ 4 เพิ่ม', 'e.g., Great progress today, review problem #4')}
               className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
             />
           </div>
@@ -696,7 +697,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 onChange={(e) => setHasHomework(e.target.checked)}
                 className="rounded text-blue-900 focus:ring-blue-900"
               />
-              <span>สั่งการบ้านในคาบนี้ด้วย</span>
+              <span>{tx('สั่งการบ้านในคาบนี้', 'Assign Homework')}</span>
             </label>
 
             {hasHomework && (
@@ -704,7 +705,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="text"
-                    placeholder="หัวข้อการบ้าน เช่น แบบฝึกหัดท้ายบทข้อ 1-10"
+                    placeholder={tx('หัวข้อการบ้าน เช่น แบบฝึกหัดท้ายบทข้อ 1-10', 'Homework title')}
                     value={hwTitle}
                     onChange={(e) => setHwTitle(e.target.value)}
                     className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
@@ -718,7 +719,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 </div>
                 <textarea
                   rows={2}
-                  placeholder="คำอธิบายรายละเอียดการบ้าน หรือข้อที่ต้องทำส่ง"
+                  placeholder={tx('คำอธิบายรายละเอียดการบ้าน หรือข้อที่ต้องทำส่ง', 'Homework instructions')}
                   value={hwDescription}
                   onChange={(e) => setHwDescription(e.target.value)}
                   className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
@@ -734,13 +735,13 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              ยกเลิก
+              {tx('ยกเลิก', 'Cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
             >
-              {editLesson ? 'บันทึกการเปลี่ยนแปลง' : 'ยืนยันบันทึกคาบเรียน'}
+              {editLesson ? tx('บันทึกการเปลี่ยนแปลง', 'Save Changes') : tx('บันทึกคาบเรียน', 'Save Lesson Log')}
             </button>
           </div>
         </form>

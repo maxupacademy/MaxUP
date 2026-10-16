@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { MaxUpLogo } from '../brand/MaxUpLogo';
 import {
@@ -7,15 +7,20 @@ import {
   Lock,
   User,
   ArrowRight,
-  Sparkles,
   AlertCircle,
   Loader2,
   KeyRound,
-  CheckCircle2,
   BookOpen,
+  TrendingUp,
+  Video,
+  ClipboardCheck,
 } from 'lucide-react';
 
-export const LoginView: React.FC = () => {
+interface LoginViewProps {
+  onLoginSuccess?: () => void;
+}
+
+export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const {
     courses,
     activeCourseId,
@@ -39,8 +44,8 @@ export const LoginView: React.FC = () => {
     activeCourseId || courses[0]?.id || 'MATH_JUNIOR_FUNDENMENTAL_01'
   );
   const [coursePasscode, setCoursePasscode] = useState<string>('');
-  const [grade, setGrade] = useState<string>('มัธยมศึกษาปีที่ 6');
-  const [targetExam, setTargetExam] = useState<string>('A-Level 68 (เคมี)');
+  const [grade, setGrade] = useState<string>('เธกเธฑเธเธขเธกเธจเธถเธเธฉเธฒเธเธตเธ—เธตเน 6');
+  const [targetExam, setTargetExam] = useState<string>('A-Level 68 (เน€เธเธกเธต)');
   const [school, setSchool] = useState<string>('');
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) || courses[0];
@@ -52,6 +57,7 @@ export const LoginView: React.FC = () => {
 
     try {
       await loginWithUsernameAndPassword(username, password);
+      onLoginSuccess?.();
     } catch {
       // Error is stored in authError
     }
@@ -76,314 +82,310 @@ export const LoginView: React.FC = () => {
           school,
         }
       );
+      onLoginSuccess?.();
     } catch {
       // Error handled in context state
     }
   };
 
+  const features = [
+    { icon: TrendingUp, label: 'เธ•เธดเธ”เธ•เธฒเธกเธเธงเธฒเธกเธเนเธฒเธงเธซเธเนเธฒ', sub: 'เน€เธเนเธเธชเธฒเธฃเธเธฑเธเธ—เธตเนเน€เธฃเธตเธขเธเนเธฅเนเธงเนเธเธ real-time' },
+    { icon: BookOpen, label: 'เธเธญเธฃเนเธช & เธชเธทเนเธญเธเธฒเธฃเน€เธฃเธตเธขเธ', sub: 'เน€เธญเธเธชเธฒเธฃ เนเธเธฅเน Google Drive เธเธฃเธ' },
+    { icon: Video, label: 'เธงเธดเธ”เธตเนเธญเธขเนเธญเธเธซเธฅเธฑเธ', sub: 'เธเธฅเธดเธเธชเธญเธ YouTube เธ—เธเธ—เธงเธเธ•เธฅเธญเธ” 24 เธเธก.' },
+    { icon: ClipboardCheck, label: 'เธเธฒเธฃเธเนเธฒเธ & เธ•เธฃเธงเธเธเธฒเธ', sub: 'เธชเนเธเธเธฒเธ เธฃเธฑเธ feedback เธเธฒเธเธเธฃเธน' },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#FFFDF7] flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden">
-      {/* Background ambient accents */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 flex flex-col lg:flex-row">
+      {/* โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•
+          LEFT PANEL โ€” Brand & Feature Highlights
+      โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ• */}
+      <div className="lg:w-[45%] xl:w-[42%] flex flex-col justify-between p-8 sm:p-10 lg:p-14 relative overflow-hidden">
+        {/* Geometric accent โ€” subtle, not decorative glitter */}
+        <div className="absolute top-0 right-0 w-px h-full bg-slate-800" />
+        <div className="absolute top-1/3 -right-24 w-48 h-48 rounded-full border border-amber-500/10" />
+        <div className="absolute bottom-1/4 -right-32 w-72 h-72 rounded-full border border-blue-500/5" />
 
-      <div className="max-w-4xl w-full mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left column: Brand & Mascot Welcome */}
-        <div className="lg:col-span-5 text-center lg:text-left space-y-4">
-          <div className="inline-block">
-            <MaxUpLogo size="lg" showSubtitle={true} />
-          </div>
-
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-900 bg-white/90 border border-blue-900/10 px-3 py-1 rounded-xl shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>แพลตฟอร์มการเรียนรู้และบันทึกการสอน MaxUp TutorHub</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
-            เข้าสู่ระบบคอร์สเรียน & บันทึกการสอน
-          </h1>
-
-          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-            กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้ (Username) และรหัสผ่าน หรือสมัครสมาชิกนักเรียนใหม่พร้อมกรอกรหัสเข้าคอร์สเรียนที่คุณครู Max กำหนดให้
+        {/* Top: Logo */}
+        <div>
+          <MaxUpLogo size="sm" showSubtitle={false} />
+          <p className="mt-3 text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
+            MaxUp TutorHub
           </p>
-
-          {/* Platform Feature Highlights Card */}
-          <div className="pt-2 grid grid-cols-2 gap-2 text-left">
-            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
-              <div className="text-base">📚</div>
-              <div className="text-xs font-bold text-slate-800">สารบัญบทเรียน</div>
-              <p className="text-[10px] text-slate-500">เช็คหัวข้อที่เรียนและไฟล์ Google Drive</p>
-            </div>
-            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
-              <div className="text-base">📅</div>
-              <div className="text-xs font-bold text-slate-800">ตารางเรียนล่วงหน้า</div>
-              <p className="text-[10px] text-slate-500">วางแผนชั่วโมงและเนื้อหาล่วงหน้า</p>
-            </div>
-            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
-              <div className="text-base">▶️</div>
-              <div className="text-xs font-bold text-slate-800">วิดีโอย้อนหลัง</div>
-              <p className="text-[10px] text-slate-500">คลิปสอน YouTube ทบทวนได้ตลอด</p>
-            </div>
-            <div className="bg-white/90 border border-amber-900/10 rounded-2xl p-3 shadow-2xs space-y-1">
-              <div className="text-base">📝</div>
-              <div className="text-xs font-bold text-slate-800">การบ้าน & ตรวจงาน</div>
-              <p className="text-[10px] text-slate-500">ส่งการบ้านพร้อมคำแนะนำครู</p>
-            </div>
-          </div>
         </div>
 
-        {/* Right column: Login / Sign Up Card */}
-        <div className="lg:col-span-7 bg-white border border-amber-900/15 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
-          {/* Top Switcher: Sign In vs Sign Up */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                {authMode === 'signin' ? 'เข้าสู่ระบบ (Sign In)' : 'สมัครสมาชิกนักเรียนใหม่ (Register)'}
-              </h2>
-              <p className="text-xs text-slate-500">
-                {authMode === 'signin'
-                  ? 'กรอก Username และ Password ของคุณ'
-                  : 'กรอกข้อมูลส่วนตัวพร้อมรหัสเข้าคอร์สเรียน'}
-              </p>
-            </div>
+        {/* Middle: Headline */}
+        <div className="my-10 lg:my-0">
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-white leading-[1.15] tracking-tight" style={{ textWrap: 'balance' }}>
+            เธฃเธฐเธเธเธ•เธดเธงเน€เธ•เธญเธฃเน<br />
+            <span className="text-amber-400">เธชเนเธงเธเธ•เธฑเธง</span> เธ—เธตเนเธฃเธนเนเธเธฑเธ<br />
+            เธเนเธญเธเธเธเน€เธ”เธตเธขเธง
+          </h1>
+          <p className="mt-5 text-sm text-slate-400 leading-relaxed max-w-xs">
+            เธเธฑเธเธ—เธถเธเธเธฒเธเน€เธฃเธตเธขเธ เธ•เธดเธ”เธ•เธฒเธกเธชเธฒเธฃเธเธฑเธ เธงเธฒเธเนเธเธเธ•เธฒเธฃเธฒเธเธชเธญเธ โ€” เธ—เธธเธเธญเธขเนเธฒเธเธเธดเธเธเนเนเธเธ real-time
+          </p>
 
-            <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+          {/* Feature list โ€” no icon grid clichรฉ */}
+          <ul className="mt-8 space-y-4">
+            {features.map(({ icon: Icon, label, sub }) => (
+              <li key={label} className="flex items-start gap-3.5">
+                <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center">
+                  <Icon className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-200">{label}</div>
+                  <div className="text-[11px] text-slate-500 mt-0.5">{sub}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom: Credential hint for admin */}
+        <p className="text-[10px] text-slate-600 flex items-center gap-1.5 mt-10 lg:mt-0">
+          <Shield className="w-3 h-3 text-slate-700" />
+          <span>เธชเธณเธซเธฃเธฑเธเธเธฃเธนเธเธนเนเธชเธญเธ: เธฅเนเธญเธเธญเธดเธเธ”เนเธงเธข Admin credentials เธ—เธตเนเธเธณเธซเธเธ”เนเธงเน</span>
+        </p>
+      </div>
+
+      {/* โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•
+          RIGHT PANEL โ€” Auth Form
+      โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ•โ• */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14 bg-slate-900">
+        <div className="w-full max-w-md">
+          {/* Mode Switcher */}
+          <div className="flex gap-1 p-1 bg-slate-800 rounded-xl mb-8 w-fit">
+            {(['signin', 'signup'] as const).map((mode) => (
               <button
+                key={mode}
                 type="button"
-                onClick={() => {
-                  setAuthMode('signin');
-                  clearAuthError();
-                }}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  authMode === 'signin'
-                    ? 'bg-blue-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                onClick={() => { setAuthMode(mode); clearAuthError(); }}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  authMode === mode
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                เข้าสู่ระบบ
+                {mode === 'signin' ? 'เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ' : 'เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ'}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('signup');
-                  clearAuthError();
-                }}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  authMode === 'signup'
-                    ? 'bg-blue-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                สมัครใหม่
-              </button>
-            </div>
+            ))}
           </div>
+
+          <h2 className="text-xl font-black text-white mb-1">
+            {authMode === 'signin' ? 'เธขเธดเธเธ”เธตเธ•เนเธญเธเธฃเธฑเธเธเธฅเธฑเธเธกเธฒ' : 'เธชเธฃเนเธฒเธเธเธฑเธเธเธตเธเธฑเธเน€เธฃเธตเธขเธเนเธซเธกเน'}
+          </h2>
+          <p className="text-xs text-slate-500 mb-6">
+            {authMode === 'signin'
+              ? 'เธเธฃเธญเธ Username เนเธฅเธฐ Password เธเธญเธเธเธธเธ“'
+              : 'เธเธฃเธญเธเธเนเธญเธกเธนเธฅเธชเนเธงเธเธ•เธฑเธงเธเธฃเนเธญเธกเธฃเธซเธฑเธชเน€เธเนเธฒเธเธญเธฃเนเธชเน€เธฃเธตเธขเธ'}
+          </p>
 
           {/* Error Alert */}
           {authError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700 animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+            <div className="mb-4 p-3 bg-red-950/60 border border-red-800/60 rounded-xl flex items-center gap-2 text-xs text-red-300">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
               <span>{authError}</span>
             </div>
           )}
 
-          {/* Sign In Form */}
+          {/* โ”€โ”€โ”€ Sign In Form โ”€โ”€โ”€ */}
           {authMode === 'signin' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  ชื่อผู้ใช้งาน (Username) *
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  เธเธทเนเธญเธเธนเนเนเธเนเธเธฒเธ (Username)
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="กรอก Username ของคุณ"
+                    placeholder="เธเธฃเธญเธ Username เธเธญเธเธเธธเธ“"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none transition-all"
                   />
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">รหัสผ่าน (Password) *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">เธฃเธซเธฑเธชเธเนเธฒเธ</label>
                 <div className="relative">
                   <input
                     type="password"
                     required
-                    placeholder="กรอกรหัสผ่านของคุณ"
+                    placeholder="เธเธฃเธญเธเธฃเธซเธฑเธชเธเนเธฒเธเธเธญเธเธเธธเธ“"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none transition-all"
                   />
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isAuthLoading}
-                className="w-full py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+                className="w-full mt-2 py-2.5 px-4 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-900 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40"
               >
                 {isAuthLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                    <span>กำลังตรวจสอบข้อมูล...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>เธเธณเธฅเธฑเธเธ•เธฃเธงเธเธชเธญเธ...</span>
                   </>
                 ) : (
                   <>
-                    <span>เข้าสู่ระบบ (Sign In)</span>
-                    <ArrowRight className="w-4 h-4 text-amber-300" />
+                    <span>เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ</span>
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
 
-              <div className="pt-2 border-t border-slate-100 text-center text-[11px] text-slate-500">
-                <span>สำหรับนักเรียน: หากยังไม่มีบัญชี กรุณากดปุ่ม </span>
-                <strong className="text-blue-900 cursor-pointer underline" onClick={() => setAuthMode('signup')}>"สมัครใหม่"</strong>
-                <span> ด้านบน</span>
-              </div>
+              <p className="text-center text-[11px] text-slate-600 pt-1">
+                เธขเธฑเธเนเธกเนเธกเธตเธเธฑเธเธเธต?{' '}
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signup')}
+                  className="text-amber-400 font-semibold hover:text-amber-300 cursor-pointer"
+                >
+                  เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ
+                </button>
+              </p>
             </form>
           ) : (
-            /* Sign Up Form for Students */
-            <form onSubmit={handleSignUpSubmit} className="space-y-3.5 text-xs">
-              <div className="p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center gap-2 text-slate-700">
-                <GraduationCap className="w-4 h-4 text-blue-800 shrink-0" />
+            /* โ”€โ”€โ”€ Sign Up Form โ”€โ”€โ”€ */
+            <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
+              <div className="p-3 bg-blue-950/50 border border-blue-800/50 rounded-xl flex items-center gap-2 text-slate-300">
+                <GraduationCap className="w-4 h-4 text-blue-400 shrink-0" />
                 <span className="text-[11px]">
-                  เปิดรับสมัครสำหรับ <strong>นักเรียน (Student)</strong> เท่านั้น กรุณากรอกรหัสเข้าคอร์สที่คุณครู Max แจ้งเพื่อปลดล็อกสิทธิ์เข้าเรียน
+                  เน€เธเธดเธ”เธฃเธฑเธเธชเธกเธฑเธเธฃ <strong className="text-white">เธเธฑเธเน€เธฃเธตเธขเธ</strong> เน€เธ—เนเธฒเธเธฑเนเธ โ€” เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธฃเธซเธฑเธชเน€เธเนเธฒเธเธญเธฃเนเธชเธ—เธตเนเธเธฃเธน Max เนเธเนเธ
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ชื่อ-นามสกุลจริง *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">เธเธทเนเธญ-เธเธฒเธกเธชเธเธธเธฅ *</label>
                   <input
                     type="text"
                     required
-                    placeholder="เช่น สมชาย ใจดี"
+                    placeholder="เธชเธกเธเธฒเธข เนเธเธ”เธต"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ชื่อเล่น *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">เธเธทเนเธญเน€เธฅเนเธ *</label>
                   <input
                     type="text"
                     required
-                    placeholder="เช่น น้องนนท์"
+                    placeholder="เธเนเธญเธเธเธเธ—เน"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ตั้งชื่อผู้ใช้ (Username) *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Username *</label>
                   <input
                     type="text"
                     required
-                    placeholder="เช่น non_student, somchai"
+                    placeholder="non_student"
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ตั้งรหัสผ่าน (Password) *</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Password *</label>
                   <input
                     type="password"
                     required
-                    placeholder="อย่างน้อย 4 ตัวอักษร"
+                    placeholder="เธญเธขเนเธฒเธเธเนเธญเธข 4 เธ•เธฑเธง"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
               </div>
 
-              {/* Course Selection & Course Passcode */}
+              {/* Course + Passcode */}
               {courses.length === 0 ? (
-                <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-2xl text-center text-xs text-amber-900 space-y-1">
-                  <div className="font-bold">ยังไม่มีคอร์สเรียนเปิดรับสมัครในขณะนี้</div>
-                  <p className="text-[11px] text-slate-600">
-                    คุณครู Max กำลังเริ่มร่างหลักสูตรคอร์สเรียนใหม่ กรุณาติดต่อคุณครูเพื่อเปิดระบบคอร์ส
-                  </p>
+                <div className="p-3 bg-amber-950/40 border border-amber-800/40 rounded-xl text-center text-xs text-amber-300">
+                  เธขเธฑเธเนเธกเนเธกเธตเธเธญเธฃเนเธชเน€เธเธดเธ”เธฃเธฑเธเธชเธกเธฑเธเธฃ โ€” เธ•เธดเธ”เธ•เนเธญเธเธฃเธน Max เน€เธเธทเนเธญเน€เธเธดเธ”เธฃเธฐเธเธ
                 </div>
               ) : (
-                <div className="p-3 bg-amber-50/70 border border-amber-200/90 rounded-2xl space-y-2.5">
-                  <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
-                    <BookOpen className="w-4 h-4 text-amber-700" />
-                    <span>เลือกคอร์สเรียน & ระบุรหัสเข้าคอร์ส (Course Passcode)</span>
+                <div className="p-3 bg-slate-800 border border-slate-700 rounded-xl space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+                    <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                    <span>เธเธญเธฃเนเธชเน€เธฃเธตเธขเธ & เธฃเธซเธฑเธชเน€เธเนเธฒเธเธญเธฃเนเธช</span>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">คอร์สที่ต้องการสมัคร *</label>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">เธเธญเธฃเนเธชเธ—เธตเนเธชเธกเธฑเธเธฃ *</label>
                       <select
                         value={selectedCourseId}
                         onChange={(e) => setSelectedCourseId(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none font-medium"
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2.5 py-2 text-xs text-slate-100 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                       >
                         {courses.map((c) => (
                           <option key={c.id} value={c.id}>
-                            {c.name} ({c.code})
+                            {c.name}
                           </option>
                         ))}
                       </select>
                     </div>
-
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                        <span>รหัสเข้าคอร์สเรียน (Passcode) *</span>
-                        <span className="text-[10px] text-amber-700 font-normal">ถามจากคุณครู Max</span>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Passcode *{' '}
+                        <span className="text-amber-500 font-normal">(เธ–เธฒเธกเธเธฃเธน)</span>
                       </label>
                       <div className="relative">
                         <input
                           type="text"
                           required
-                          placeholder="กรอกรหัสเข้าคอร์ส เช่น CHEM68"
+                          placeholder="CHEM68"
                           value={coursePasscode}
                           onChange={(e) => setCoursePasscode(e.target.value)}
-                          className="w-full bg-white border border-amber-300 rounded-xl pl-8 pr-3 py-2 font-mono font-bold tracking-wider text-slate-900 uppercase focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                          className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-7 pr-2.5 py-2 text-xs font-mono font-bold tracking-widest text-amber-300 uppercase focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                         />
-                        <KeyRound className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <KeyRound className="w-3.5 h-3.5 text-amber-600 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
                     </div>
                   </div>
-
-                  <p className="text-[11px] text-slate-500 leading-normal">
-                    📌 เมื่อกรอกรหัสถูกต้อง คอร์ส <strong className="text-slate-800">{selectedCourse?.name}</strong> จะถูกเพิ่มเข้าโปรไฟล์ของคุณทันที (นักเรียนสามารถเพิ่มคอร์สอื่นภายหลังได้ด้วยรหัสคอร์สนั้นๆ)
-                  </p>
+                  {selectedCourse && (
+                    <p className="text-[11px] text-slate-500">
+                      เธเธญเธฃเนเธช <strong className="text-slate-300">{selectedCourse.name}</strong> เธเธฐเธ–เธนเธเน€เธเธดเนเธกเน€เธเนเธฒเนเธเธฃเนเธเธฅเนเธ—เธฑเธเธ—เธต
+                    </p>
+                  )}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ระดับชั้น</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">เธฃเธฐเธ”เธฑเธเธเธฑเนเธ</label>
                   <select
                     value={grade}
                     onChange={(e) => setGrade(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-100 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   >
-                    <option value="มัธยมศึกษาปีที่ 6">มัธยมศึกษาปีที่ 6</option>
-                    <option value="มัธยมศึกษาปีที่ 5">มัธยมศึกษาปีที่ 5</option>
-                    <option value="มัธยมศึกษาปีที่ 4">มัธยมศึกษาปีที่ 4</option>
-                    <option value="มัธยมศึกษาตอนต้น">มัธยมศึกษาตอนต้น</option>
+                    <option value="เธกเธฑเธเธขเธกเธจเธถเธเธฉเธฒเธเธตเธ—เธตเน 6">เธก. 6</option>
+                    <option value="เธกเธฑเธเธขเธกเธจเธถเธเธฉเธฒเธเธตเธ—เธตเน 5">เธก. 5</option>
+                    <option value="เธกเธฑเธเธขเธกเธจเธถเธเธฉเธฒเธเธตเธ—เธตเน 4">เธก. 4</option>
+                    <option value="เธกเธฑเธเธขเธกเธจเธถเธเธฉเธฒเธ•เธญเธเธ•เนเธ">เธก. เธ•เนเธ</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">โรงเรียน</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">เนเธฃเธเน€เธฃเธตเธขเธ</label>
                   <input
                     type="text"
-                    placeholder="เช่น โรงเรียนเตรียมอุดมศึกษา"
+                    placeholder="เน€เธ•เธฃเธตเธขเธกเธญเธธเธ”เธกเธจเธถเธเธฉเธฒ"
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -391,17 +393,17 @@ export const LoginView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isAuthLoading}
-                className="w-full py-2.5 px-4 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98 disabled:opacity-50 mt-2"
+                className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-900 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 mt-1"
               >
                 {isAuthLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                    <span>กำลังบันทึกข้อมูลและตรวจสอบรหัสคอร์ส...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธเนเธฅเธฐเธ•เธฃเธงเธเธชเธญเธเธฃเธซเธฑเธชเธเธญเธฃเนเธช...</span>
                   </>
                 ) : (
                   <>
-                    <span>ยืนยันสมัครสมาชิก & เข้าสู่คอร์สเรียน</span>
-                    <ArrowRight className="w-4 h-4 text-amber-300" />
+                    <span>เธขเธทเธเธขเธฑเธเธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ</span>
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>

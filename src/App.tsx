@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -17,7 +17,7 @@ import { HomeworkSuite } from './components/homework/HomeworkSuite';
 import { LoginView } from './components/auth/LoginView';
 import { MaxUpLogo } from './components/brand/MaxUpLogo';
 import { Lesson } from './types';
-import { BookOpen, Calendar, Shield, GraduationCap, CheckCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const MainContent: React.FC = () => {
@@ -25,9 +25,7 @@ const MainContent: React.FC = () => {
     currentUser,
     currentUserRole,
     isLoggedIn,
-    activeStudent,
-    activeStudentLessons,
-    activeCourse,
+    logout,
   } = useApp();
 
   const [currentTab, setCurrentTab] = useState<string>('overview');
@@ -35,19 +33,31 @@ const MainContent: React.FC = () => {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // If not logged in or user explicitly requested login screen
+  // Called immediately after successful login โ€” navigate to correct dashboard
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // Navigate to appropriate start tab based on role
+    const role = currentUserRole;
+    if (role === 'admin') {
+      setCurrentTab('overview');
+    } else {
+      setCurrentTab('home');
+    }
+  };
+
+  // If not logged in โ€” show full-page login
   if (!isLoggedIn || showLoginModal) {
     return (
       <div className="relative">
         {showLoginModal && isLoggedIn && (
           <button
             onClick={() => setShowLoginModal(false)}
-            className="fixed top-4 right-4 z-50 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition-all"
+            className="fixed top-4 right-4 z-50 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition-all border border-slate-700"
           >
-            ← กลับสู่ระบบ ({currentUser?.nickname || 'แดชบอร์ด'})
+            โ เธเธฅเธฑเธเธชเธนเนเธฃเธฐเธเธ ({currentUser?.nickname || 'เนเธ”เธเธเธญเธฃเนเธ”'})
           </button>
         )}
-        <LoginView />
+        <LoginView onLoginSuccess={handleLoginSuccess} />
       </div>
     );
   }
@@ -117,19 +127,19 @@ const MainContent: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <MaxUpLogo size="sm" />
-            <span className="text-slate-400">·</span>
-            <span>แพลตฟอร์มการเรียนรู้และบันทึกการสอน MaxUp TutorHub</span>
+            <span className="text-slate-400">ยท</span>
+            <span>เนเธเธฅเธ•เธเธญเธฃเนเธกเธเธฒเธฃเน€เธฃเธตเธขเธเธฃเธนเนเนเธฅเธฐเธเธฑเธเธ—เธถเธเธเธฒเธฃเธชเธญเธ MaxUp TutorHub</span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-500">
             <span className="flex items-center gap-1">
               <Shield className="w-3.5 h-3.5 text-blue-900" />
               <span>
-                ล็อกอินในชื่อ: {currentUserRole === 'admin' ? 'ครูพี่แม็ก (Admin)' : currentUser?.nickname}
+                เธฅเนเธญเธเธญเธดเธเนเธเธเธทเนเธญ: {currentUserRole === 'admin' ? 'เธเธฃเธนเธเธตเนเนเธกเนเธ (Admin)' : currentUser?.nickname}
               </span>
             </span>
-            <span className="text-slate-400">·</span>
-            <span>ระบบบริหารจัดการหลังบ้านครบวงจร</span>
+            <span className="text-slate-400">ยท</span>
+            <span>เธฃเธฐเธเธเธเธฃเธดเธซเธฒเธฃเธเธฑเธ”เธเธฒเธฃเธซเธฅเธฑเธเธเนเธฒเธเธเธฃเธเธงเธเธเธฃ</span>
           </div>
         </div>
       </footer>
@@ -146,3 +156,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+

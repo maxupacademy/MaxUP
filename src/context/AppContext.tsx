@@ -28,6 +28,7 @@ import {
   INITIAL_HOMEWORKS,
 } from '../data/initialData';
 import { COURSE_MATH_JUNIOR } from '../data/mathJuniorCourse';
+import { COURSE_CHEM_SENIOR } from '../data/chemSeniorCourse';
 import { db } from '../lib/firebase';
 import {
   collection,
@@ -259,7 +260,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
-  // Courses (คอร์สคณิตศาสตร์ ม.ต้น MATH_JUNIOR_FUNDENMENTAL_01 และคอร์สอื่นๆ)
+  // Courses (คอร์สคณิตศาสตร์ ม.ต้น MATH_JUNIOR_FUNDENMENTAL_01, เคมี ม.ปลาย CHEM_SENIOR_FUNDAMENTAL_01 และคอร์สอื่นๆ)
   const [courses, setCourses] = useState<Course[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}courses`);
     if (saved) {
@@ -280,9 +281,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (!validCourses[mathJuniorIdx].topics || validCourses[mathJuniorIdx].topics.length < 10) {
             validCourses[mathJuniorIdx] = COURSE_MATH_JUNIOR;
           }
-          return validCourses;
+        } else {
+          validCourses.unshift(COURSE_MATH_JUNIOR);
         }
-        return [COURSE_MATH_JUNIOR, ...validCourses];
+
+        const chemSeniorIdx = validCourses.findIndex(
+          (c) => c.id === 'CHEM_SENIOR_FUNDAMENTAL_01' || c.code === 'CHEM_SENIOR_FUNDAMENTAL_01'
+        );
+        if (chemSeniorIdx !== -1) {
+          if (!validCourses[chemSeniorIdx].topics || validCourses[chemSeniorIdx].topics.length < 14) {
+            validCourses[chemSeniorIdx] = COURSE_CHEM_SENIOR;
+          }
+        } else {
+          validCourses.push(COURSE_CHEM_SENIOR);
+        }
+
+        return validCourses;
       } catch {
         return ALL_INITIAL_SUBJECTS;
       }
@@ -506,9 +520,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             (c) => c.id === 'MATH_JUNIOR_FUNDENMENTAL_01' || c.code === 'MATH_JUNIOR_FUNDENMENTAL_01'
           );
 
-          let finalCourses = remoteCourses;
+          let finalCourses = [...remoteCourses];
           if (mathJuniorIdx === -1) {
-            finalCourses = [COURSE_MATH_JUNIOR, ...remoteCourses];
+            finalCourses.unshift(COURSE_MATH_JUNIOR);
             safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
           } else {
             if (
@@ -520,12 +534,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
 
+          const chemSeniorIdx = finalCourses.findIndex(
+            (c) => c.id === 'CHEM_SENIOR_FUNDAMENTAL_01' || c.code === 'CHEM_SENIOR_FUNDAMENTAL_01'
+          );
+
+          if (chemSeniorIdx === -1) {
+            finalCourses.push(COURSE_CHEM_SENIOR);
+            safeSetDoc(doc(db, 'courses', COURSE_CHEM_SENIOR.id), COURSE_CHEM_SENIOR);
+          } else {
+            if (
+              !finalCourses[chemSeniorIdx].topics ||
+              finalCourses[chemSeniorIdx].topics.length < 14
+            ) {
+              finalCourses[chemSeniorIdx] = COURSE_CHEM_SENIOR;
+              safeSetDoc(doc(db, 'courses', COURSE_CHEM_SENIOR.id), COURSE_CHEM_SENIOR);
+            }
+          }
+
           if (finalCourses.length > 0) {
             setCourses(finalCourses);
           }
         } else {
           safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
-          setCourses([COURSE_MATH_JUNIOR]);
+          safeSetDoc(doc(db, 'courses', COURSE_CHEM_SENIOR.id), COURSE_CHEM_SENIOR);
+          setCourses([COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR]);
         }
       },
       (err) => console.warn('Courses realtime note:', err)
@@ -1600,24 +1632,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const snap = await getDocs(collection(db, 'courses'));
       for (const d of snap.docs) {
-        if (d.id !== COURSE_MATH_JUNIOR.id) {
+        if (d.id !== COURSE_MATH_JUNIOR.id && d.id !== COURSE_CHEM_SENIOR.id) {
           await deleteDoc(doc(db, 'courses', d.id));
         }
       }
       await safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
+      await safeSetDoc(doc(db, 'courses', COURSE_CHEM_SENIOR.id), COURSE_CHEM_SENIOR);
     } catch {
       // offline fallback
     }
 
-    setCourses([COURSE_MATH_JUNIOR]);
+    setCourses([COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR]);
     setActiveCourseId(COURSE_MATH_JUNIOR.id);
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}courses`, JSON.stringify([COURSE_MATH_JUNIOR]));
+    localStorage.setItem(
+      `${STORAGE_KEY_PREFIX}courses`,
+      JSON.stringify([COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR])
+    );
     localStorage.setItem(`${STORAGE_KEY_PREFIX}active_course_id`, COURSE_MATH_JUNIOR.id);
   };
 
   const resetAllData = () => {
     localStorage.clear();
-    setCourses([COURSE_MATH_JUNIOR]);
+    setCourses([COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR]);
     setActiveCourseId(COURSE_MATH_JUNIOR.id);
     setStudents([]);
     setLessons([]);
@@ -1627,6 +1663,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setVideos([]);
     setSchedulePlans([]);
     safeSetDoc(doc(db, 'courses', COURSE_MATH_JUNIOR.id), COURSE_MATH_JUNIOR);
+    safeSetDoc(doc(db, 'courses', COURSE_CHEM_SENIOR.id), COURSE_CHEM_SENIOR);
     window.location.reload();
   };
 

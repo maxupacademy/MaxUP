@@ -10,6 +10,7 @@ import {
   StudySchedulePlan,
 } from '../types';
 import { COURSE_MATH_JUNIOR } from './mathJuniorCourse';
+import { COURSE_CHEM_SENIOR } from './chemSeniorCourse';
 
 export const INITIAL_ADMIN: UserProfile = {
   id: 'admin_max',
@@ -24,7 +25,7 @@ export const INITIAL_ADMIN: UserProfile = {
 
 // All students, courses, syllabus, and records
 export const INITIAL_STUDENTS: UserProfile[] = [];
-export const ALL_INITIAL_SUBJECTS: Course[] = [COURSE_MATH_JUNIOR];
+export const ALL_INITIAL_SUBJECTS: Course[] = [COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR];
 export const INITIAL_LESSONS: Lesson[] = [];
 export const INITIAL_HOMEWORKS: Homework[] = [];
 export const INITIAL_MATERIALS: CourseMaterial[] = [];

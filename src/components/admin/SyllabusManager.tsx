@@ -382,7 +382,7 @@ export const SyllabusManager: React.FC = () => {
 
   interface FlattenedSubtopic {
     sub: Subtopic;
-    level: 1 | 2 | 3;
+    level: 1 | 2 | 3 | 4;
     numbering: string;
     parentName?: string;
   }
@@ -392,7 +392,7 @@ export const SyllabusManager: React.FC = () => {
     const subs = topic.subtopics || [];
     const visited = new Set<string>();
 
-    // 1. Level 1 items (level === 1 OR (!parentId && level !== 2 && level !== 3))
+    // 1. Level 1 items (level === 1 OR (!parentId && level !== 2 && level !== 3 && level !== 4))
     const level1Items = subs.filter((s) => !s.parentId || s.level === 1);
 
     level1Items.forEach((l1, i) => {
@@ -427,16 +427,29 @@ export const SyllabusManager: React.FC = () => {
             numbering: num3,
             parentName: l2.name,
           });
+
+          // 4. Level 4 items under l3 (Deep Level / K-Tips / Competition insights)
+          const level4Items = subs.filter((s) => s.parentId === l3.id || (s.level === 4 && s.parentId === l3.id));
+          level4Items.forEach((l4, m) => {
+            visited.add(l4.id);
+            const num4 = `${num3}.${m + 1}`;
+            result.push({
+              sub: l4,
+              level: 4,
+              numbering: num4,
+              parentName: l3.name,
+            });
+          });
         });
       });
     });
 
-    // 4. Any leftover subtopics (orphans or unlinked)
+    // 5. Any leftover subtopics (orphans or unlinked)
     subs.forEach((s) => {
       if (!visited.has(s.id)) {
         result.push({
           sub: s,
-          level: (s.level || 1) as 1 | 2 | 3,
+          level: (s.level || 1) as 1 | 2 | 3 | 4,
           numbering: `${topicIdx + 1}.${result.length + 1}`,
         });
       }
@@ -971,7 +984,9 @@ export const SyllabusManager: React.FC = () => {
                                     ? 'bg-white border border-slate-200 hover:border-blue-300'
                                     : level === 2
                                     ? 'bg-amber-50/25 border border-amber-200/90 ml-3 sm:ml-6 hover:border-amber-400'
-                                    : 'bg-purple-50/20 border border-purple-200/80 ml-6 sm:ml-12 hover:border-purple-400'
+                                    : level === 3
+                                    ? 'bg-purple-50/20 border border-purple-200/80 ml-6 sm:ml-12 hover:border-purple-400'
+                                    : 'bg-indigo-50/30 border border-indigo-200/90 ml-8 sm:ml-16 hover:border-indigo-400'
                                 }`}
                               >
                                 <div className="space-y-1.5 flex-1 min-w-0">
@@ -984,6 +999,13 @@ export const SyllabusManager: React.FC = () => {
                                       <div className="flex items-center text-purple-400 shrink-0">
                                         <CornerDownRight className="w-3 h-3" />
                                         <CornerDownRight className="w-3 h-3 -ml-1.5 text-purple-600" />
+                                      </div>
+                                    )}
+                                    {level === 4 && (
+                                      <div className="flex items-center text-indigo-500 shrink-0">
+                                        <CornerDownRight className="w-3 h-3" />
+                                        <CornerDownRight className="w-3 h-3 -ml-1.5 text-indigo-600" />
+                                        <span className="text-[10px] font-black bg-indigo-100 text-indigo-800 px-1 py-0.2 rounded ml-1">L4</span>
                                       </div>
                                     )}
 

@@ -21,8 +21,8 @@ export interface UserProfile {
 export interface Subtopic {
   id: string;
   topicId: string;
-  parentId?: string; // ID ของหัวข้อแม่ หากเป็นหัวข้อย่อยขั้นที่ 2 หรือ ขั้นที่ 3
-  level?: 1 | 2 | 3; // ระดับขั้นหัวข้อย่อย: 1 = ขั้นที่ 1 (หลัก), 2 = ขั้นที่ 2 (ย่อย), 3 = ขั้นที่ 3 (ย่อยลึก)
+  parentId?: string; // ID ของหัวข้อแม่ หากเป็นหัวข้อย่อยขั้นที่ 2, 3 หรือ 4
+  level?: 1 | 2 | 3 | 4; // ระดับขั้นหัวข้อย่อย: 1 = ขั้นที่ 1 (หลัก), 2 = ขั้นที่ 2 (ย่อย), 3 = ขั้นที่ 3 (ย่อยลึก), 4 = ขั้นที่ 4 (เจาะลึกพิเศษ/ข้อสอบแข่งขัน)
   name: string;
   description?: string;
   sortOrder: number;

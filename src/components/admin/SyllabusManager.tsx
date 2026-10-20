@@ -691,11 +691,24 @@ export const SyllabusManager: React.FC = () => {
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
                         <span>{topic.subtopics.length} หัวข้อย่อย</span>
-                        <span>·</span>
-                        <span className="text-blue-900 font-semibold flex items-center gap-1">
-                          <FileText className="w-3 h-3 text-red-500" />
-                          <span>ชีท PDF ผูกไว้ {topicMaterials.length} ไฟล์</span>
-                        </span>
+                        {topicMaterials.length > 0 && (
+                          <>
+                            <span>·</span>
+                            <span className="text-blue-900 font-semibold flex items-center gap-1">
+                              <FileText className="w-3 h-3 text-red-500" />
+                              <span>เอกสาร {topicMaterials.length} ไฟล์</span>
+                            </span>
+                          </>
+                        )}
+                        {currentUserRole === 'admin' && topicMaterials.length === 0 && (
+                          <>
+                            <span>·</span>
+                            <span className="text-slate-400 font-normal flex items-center gap-1">
+                              <FileText className="w-3 h-3 text-slate-300" />
+                              <span>ยังไม่มีชีทแนบ</span>
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -754,108 +767,114 @@ export const SyllabusManager: React.FC = () => {
                 {/* Expanded Section: Linked PDF Materials + Subtopics */}
                 {isExpanded && (
                   <div className="px-5 pb-5 pt-3 border-t border-slate-100 space-y-4 bg-[#FFFDF7]/50">
-                    {/* 1. LINKED PDF MATERIALS SECTION (ผูกไฟล์ PDF ประจำบทนี้โดยตรง) */}
-                    <div className="p-4 bg-gradient-to-r from-blue-50/80 via-white to-amber-50/50 border border-blue-200/90 rounded-2xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-blue-900 text-white flex items-center justify-center">
-                            <FileText className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-xs sm:text-sm text-blue-950">
-                              เอกสาร & ชีทประจำบทที่ {index + 1}: {topic.name}
-                            </h4>
-                            <p className="text-[11px] text-slate-500">
-                              ไฟล์เอกสารที่คุณครูอัปโหลดผูกไว้กับบทนี้
-                            </p>
-                          </div>
-                        </div>
-
-                        {currentUserRole === 'admin' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAttachingTopic(topic);
-                              setAttachTitle(`ชีทสรุป_${topic.name.replace(/\s+/g, '_')}`);
-                              setAttachDriveUrl('');
-                              setIsAttachModalOpen(true);
-                            }}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer whitespace-nowrap"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-amber-500" />
-                            <span>+ แปะลิงก์ชีท Google Drive</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {topicMaterials.length === 0 ? (
-                        <div className="p-3 bg-white/90 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 text-center">
-                          ยังไม่มีลิงก์เอกสาร Google Drive ที่ผูกไว้กับบทนี้ (กด "+ แปะลิงก์ชีท Google Drive" ด้านบน หรือแนบลิงก์ในแต่ละหัวข้อย่อยได้)
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                          {topicMaterials.map((mat) => (
-                            <div
-                              key={mat.id}
-                              className="p-3 bg-white border border-blue-100 hover:border-blue-300 rounded-xl flex items-center justify-between gap-3 shadow-2xs transition-all"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-8 h-8 bg-emerald-50 text-emerald-700 font-bold text-[11px] rounded-lg flex items-center justify-center shrink-0 border border-emerald-200/60">
-                                  <FolderOpen className="w-4 h-4 text-emerald-600" />
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="font-bold text-slate-900 text-xs truncate" title={mat.title}>
-                                    {mat.title}
-                                  </div>
-                                  <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                    <span className="text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded font-medium">
-                                      {mat.category}
-                                    </span>
-                                    <span>•</span>
-                                    <span className="text-emerald-700 font-medium">Google Drive</span>
-                                  </div>
-                                </div>
+                      {/* 1. LINKED PDF MATERIALS SECTION (แสดงเมื่อมีเอกสาร หรือสำหรับครู) */}
+                      {(currentUserRole === 'admin' || topicMaterials.length > 0) && (
+                        <div className="p-4 bg-gradient-to-r from-blue-50/80 via-white to-amber-50/50 border border-blue-200/90 rounded-2xl space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-lg bg-blue-900 text-white flex items-center justify-center">
+                                <FileText className="w-3.5 h-3.5" />
                               </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {mat.driveUrl && (
-                                  <a
-                                    href={mat.driveUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => recordDownload(mat.id)}
-                                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                                  >
-                                    <ExternalLink className="w-3 h-3 text-emerald-200" />
-                                    <span>เปิดชีท Drive</span>
-                                  </a>
-                                )}
-                                {mat.fileData && !mat.driveUrl && (
-                                  <a
-                                    href={mat.fileData}
-                                    download={mat.title}
-                                    onClick={() => recordDownload(mat.id)}
-                                    className="px-2.5 py-1 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                                  >
-                                    <Download className="w-3 h-3 text-amber-300" />
-                                    <span>ดาวน์โหลด</span>
-                                  </a>
-                                )}
-                                {currentUserRole === 'admin' && (
-                                  <button
-                                    onClick={() => handleDeleteMaterial(mat)}
-                                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                    title="ลบเอกสารนี้ออกจากบทเรียน"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
+                              <div>
+                                <h4 className="font-bold text-xs sm:text-sm text-blue-950">
+                                  เอกสาร & ชีทประจำบทที่ {index + 1}: {topic.name}
+                                </h4>
+                                <p className="text-[11px] text-slate-500">
+                                  {currentUserRole === 'admin'
+                                    ? 'ไฟล์เอกสารที่คุณครูอัปโหลดผูกไว้กับบทนี้'
+                                    : 'เอกสารประกอบการเรียนประจำบท'}
+                                </p>
                               </div>
                             </div>
-                          ))}
+
+                            {currentUserRole === 'admin' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAttachingTopic(topic);
+                                  setAttachTitle(`ชีทสรุป_${topic.name.replace(/\s+/g, '_')}`);
+                                  setAttachDriveUrl('');
+                                  setIsAttachModalOpen(true);
+                                }}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+                              >
+                                <Plus className="w-3.5 h-3.5 text-amber-500" />
+                                <span>+ แปะลิงก์ชีท Google Drive</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {topicMaterials.length === 0 ? (
+                            currentUserRole === 'admin' ? (
+                              <div className="p-3 bg-white/90 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 text-center">
+                                ยังไม่มีลิงก์เอกสาร Google Drive ที่ผูกไว้กับบทนี้ (กด "+ แปะลิงก์ชีท Google Drive" ด้านบน หรือแนบลิงก์ในแต่ละหัวข้อย่อยได้)
+                              </div>
+                            ) : null
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                              {topicMaterials.map((mat) => (
+                                <div
+                                  key={mat.id}
+                                  className="p-3 bg-white border border-blue-100 hover:border-blue-300 rounded-xl flex items-center justify-between gap-3 shadow-2xs transition-all"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-8 h-8 bg-emerald-50 text-emerald-700 font-bold text-[11px] rounded-lg flex items-center justify-center shrink-0 border border-emerald-200/60">
+                                      <FolderOpen className="w-4 h-4 text-emerald-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="font-bold text-slate-900 text-xs truncate" title={mat.title}>
+                                        {mat.title}
+                                      </div>
+                                      <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded font-medium">
+                                          {mat.category}
+                                        </span>
+                                        <span>•</span>
+                                        <span className="text-emerald-700 font-medium">Google Drive</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {mat.driveUrl && (
+                                      <a
+                                        href={mat.driveUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => recordDownload(mat.id)}
+                                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                                      >
+                                        <ExternalLink className="w-3 h-3 text-emerald-200" />
+                                        <span>เปิดชีท Drive</span>
+                                      </a>
+                                    )}
+                                    {mat.fileData && !mat.driveUrl && (
+                                      <a
+                                        href={mat.fileData}
+                                        download={mat.title}
+                                        onClick={() => recordDownload(mat.id)}
+                                        className="px-2.5 py-1 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                                      >
+                                        <Download className="w-3 h-3 text-amber-300" />
+                                        <span>ดาวน์โหลด</span>
+                                      </a>
+                                    )}
+                                    {currentUserRole === 'admin' && (
+                                      <button
+                                        onClick={() => handleDeleteMaterial(mat)}
+                                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                        title="ลบเอกสารนี้ออกจากบทเรียน"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
 
                     {/* 2. SUBTOPICS LIST */}
                     <div className="space-y-2 pt-1">

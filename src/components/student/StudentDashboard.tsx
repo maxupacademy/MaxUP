@@ -422,162 +422,136 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Royal Navy & Orange Student Hero Banner with Pumpkin Mascot */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-[#001B48] via-[#072B61] to-[#0B48A1] text-white rounded-3xl p-6 sm:p-8 shadow-md border border-blue-800/50">
+      {/* Clean Editorial Student Hero Bar */}
+      <section className="relative overflow-hidden bg-[#001B48] text-white rounded-3xl p-5 sm:p-7 border border-blue-900/60 shadow-sm">
         <div
-          className="pointer-events-none absolute inset-0 opacity-15"
+          className="pointer-events-none absolute inset-0 opacity-10"
           style={{
-            backgroundImage: 'radial-gradient(rgba(251, 191, 36, 0.4) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
+            backgroundImage: 'radial-gradient(rgba(255, 122, 0, 0.4) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
           }}
         />
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left max-w-xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-5 relative z-10">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
             {/* Pumpkin Mascot Avatar */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md shrink-0 bg-white/10">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl overflow-hidden ring-2 ring-amber-400/80 shadow-md shrink-0 bg-white/10">
               <img
                 src="/mascot/pumpkin_lab.jpg"
                 alt="น้องพัมคิน (Pumpkin)"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-300 bg-white/10 border border-white/15 px-3 py-1 rounded-full backdrop-blur-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>{tx('แดชบอร์ดนักเรียน', 'Student Learning Hub')} · MaxUp Academy</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <span className="text-[11px] font-bold tracking-wider text-amber-300 uppercase">
+                  {tx('ห้องเรียนของฉัน', 'Student Hub')}
+                </span>
+                <span className="text-blue-300/40 text-xs">•</span>
+                <span className="text-[11px] text-blue-200">MaxUp Academy</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 {tx(`สวัสดีครับ ${activeStudent?.nickname}! 🚀`, `Welcome back, ${activeStudent?.nickname}! 🚀`)}
               </h1>
 
-              <p className="text-blue-100 text-sm leading-relaxed">
-                {tx('เป้าหมาย:', 'Target:')}{' '}
+              <p className="text-xs text-blue-200/90 flex items-center gap-1.5 flex-wrap justify-center sm:justify-start">
+                <span>{tx('เป้าหมาย:', 'Target:')}</span>
                 <strong className="text-amber-300 font-bold">
                   {activeStudent?.targetFaculty || activeStudent?.targetExam || '-'}
-                </strong>{' '}
-                · {tx(`ความคืบหน้าวิชา ${activeSubject.name}`, `${activeSubject.name} mastery`)}{' '}
-                <strong className="text-amber-300 font-mono font-black">{syllabusPercent}%</strong>
+                </strong>
+                <span className="text-blue-300/40">•</span>
+                <span>{tx('ความก้าวหน้า:', 'Mastery:')}</span>
+                <span className="text-amber-300 font-mono font-bold">{syllabusPercent}%</span>
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                 <button
                   onClick={() => setCurrentTab('my-lessons')}
-                  className="px-3.5 py-2 text-xs font-black text-white bg-gradient-to-r from-[#FF7A00] to-[#F55D00] hover:from-[#F55D00] hover:to-[#E05000] rounded-xl shadow-md transition-all active:scale-98 cursor-pointer"
+                  className="px-4 py-2 text-xs font-black text-white bg-[#FF7A00] hover:bg-[#E66E00] rounded-xl shadow-sm transition-all active:scale-97 min-h-[40px] cursor-pointer"
                 >
                   {tx(`ประวัติเรียน (${totalLessons})`, `History (${totalLessons})`)}
                 </button>
                 <button
                   onClick={() => setCurrentTab('my-syllabus')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                  className="px-3.5 py-2 text-xs font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all min-h-[40px] cursor-pointer"
                 >
                   {tx(`สารบัญ (${completedCount}/${totalSubtopics})`, `Syllabus (${completedCount}/${totalSubtopics})`)}
                 </button>
                 <button
                   onClick={() => setCurrentTab('schedule')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
+                  className="px-3.5 py-2 text-xs font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all min-h-[40px] cursor-pointer"
                 >
                   {tx('ตารางเรียน', 'Schedule')}
-                </button>
-                <button
-                  onClick={() => setCurrentTab('my-materials')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
-                >
-                  {tx('เอกสารเรียน', 'Materials')}
-                </button>
-                <button
-                  onClick={() => setCurrentTab('my-videos')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
-                >
-                  {tx('วิดีโอ', 'Videos')}
-                </button>
-                <button
-                  onClick={() => setCurrentTab('my-homework')}
-                  className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all cursor-pointer backdrop-blur-xs"
-                >
-                  {tx('การบ้าน', 'Homework')}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Student Goal Spotlight Badge in Glassmorphism */}
-          <SpotlightCard
-            spotlightColor="rgba(251, 191, 36, 0.25)"
-            className="shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 flex flex-col items-center justify-center text-center min-w-[210px]"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center mb-2 shadow-xs">
-              <Target className="w-6 h-6" />
+          {/* Student Goal Target Card */}
+          <div className="shrink-0 bg-white/10 border border-white/15 rounded-2xl p-4 flex items-center gap-3.5 min-w-[200px]">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+              <Target className="w-5 h-5" />
             </div>
-            <div className="text-xs font-bold text-white">
-              {activeStudent?.targetExam || tx('เตรียมสอบเข้า', 'Exam Preparation')}
+            <div>
+              <div className="text-[11px] text-blue-200">
+                {activeStudent?.targetExam || tx('หลักสูตรเป้าหมาย', 'Exam Target')}
+              </div>
+              <div className="text-xs font-bold text-white mt-0.5 max-w-[150px] truncate">
+                {activeStudent?.targetFaculty || tx(`สะสม ${totalHours} ชม.`, `${totalHours} hrs logged`)}
+              </div>
             </div>
-            <div className="text-[11px] text-blue-200 mt-1 max-w-[180px]">
-              {activeStudent?.targetFaculty
-                ? activeStudent.targetFaculty
-                : tx(`สะสมชั่วโมงเรียน ${totalHours} ชม.`, `${totalHours} hours completed`)}
-            </div>
-          </SpotlightCard>
+          </div>
         </div>
       </section>
 
-      {/* 21st.dev Quantitative Metric Cards with Spotlight & NumberTicker */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 21st.dev Quantitative Metric Bento Cards - Crisp Numbers, No Fluff */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
         <SpotlightCard
-          spotlightColor="rgba(245, 158, 11, 0.12)"
-          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-amber-300"
+          spotlightColor="rgba(255, 122, 0, 0.08)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-[#FF7A00]/40 transition-colors"
         >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold">{tx('ชั่วโมงเรียนสะสม', 'Study Hours')}</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-amber-600" />
+            <span className="text-xs font-bold tracking-tight text-slate-600">{tx('ชั่วโมงเรียนสะสม', 'Study Hours')}</span>
+            <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-[#FF7A00]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
             <NumberTicker value={totalHoursNum} decimals={1} />
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>{tx('ชั่วโมงเรียนทั้งหมด', 'Total hours logged')}</span>
+            <span className="text-xs font-normal text-slate-400 ml-1.5">{tx('ชม.', 'hrs')}</span>
           </div>
         </SpotlightCard>
 
         <SpotlightCard
-          spotlightColor="rgba(30, 58, 138, 0.1)"
-          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-blue-300"
+          spotlightColor="rgba(0, 27, 72, 0.08)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-[#001B48]/30 transition-colors"
         >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold">{tx('จำนวนคาบที่เรียน', 'Sessions Attended')}</span>
+            <span className="text-xs font-bold tracking-tight text-slate-600">{tx('จำนวนคาบที่เรียน', 'Sessions Attended')}</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/60 flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-blue-900" />
+              <BookOpen className="w-4 h-4 text-[#001B48]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
             <NumberTicker value={totalLessons} />
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>{tx('คาบเรียนที่บันทึกแล้ว', 'Recorded sessions')}</span>
+            <span className="text-xs font-normal text-slate-400 ml-1.5">{tx('คาบ', 'sessions')}</span>
           </div>
         </SpotlightCard>
 
         <SpotlightCard
-          spotlightColor="rgba(16, 185, 129, 0.12)"
-          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300"
+          spotlightColor="rgba(16, 185, 129, 0.08)"
+          className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-emerald-300 transition-colors"
         >
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold">{tx('สารบัญที่ครอบคลุม', 'Syllabus Mastery')}</span>
+            <span className="text-xs font-bold tracking-tight text-slate-600">{tx('ความครอบคลุมสารบัญ', 'Syllabus Mastery')}</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/60 flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-emerald-600" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
             <NumberTicker value={syllabusPercent} suffix="%" />
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            <span>
-              {tx(
-                `${completedCount} จาก ${totalSubtopics} หัวข้อย่อย`,
-                `${completedCount} of ${totalSubtopics} subtopics`
-              )}
+            <span className="text-xs font-normal text-slate-400 ml-1.5">
+              ({completedCount}/{totalSubtopics})
             </span>
           </div>
         </SpotlightCard>

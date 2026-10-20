@@ -115,14 +115,13 @@ export const SyllabusManager: React.FC = () => {
   const [editSubGoogleDriveUrl, setEditSubGoogleDriveUrl] = useState('');
   const [editSubHandwrittenSolutionUrl, setEditSubHandwrittenSolutionUrl] = useState('');
 
-  // Attach PDF Material directly to Topic Modal state
+  // Attach Google Drive Material directly to Topic Modal state
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [attachingTopic, setAttachingTopic] = useState<Topic | null>(null);
   const [attachTitle, setAttachTitle] = useState('');
+  const [attachDriveUrl, setAttachDriveUrl] = useState('');
   const [attachDesc, setAttachDesc] = useState('');
   const [attachCategory, setAttachCategory] = useState<CourseMaterial['category']>('ชีทสรุปสูตร');
-  const [attachFileSize, setAttachFileSize] = useState('3.2 MB');
-  const [attachFileData, setAttachFileData] = useState<string | undefined>(undefined);
 
   const toggleTopic = (id: string) => {
     setExpandedTopicIds((prev) =>
@@ -240,64 +239,27 @@ export const SyllabusManager: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
-    setAttachFileSize(`${sizeInMb} MB`);
-    if (!attachTitle) {
-      setAttachTitle(file.name);
-    }
-
-    const reader = new FileReader();
-    reader.onload = (loadEvt) => {
-      const result = loadEvt.target?.result as string;
-      setAttachFileData(result);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleAttachSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!attachingTopic || !attachTitle.trim()) return;
-
-    const titleWithExt = attachTitle.trim().endsWith('.pdf')
-      ? attachTitle.trim()
-      : `${attachTitle.trim()}.pdf`;
+    if (!attachingTopic || !attachTitle.trim() || !attachDriveUrl.trim()) return;
 
     addMaterial({
       courseId: activeSubjectId,
       topicId: attachingTopic.id,
-      title: titleWithExt,
+      title: attachTitle.trim(),
       description: attachDesc.trim() || `เอกสารประกอบบทเรียน: ${attachingTopic.name}`,
       category: attachCategory,
       fileType: 'pdf',
-      fileSize: attachFileSize.trim() || '2.8 MB',
-      fileData: attachFileData,
-      isProtected: true,
-      embeddedPages: [
-        {
-          pageNumber: 1,
-          title: attachingTopic.name,
-          subtitle: `${activeSubject.name} • ${attachingTopic.nameEn || 'เอกสารประกอบบทเรียน'}`,
-          content: attachingTopic.subtopics.map(
-            (s, idx) => `${idx + 1}. ${s.name} — ${s.description || 'เนื้อหาและแนวโจทย์สำคัญ'}`
-          ),
-          keyFormulas: [
-            'สรุปแนวคิดและสูตรที่ใช้ในบทนี้',
-            'ฝึกฝนทบทวนโจทย์อย่างสม่ำเสมอ',
-          ],
-          tips: ['ทบทวนเนื้อหาก่อนเข้าเรียนหรือเตรียมตัวสอบ A-Level'],
-        },
-      ],
+      fileSize: 'Google Drive',
+      driveUrl: attachDriveUrl.trim(),
+      isProtected: false,
     });
 
     setIsAttachModalOpen(false);
     setAttachingTopic(null);
     setAttachTitle('');
+    setAttachDriveUrl('');
     setAttachDesc('');
-    setAttachFileData(undefined);
   };
 
   const handleOpenMaterialForTopic = (topic: Topic) => {
@@ -814,20 +776,21 @@ export const SyllabusManager: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               setAttachingTopic(topic);
-                              setAttachTitle(`MaxUp_${topic.name.replace(/\s+/g, '_')}_Summary.pdf`);
+                              setAttachTitle(`ชีทสรุป_${topic.name.replace(/\s+/g, '_')}`);
+                              setAttachDriveUrl('');
                               setIsAttachModalOpen(true);
                             }}
                             className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-2xs transition-all cursor-pointer whitespace-nowrap"
                           >
                             <Plus className="w-3.5 h-3.5 text-amber-500" />
-                            <span>+ แนบไฟล์ PDF ให้บทนี้</span>
+                            <span>+ แปะลิงก์ชีท Google Drive</span>
                           </button>
                         )}
                       </div>
 
                       {topicMaterials.length === 0 ? (
                         <div className="p-3 bg-white/90 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 text-center">
-                          ยังไม่มีไฟล์ PDF เจาะจงที่ผูกไว้กับบทนี้ (กด "+ แนบไฟล์ PDF ให้บทนี้" ด้านบน หรือแนบลิงก์ Google Drive ในแต่ละหัวข้อย่อยได้)
+                          ยังไม่มีลิงก์เอกสาร Google Drive ที่ผูกไว้กับบทนี้ (กด "+ แปะลิงก์ชีท Google Drive" ด้านบน หรือแนบลิงก์ในแต่ละหัวข้อย่อยได้)
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -837,8 +800,8 @@ export const SyllabusManager: React.FC = () => {
                               className="p-3 bg-white border border-blue-100 hover:border-blue-300 rounded-xl flex items-center justify-between gap-3 shadow-2xs transition-all"
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-8 h-8 bg-red-50 text-red-600 font-bold text-[11px] rounded-lg flex items-center justify-center shrink-0 border border-red-200/50">
-                                  PDF
+                                <div className="w-8 h-8 bg-emerald-50 text-emerald-700 font-bold text-[11px] rounded-lg flex items-center justify-center shrink-0 border border-emerald-200/60">
+                                  <FolderOpen className="w-4 h-4 text-emerald-600" />
                                 </div>
                                 <div className="min-w-0">
                                   <div className="font-bold text-slate-900 text-xs truncate" title={mat.title}>
@@ -849,15 +812,25 @@ export const SyllabusManager: React.FC = () => {
                                       {mat.category}
                                     </span>
                                     <span>•</span>
-                                    <span>{mat.fileSize}</span>
-                                    <span>•</span>
-                                    <span className="text-emerald-700">ฝังในระบบแล้ว</span>
+                                    <span className="text-emerald-700 font-medium">Google Drive</span>
                                   </div>
                                 </div>
                               </div>
 
                               <div className="flex items-center gap-1.5 shrink-0">
-                                {mat.fileData && (
+                                {mat.driveUrl && (
+                                  <a
+                                    href={mat.driveUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => recordDownload(mat.id)}
+                                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                                  >
+                                    <ExternalLink className="w-3 h-3 text-emerald-200" />
+                                    <span>เปิดชีท Drive</span>
+                                  </a>
+                                )}
+                                {mat.fileData && !mat.driveUrl && (
                                   <a
                                     href={mat.fileData}
                                     download={mat.title}
@@ -1268,110 +1241,104 @@ export const SyllabusManager: React.FC = () => {
         )}
       </div>
 
-      {/* Attach PDF Material Directly Modal */}
+      {/* Attach Google Drive Material Directly Modal */}
       {isAttachModalOpen && attachingTopic && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
           <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden p-6 animate-in fade-in zoom-in-95 duration-200 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <UploadCloud className="w-5 h-5 text-blue-900" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <FolderOpen className="w-4 h-4" />
+                </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">แนบไฟล์ PDF ให้บทเรียนนี้</h3>
+                  <h3 className="font-bold text-slate-900 text-base">แปะลิงก์ชีท Google Drive ให้บทเรียนนี้</h3>
                   <p className="text-xs text-slate-500">
-                    ผูกไฟล์เข้ากับ: {attachingTopic.name} ({activeSubject.name})
+                    ผูกลิงก์เอกสารเข้ากับ: <span className="font-semibold text-slate-700">{attachingTopic.name}</span> ({activeSubject.name})
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAttachModalOpen(false)}
-                className="p-1 rounded text-slate-400 hover:text-slate-600"
+                className="p-1 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAttachSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleAttachSubmit} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  ชื่อไฟล์ PDF *
+                  ชื่อเอกสาร / ชีทเรียน *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น MaxUp_Chem_Summary_Ch1.pdf"
+                  placeholder="เช่น ชีทสรุปสูตรเคมี ม.4 เทอม 1"
                   value={attachTitle}
                   onChange={(e) => setAttachTitle(e.target.value)}
-                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">หมวดหมู่เอกสาร</label>
-                  <select
-                    value={attachCategory}
-                    onChange={(e) => setAttachCategory(e.target.value as CourseMaterial['category'])}
-                    className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
-                  >
-                    <option value="ชีทสรุปสูตร">ชีทสรุปสูตร</option>
-                    <option value="ใบงานแบบฝึกหัด">ใบงานแบบฝึกหัด</option>
-                    <option value="ข้อสอบเก่า">ข้อสอบเก่า</option>
-                    <option value="เฉลยละเอียด">เฉลยละเอียด</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ขนาดไฟล์ระบุ</label>
-                  <input
-                    type="text"
-                    value={attachFileSize}
-                    onChange={(e) => setAttachFileSize(e.target.value)}
-                    className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
-                  />
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">หมวดหมู่เอกสาร</label>
+                <select
+                  value={attachCategory}
+                  onChange={(e) => setAttachCategory(e.target.value as CourseMaterial['category'])}
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-amber-400"
+                >
+                  <option value="ชีทสรุปสูตร">ชีทสรุปสูตร</option>
+                  <option value="ใบงานแบบฝึกหัด">ใบงานแบบฝึกหัด</option>
+                  <option value="ข้อสอบเก่า">ข้อสอบเก่า</option>
+                  <option value="เฉลยละเอียด">เฉลยละเอียด</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  ลิงก์ Google Drive (URL) *
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://drive.google.com/file/d/... หรือ https://docs.google.com/..."
+                  value={attachDriveUrl}
+                  onChange={(e) => setAttachDriveUrl(e.target.value)}
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:border-emerald-500"
+                />
+                <div className="mt-2 p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-amber-900 text-[11px] flex items-start gap-2">
+                  <span className="text-sm shrink-0">💡</span>
+                  <div>
+                    <span className="font-bold">คำแนะนำ:</span> วางลิงก์ไฟล์หรือโฟลเดอร์ Google Drive ของชีทเรียน (ตั้งค่าสิทธิ์แชร์เป็น "ทุกคนที่มีลิงก์มีสิทธิ์ดู") เพื่อให้นักเรียนกดเปิดดูได้ทันที และไม่เปลืองพื้นที่จัดเก็บฐานข้อมูล
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำอธิบายเอกสาร</label>
+                <label className="block font-semibold text-slate-700 mb-1">คำอธิบายเอกสาร (เพิ่มเติม)</label>
                 <textarea
                   rows={2}
                   placeholder="ระบุจุดเน้น หรือสิ่งที่นักเรียนจะได้รับจากชีทชุดนี้"
                   value={attachDesc}
                   onChange={(e) => setAttachDesc(e.target.value)}
-                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                  className="w-full bg-[#FFFDF7] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-amber-400"
                 />
-              </div>
-
-              {/* Upload PDF from local device */}
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  อัปโหลดไฟล์ PDF จากเครื่อง (อุปกรณ์จริง):
-                </label>
-                <div className="border-2 border-dashed border-amber-300 hover:border-amber-500 rounded-2xl p-4 text-center bg-amber-50/40 transition-colors cursor-pointer relative">
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <UploadCloud className="w-7 h-7 text-amber-600 mx-auto mb-1" />
-                  <p className="font-semibold text-slate-700">คลิกเพื่อเลือกไฟล์ PDF</p>
-                  <p className="text-[11px] text-slate-500">หรือลากไฟล์มาวางที่นี่เพื่อฝังลงในบทเรียน</p>
-                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAttachModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-slate-900 rounded-xl"
+                  className="px-4 py-2 text-slate-600 hover:text-slate-900 rounded-xl cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs"
+                  className="px-5 py-2 font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
-                  ผูกไฟล์ PDF เข้าบทนี้
+                  <Check className="w-4 h-4 text-amber-300" />
+                  <span>บันทึกลิงก์ Google Drive</span>
                 </button>
               </div>
             </form>

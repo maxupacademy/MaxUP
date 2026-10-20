@@ -87,6 +87,7 @@ export const AdminContentSuite: React.FC = () => {
   const [matTitle, setMatTitle] = useState('');
   const [matCategory, setMatCategory] = useState<CourseMaterial['category']>('ชีทสรุปสูตร');
   const [matSize, setMatSize] = useState('3.5 MB');
+  const [matDriveUrl, setMatDriveUrl] = useState('');
   const [matDesc, setMatDesc] = useState('');
   const [matFileData, setMatFileData] = useState<string | undefined>(undefined);
   const [matFileName, setMatFileName] = useState('');
@@ -218,17 +219,19 @@ export const AdminContentSuite: React.FC = () => {
 
     addMaterial({
       courseId: activeCourseId,
-      title: matTitle.trim().endsWith('.pdf') ? matTitle.trim() : `${matTitle.trim()}.pdf`,
+      title: matTitle.trim(),
       description: matDesc.trim() || 'เอกสารประกอบการเรียนและฝึกโจทย์',
       category: matCategory,
       fileType: 'pdf',
-      fileSize: matSize.trim() || '2.5 MB',
+      fileSize: matDriveUrl.trim() ? 'Google Drive' : (matSize.trim() || '2.5 MB'),
+      driveUrl: matDriveUrl.trim() || undefined,
       fileData: matFileData,
-      isProtected: true,
+      isProtected: false,
     });
 
     setIsAddMatModalOpen(false);
     setMatTitle('');
+    setMatDriveUrl('');
     setMatDesc('');
     setMatFileData(undefined);
     setMatFileName('');
@@ -660,14 +663,14 @@ export const AdminContentSuite: React.FC = () => {
               <h2 className="text-base font-bold text-slate-900">
                 {tx(`เอกสารประกอบการเรียน: ${activeCourse.name}`, `Materials: ${activeCourse.name}`)} ({courseMaterials.length})
               </h2>
-              <p className="text-xs text-slate-500">{tx('อัปโหลดไฟล์ PDF ให้อ่านและดาวน์โหลดได้ทันที', 'Upload PDF study sheets for students')}</p>
+              <p className="text-xs text-slate-500">{tx('แนบลิงก์ Google Drive ชีทเรียนให้อ่านได้ทันที', 'Attach Google Drive study sheets for students')}</p>
             </div>
             <button
               onClick={() => setIsAddMatModalOpen(true)}
-              className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-amber-300" />
-              <span>+ {tx('อัปโหลด PDF', 'Upload PDF')}</span>
+              <span>+ {tx('วางลิงก์ Google Drive', 'Add Drive Link')}</span>
             </button>
           </div>
 
@@ -676,16 +679,31 @@ export const AdminContentSuite: React.FC = () => {
               <div key={mat.id} className="py-3 flex items-center justify-between gap-3 text-xs">
                 <div>
                   <h4 className="font-bold text-slate-900">{mat.title}</h4>
-                  <p className="text-slate-500 text-[11px]">
-                    {mat.category} · {mat.fileSize}
+                  <p className="text-slate-500 text-[11px] flex items-center gap-1.5 mt-0.5">
+                    <span>{mat.category}</span>
+                    <span>·</span>
+                    <span className="text-emerald-700 font-medium">Google Drive</span>
                   </p>
                 </div>
-                <button
-                  onClick={() => deleteMaterial(mat.id)}
-                  className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {mat.driveUrl && (
+                    <a
+                      href={mat.driveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3 text-emerald-200" />
+                      <span>เปิด Drive</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => deleteMaterial(mat.id)}
+                    className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -1091,79 +1109,70 @@ export const AdminContentSuite: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Add Material with PDF Upload */}
+      {/* MODAL: Add Material with Drive Link */}
       {isAddMatModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">อัปโหลดไฟล์เรียน / PDF</h3>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <FolderOpen className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base">{tx('วางลิงก์เอกสาร Google Drive', 'Attach Google Drive Sheet')}</h3>
+              </div>
               <button onClick={() => setIsAddMatModalOpen(false)} className="p-1 text-slate-400 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleAddMatSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleAddMatSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">ไฟล์ PDF (ฝังในระบบโดยตรง):</label>
-                <div className="border-2 border-dashed border-amber-300 hover:border-amber-500 rounded-xl p-4 text-center bg-amber-50/40 relative cursor-pointer">
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <UploadCloud className="w-7 h-7 text-amber-600 mx-auto mb-1" />
-                  <div className="text-xs font-semibold text-slate-800">
-                    {matFileName ? (
-                      <span className="text-emerald-700 font-bold">✓ {matFileName}</span>
-                    ) : (
-                      'คลิกเพื่อเลือกไฟล์ PDF'
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">ชื่อเอกสาร *</label>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('ชื่อเอกสาร / ชีทเรียน *', 'Title *')}</label>
                 <input
                   type="text"
                   required
-                  placeholder="เช่น สรุปสูตรเคมี A-Level.pdf"
+                  placeholder="เช่น ชีทสรุปเคมี A-Level"
                   value={matTitle}
                   onChange={(e) => setMatTitle(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">หมวดหมู่</label>
-                  <select
-                    value={matCategory}
-                    onChange={(e) => setMatCategory(e.target.value as CourseMaterial['category'])}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                  >
-                    <option value="ชีทสรุปสูตร">ชีทสรุปสูตร</option>
-                    <option value="ใบงานแบบฝึกหัด">ใบงานแบบฝึกหัด</option>
-                    <option value="ข้อสอบเก่า">ข้อสอบเก่า</option>
-                    <option value="เฉลยละเอียด">เฉลยละเอียด</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">ขนาดไฟล์</label>
-                  <input
-                    type="text"
-                    value={matSize}
-                    onChange={(e) => setMatSize(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-mono"
-                  />
-                </div>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('หมวดหมู่', 'Category')}</label>
+                <select
+                  value={matCategory}
+                  onChange={(e) => setMatCategory(e.target.value as CourseMaterial['category'])}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+                >
+                  <option value="ชีทสรุปสูตร">ชีทสรุปสูตร</option>
+                  <option value="ใบงานแบบฝึกหัด">ใบงานแบบฝึกหัด</option>
+                  <option value="ข้อสอบเก่า">ข้อสอบเก่า</option>
+                  <option value="เฉลยละเอียด">เฉลยละเอียด</option>
+                </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">คำอธิบายเอกสาร</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {tx('ลิงก์ Google Drive (URL) *', 'Google Drive Link *')}
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://drive.google.com/file/d/... หรือ https://docs.google.com/..."
+                  value={matDriveUrl}
+                  onChange={(e) => setMatDriveUrl(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-mono"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  💡 แปะลิงก์ Google Drive เพื่อให้นักเรียนเปิดดูได้ทันที และไม่เปลืองพื้นที่จัดเก็บฐานข้อมูล
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">{tx('คำอธิบายเอกสาร (เพิ่มเติม)', 'Description')}</label>
                 <textarea
                   rows={2}
-                  placeholder="คำอธิบายสรุปหรือปีข้อสอบ..."
+                  placeholder="คำอธิบายสรุปหรือสิ่งที่นักเรียนจะได้รับ..."
                   value={matDesc}
                   onChange={(e) => setMatDesc(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
@@ -1172,10 +1181,11 @@ export const AdminContentSuite: React.FC = () => {
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setIsAddMatModalOpen(false)} className="px-4 py-2 text-slate-600 cursor-pointer">
-                  ยกเลิก
+                  {tx('ยกเลิก', 'Cancel')}
                 </button>
-                <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer">
-                  บันทึกไฟล์
+                <button type="submit" className="px-5 py-2 font-semibold text-white bg-blue-900 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-amber-300" />
+                  <span>{tx('บันทึกลิงก์ Google Drive', 'Save Drive Link')}</span>
                 </button>
               </div>
             </form>

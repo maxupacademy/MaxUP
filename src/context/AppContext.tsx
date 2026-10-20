@@ -386,17 +386,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDoc(doc(db, 'settings', 'promptpay'), data).catch(() => {});
   };
 
-  // Progress
-  const [progressMap, setProgressMap] = useState<Record<string, StudentTopicProgress[]>>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}progress`);
-    return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
-  });
+  // Progress - Derives strictly from current lessons (Single Source of Truth)
+  const [progressMap, setProgressMap] = useState<Record<string, StudentTopicProgress[]>>({});
 
-  // คำนวณความคืบหน้าของนักเรียนจากคาบเรียนปัจจุบันที่มีอยู่จริง (Single Source of Truth)
+  // คำนวณความคืบหน้าของนักเรียนจากคาบเรียนปัจจุบันที่มีอยู่จริงเท่านั้น (Single Source of Truth)
+  // ตัดข้อมูลประวัติค้างหรือ ghost subtopics ที่ไม่มีในคาบเรียนจริงออก 100%
   const computeStudentProgressFromLessons = (
     targetStudentId: string,
-    currentLessons: Lesson[],
-    existingStudentProgress: StudentTopicProgress[] = []
+    currentLessons: Lesson[]
   ): StudentTopicProgress[] => {
     const studentLessons = currentLessons.filter((l) => l.studentId === targetStudentId);
 
@@ -424,32 +421,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const calculatedList: StudentTopicProgress[] = [];
     subtopicStats.forEach((stat, subId) => {
-      const existing = existingStudentProgress.find((p) => p.subtopicId === subId);
-      const isMastered = stat.count >= 3 || (existing && existing.status === 'mastered');
-
       calculatedList.push({
         subtopicId: subId,
         studyCount: stat.count,
-        status: isMastered ? 'mastered' : 'completed',
+        status: stat.count >= 3 ? 'mastered' : 'completed',
         lastStudiedDate: stat.latestDate,
-        handwrittenSolutionUrl:
-          stat.handwrittenSolutionUrl || existing?.handwrittenSolutionUrl,
+        handwrittenSolutionUrl: stat.handwrittenSolutionUrl,
       });
-    });
-
-    // รักษาค่าที่อาจมีการปรับแบบ Manual เฉพาะที่มีค่าเรียนจริงมากกว่า 0
-    existingStudentProgress.forEach((existing) => {
-      if (!subtopicStats.has(existing.subtopicId) && (existing.studyCount || 0) > 0 && existing.status !== 'not_started') {
-        calculatedList.push(existing);
-      }
     });
 
     return calculatedList;
   };
 
   const recomputeAllStudentsProgress = (
-    allLessons: Lesson[],
-    currentProgressMap: Record<string, StudentTopicProgress[]>
+    allLessons: Lesson[]
   ): Record<string, StudentTopicProgress[]> => {
     const newProgressMap: Record<string, StudentTopicProgress[]> = {};
     const allStudentIds = new Set<string>();
@@ -458,26 +443,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (l.studentId) allStudentIds.add(l.studentId);
     });
     students.forEach((s) => allStudentIds.add(s.id));
-    Object.keys(currentProgressMap).forEach((stId) => allStudentIds.add(stId));
+    if (currentUser?.id) allStudentIds.add(currentUser.id);
 
     allStudentIds.forEach((stId) => {
-      newProgressMap[stId] = computeStudentProgressFromLessons(
-        stId,
-        allLessons,
-        currentProgressMap[stId] || []
-      );
+      newProgressMap[stId] = computeStudentProgressFromLessons(stId, allLessons);
     });
 
     return newProgressMap;
   };
 
   const syncAndCleanAllProgress = () => {
-    setProgressMap((prev) => {
-      const cleanMap = recomputeAllStudentsProgress(lessons, prev);
-      Object.entries(cleanMap).forEach(([stId, progList]) => {
-        safeSetDoc(doc(db, 'progress', stId), { progress: progList });
-      });
-      return cleanMap;
+    const cleanMap = recomputeAllStudentsProgress(lessons);
+    setProgressMap(cleanMap);
+    Object.entries(cleanMap).forEach(([stId, progList]) => {
+      safeSetDoc(doc(db, 'progress', stId), { progress: progList });
     });
   };
 
@@ -514,9 +493,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${STORAGE_KEY_PREFIX}homeworks`, JSON.stringify(homeworks));
   }, [homeworks]);
 
+  // Synchronize progressMap strictly from active lessons in real-time
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(progressMap));
-  }, [progressMap]);
+    const cleanMap = recomputeAllStudentsProgress(lessons);
+    setProgressMap(cleanMap);
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
+    // Clean Firestore progress documents to match current active lessons
+    Object.entries(cleanMap).forEach(([stId, progList]) => {
+      safeSetDoc(doc(db, 'progress', stId), { progress: progList });
+    });
+  }, [lessons, students]);
 
   // Realtime background sync with Firestore for all collections (Lessons, Progress, Schedules, Users, Courses, Homeworks, Materials, Settings)
   useEffect(() => {
@@ -531,38 +517,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         remoteLessons.sort((a, b) => (b.lessonDate || '').localeCompare(a.lessonDate || ''));
         setLessons(remoteLessons);
 
-        // คำนวณความคืบหน้าของนักเรียนทุกคนใหม่ทันทีจากคาบเรียนจริงที่อัปเดตจาก Firestore
-        setProgressMap((prev) => {
-          const updatedMap = recomputeAllStudentsProgress(remoteLessons, prev);
-          Object.entries(updatedMap).forEach(([stId, progList]) => {
-            safeSetDoc(doc(db, 'progress', stId), { progress: progList });
-          });
-          return updatedMap;
+        // คำนวณความคืบหน้าของนักเรียนทุกคนใหม่ทันทีจากคาบเรียนจริงที่อัปเดตจาก Firestore (Single Source of Truth)
+        const updatedMap = recomputeAllStudentsProgress(remoteLessons);
+        setProgressMap(updatedMap);
+        Object.entries(updatedMap).forEach(([stId, progList]) => {
+          safeSetDoc(doc(db, 'progress', stId), { progress: progList });
         });
       },
       (err) => console.warn('Lessons realtime note:', err)
     );
 
-    // 2. Realtime Student Progress Listener (Auto updates checklist & study counts)
-    const unsubProgress = onSnapshot(
-      collection(db, 'progress'),
-      (snapshot) => {
-        const remoteProgress: Record<string, StudentTopicProgress[]> = {};
-        snapshot.forEach((docItem) => {
-          const data = docItem.data();
-          if (data && Array.isArray(data.progress)) {
-            // กรองเอาเฉพาะข้อมูลที่ถูกต้อง (studyCount > 0)
-            remoteProgress[docItem.id] = data.progress.filter(
-              (p: StudentTopicProgress) => (p.studyCount || 0) > 0 && p.status !== 'not_started'
-            );
-          }
-        });
-        if (Object.keys(remoteProgress).length > 0) {
-          setProgressMap((prev) => ({ ...prev, ...remoteProgress }));
-        }
-      },
-      (err) => console.warn('Progress realtime note:', err)
-    );
+    // 2. Realtime Student Progress Listener
+    // เนื่องจากยึดตาม lessons เป็นหลัก 100% จึงไม่ให้ข้อมูลขยะเก่าจาก progress collection มาทับ
+    const unsubProgress = () => {};
 
     // 3. Realtime Schedules & Payment Plans Listener
     const unsubSchedules = onSnapshot(
@@ -1210,15 +1177,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // อัปเดตความคืบหน้าของสารบัญหัวข้อ (Syllabus) ให้นักเรียนทันทีแบบ Single Source of Truth
     if (newLesson.studentId) {
       const studentId = newLesson.studentId;
-      setProgressMap((prev) => {
-        const updatedProgress = computeStudentProgressFromLessons(
-          studentId,
-          nextLessons,
-          prev[studentId] || []
-        );
-        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
-        return { ...prev, [studentId]: updatedProgress };
-      });
+      const updatedProgress = computeStudentProgressFromLessons(studentId, nextLessons);
+      setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
+      safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
   };
 
@@ -1236,15 +1197,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // คำนวณความคืบหน้าใหม่ตามรายการคาบเรียนจริงทันที (ไม่บวมซ้ำ และตัดหัวข้อที่ถูกติ๊กออกทิ้งทันที)
     if (safeLesson.studentId) {
       const studentId = safeLesson.studentId;
-      setProgressMap((prev) => {
-        const updatedProgress = computeStudentProgressFromLessons(
-          studentId,
-          nextLessons,
-          prev[studentId] || []
-        );
-        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
-        return { ...prev, [studentId]: updatedProgress };
-      });
+      const updatedProgress = computeStudentProgressFromLessons(studentId, nextLessons);
+      setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
+      safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
   };
 
@@ -1256,15 +1211,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (lessonToDelete && lessonToDelete.studentId) {
       const studentId = lessonToDelete.studentId;
-      setProgressMap((prev) => {
-        const updatedProgress = computeStudentProgressFromLessons(
-          studentId,
-          nextLessons,
-          prev[studentId] || []
-        );
-        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
-        return { ...prev, [studentId]: updatedProgress };
-      });
+      const updatedProgress = computeStudentProgressFromLessons(studentId, nextLessons);
+      setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
+      safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
   };
 
@@ -1609,15 +1558,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         safeSetDoc(doc(db, 'lessons', newLessonId), newLesson);
 
         // Update student topic progress accurately from active lessons
-        setProgressMap((prev) => {
-          const updatedProgress = computeStudentProgressFromLessons(
-            stId,
-            nextLessons,
-            prev[stId] || []
-          );
-          safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
-          return { ...prev, [stId]: updatedProgress };
-        });
+        const updatedProgress = computeStudentProgressFromLessons(stId, nextLessons);
+        setProgressMap((prev) => ({ ...prev, [stId]: updatedProgress }));
+        safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
       }
     });
   };

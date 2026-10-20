@@ -286,7 +286,7 @@ export const StudentManager: React.FC = () => {
             ).toFixed(1);
             const stProgress = progressMap[st.id] || [];
             const completedCount = stProgress.filter(
-              (p) => p.status === 'completed' || p.status === 'mastered'
+              (p) => (p.status === 'completed' || p.status === 'mastered') && (p.studyCount || 0) > 0
             ).length;
             const percent =
               totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;

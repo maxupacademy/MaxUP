@@ -218,6 +218,7 @@ interface AppContextType {
   // Data reset
   resetAllData: () => void;
   resetToDefaultMathJuniorCourse: () => Promise<void>;
+  syncAndCleanAllProgress: () => void;
 }
 
 const STORAGE_KEY_PREFIX = 'maxup_v19_math_';
@@ -391,6 +392,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_PROGRESS;
   });
 
+  // คำนวณความคืบหน้าของนักเรียนจากคาบเรียนปัจจุบันที่มีอยู่จริง (Single Source of Truth)
+  const computeStudentProgressFromLessons = (
+    targetStudentId: string,
+    currentLessons: Lesson[],
+    existingStudentProgress: StudentTopicProgress[] = []
+  ): StudentTopicProgress[] => {
+    const studentLessons = currentLessons.filter((l) => l.studentId === targetStudentId);
+
+    const subtopicStats = new Map<
+      string,
+      { count: number; latestDate: string; handwrittenSolutionUrl?: string }
+    >();
+
+    studentLessons.forEach((les) => {
+      const subIds = les.subtopicIds || [];
+      subIds.forEach((subId) => {
+        const prevStat = subtopicStats.get(subId);
+        const count = (prevStat?.count || 0) + 1;
+        const curDate = les.lessonDate || '';
+        const latestDate =
+          !prevStat || (curDate && curDate > prevStat.latestDate)
+            ? curDate
+            : prevStat.latestDate;
+        const handwrittenSolutionUrl =
+          les.handwrittenSolutionUrl || prevStat?.handwrittenSolutionUrl;
+
+        subtopicStats.set(subId, { count, latestDate, handwrittenSolutionUrl });
+      });
+    });
+
+    const calculatedList: StudentTopicProgress[] = [];
+    subtopicStats.forEach((stat, subId) => {
+      const existing = existingStudentProgress.find((p) => p.subtopicId === subId);
+      const isMastered = stat.count >= 3 || (existing && existing.status === 'mastered');
+
+      calculatedList.push({
+        subtopicId: subId,
+        studyCount: stat.count,
+        status: isMastered ? 'mastered' : 'completed',
+        lastStudiedDate: stat.latestDate,
+        handwrittenSolutionUrl:
+          stat.handwrittenSolutionUrl || existing?.handwrittenSolutionUrl,
+      });
+    });
+
+    // รักษาค่าที่อาจมีการปรับแบบ Manual เฉพาะที่มีค่าเรียนจริงมากกว่า 0
+    existingStudentProgress.forEach((existing) => {
+      if (!subtopicStats.has(existing.subtopicId) && (existing.studyCount || 0) > 0 && existing.status !== 'not_started') {
+        calculatedList.push(existing);
+      }
+    });
+
+    return calculatedList;
+  };
+
+  const recomputeAllStudentsProgress = (
+    allLessons: Lesson[],
+    currentProgressMap: Record<string, StudentTopicProgress[]>
+  ): Record<string, StudentTopicProgress[]> => {
+    const newProgressMap: Record<string, StudentTopicProgress[]> = {};
+    const allStudentIds = new Set<string>();
+
+    allLessons.forEach((l) => {
+      if (l.studentId) allStudentIds.add(l.studentId);
+    });
+    students.forEach((s) => allStudentIds.add(s.id));
+    Object.keys(currentProgressMap).forEach((stId) => allStudentIds.add(stId));
+
+    allStudentIds.forEach((stId) => {
+      newProgressMap[stId] = computeStudentProgressFromLessons(
+        stId,
+        allLessons,
+        currentProgressMap[stId] || []
+      );
+    });
+
+    return newProgressMap;
+  };
+
+  const syncAndCleanAllProgress = () => {
+    setProgressMap((prev) => {
+      const cleanMap = recomputeAllStudentsProgress(lessons, prev);
+      Object.entries(cleanMap).forEach(([stId, progList]) => {
+        safeSetDoc(doc(db, 'progress', stId), { progress: progList });
+      });
+      return cleanMap;
+    });
+  };
+
   // Persistence to localStorage (Instant, durable and completely stable without layout jitter)
   useEffect(() => {
     if (currentUser) {
@@ -440,6 +530,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         remoteLessons.sort((a, b) => (b.lessonDate || '').localeCompare(a.lessonDate || ''));
         setLessons(remoteLessons);
+
+        // คำนวณความคืบหน้าของนักเรียนทุกคนใหม่ทันทีจากคาบเรียนจริงที่อัปเดตจาก Firestore
+        setProgressMap((prev) => {
+          const updatedMap = recomputeAllStudentsProgress(remoteLessons, prev);
+          Object.entries(updatedMap).forEach(([stId, progList]) => {
+            safeSetDoc(doc(db, 'progress', stId), { progress: progList });
+          });
+          return updatedMap;
+        });
       },
       (err) => console.warn('Lessons realtime note:', err)
     );
@@ -452,7 +551,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         snapshot.forEach((docItem) => {
           const data = docItem.data();
           if (data && Array.isArray(data.progress)) {
-            remoteProgress[docItem.id] = data.progress;
+            // กรองเอาเฉพาะข้อมูลที่ถูกต้อง (studyCount > 0)
+            remoteProgress[docItem.id] = data.progress.filter(
+              (p: StudentTopicProgress) => (p.studyCount || 0) > 0 && p.status !== 'not_started'
+            );
           }
         });
         if (Object.keys(remoteProgress).length > 0) {
@@ -1101,18 +1203,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       durationMinutes: lessonData.durationMinutes || 0,
       createdAt: new Date().toISOString(),
     };
-    setLessons((prev) => [newLesson, ...prev]);
+    const nextLessons = [newLesson, ...lessons];
+    setLessons(nextLessons);
     safeSetDoc(doc(db, 'lessons', newId), newLesson);
 
-    // อัปเดตความคืบหน้าของสารบัญหัวข้อ (Syllabus) ให้นักเรียนทันที พร้อมบันทึกจำนวนครั้งที่เรียนและเฉลยลายมือ
-    if (newLesson.subtopicIds && newLesson.subtopicIds.length > 0 && newLesson.studentId) {
-      newLesson.subtopicIds.forEach((subId) => {
-        updateStudentTopicStatus(
-          newLesson.studentId,
-          subId,
-          'completed',
-          newLesson.handwrittenSolutionUrl
+    // อัปเดตความคืบหน้าของสารบัญหัวข้อ (Syllabus) ให้นักเรียนทันทีแบบ Single Source of Truth
+    if (newLesson.studentId) {
+      const studentId = newLesson.studentId;
+      setProgressMap((prev) => {
+        const updatedProgress = computeStudentProgressFromLessons(
+          studentId,
+          nextLessons,
+          prev[studentId] || []
         );
+        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
+        return { ...prev, [studentId]: updatedProgress };
       });
     }
   };
@@ -1124,51 +1229,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       contentDetail: lesson.contentDetail || '',
       durationMinutes: lesson.durationMinutes || 0,
     };
-    setLessons((prev) => prev.map((l) => (l.id === safeLesson.id ? safeLesson : l)));
+    const nextLessons = lessons.map((l) => (l.id === safeLesson.id ? safeLesson : l));
+    setLessons(nextLessons);
     safeSetDoc(doc(db, 'lessons', safeLesson.id), safeLesson);
 
-    if (safeLesson.subtopicIds && safeLesson.subtopicIds.length > 0 && safeLesson.studentId) {
-      safeLesson.subtopicIds.forEach((subId) => {
-        updateStudentTopicStatus(
-          safeLesson.studentId,
-          subId,
-          'completed',
-          safeLesson.handwrittenSolutionUrl
+    // คำนวณความคืบหน้าใหม่ตามรายการคาบเรียนจริงทันที (ไม่บวมซ้ำ และตัดหัวข้อที่ถูกติ๊กออกทิ้งทันที)
+    if (safeLesson.studentId) {
+      const studentId = safeLesson.studentId;
+      setProgressMap((prev) => {
+        const updatedProgress = computeStudentProgressFromLessons(
+          studentId,
+          nextLessons,
+          prev[studentId] || []
         );
+        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
+        return { ...prev, [studentId]: updatedProgress };
       });
     }
   };
 
   const deleteLesson = (lessonId: string) => {
     const lessonToDelete = lessons.find((l) => l.id === lessonId);
-    setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    const nextLessons = lessons.filter((l) => l.id !== lessonId);
+    setLessons(nextLessons);
     safeDeleteDoc(doc(db, 'lessons', lessonId));
 
-    if (lessonToDelete && lessonToDelete.studentId && (lessonToDelete.subtopicIds || []).length > 0) {
+    if (lessonToDelete && lessonToDelete.studentId) {
       const studentId = lessonToDelete.studentId;
-      const remainingLessonsForStudent = lessons.filter(
-        (l) => l.id !== lessonId && l.studentId === studentId
-      );
-
       setProgressMap((prev) => {
-        const studentProgress = prev[studentId] || [];
-        const updated = studentProgress.map((p) => {
-          if ((lessonToDelete.subtopicIds || []).includes(p.subtopicId)) {
-            const countInRemaining = remainingLessonsForStudent.filter(
-              (l) => (l.subtopicIds || []).includes(p.subtopicId)
-            ).length;
-
-            return {
-              ...p,
-              studyCount: countInRemaining,
-              status: (countInRemaining > 0 ? 'completed' : 'not_started') as StudentTopicProgress['status'],
-            };
-          }
-          return p;
-        });
-
-        safeSetDoc(doc(db, 'progress', studentId), { progress: updated });
-        return { ...prev, [studentId]: updated };
+        const updatedProgress = computeStudentProgressFromLessons(
+          studentId,
+          nextLessons,
+          prev[studentId] || []
+        );
+        safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
+        return { ...prev, [studentId]: updatedProgress };
       });
     }
   };
@@ -1187,13 +1282,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (existingIdx >= 0) {
         const existing = studentProgress[existingIdx];
-        const newCount = (existing.studyCount || 1) + (status === 'completed' ? 1 : 0);
         updated = studentProgress.map((p, idx) =>
           idx === existingIdx
             ? {
                 ...p,
                 status,
-                studyCount: newCount,
                 lastStudiedDate: new Date().toISOString().split('T')[0],
                 handwrittenSolutionUrl: handwrittenSolutionUrl || p.handwrittenSolutionUrl,
               }
@@ -1205,7 +1298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           {
             subtopicId,
             status,
-            studyCount: 1,
+            studyCount: status === 'completed' || status === 'mastered' ? 1 : 0,
             lastStudiedDate: new Date().toISOString().split('T')[0],
             handwrittenSolutionUrl,
           },
@@ -1230,7 +1323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (existingIdx >= 0) {
         const existing = studentProgress[existingIdx];
-        const newCount = Math.max(0, (existing.studyCount || 1) + delta);
+        const newCount = Math.max(0, (existing.studyCount || 0) + delta);
         const newStatus =
           newCount > 0
             ? existing.status === 'not_started'
@@ -1243,21 +1336,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 ...p,
                 studyCount: newCount,
                 status: newStatus,
-                lastStudiedDate: new Date().toISOString().split('T')[0],
+                lastStudiedDate: newCount > 0 ? new Date().toISOString().split('T')[0] : p.lastStudiedDate,
               }
             : p
         );
       } else {
-        const newCount = Math.max(0, 1 + delta);
-        updated = [
-          ...studentProgress,
-          {
-            subtopicId,
-            status: newCount > 0 ? 'completed' : 'not_started',
-            studyCount: newCount,
-            lastStudiedDate: new Date().toISOString().split('T')[0],
-          },
-        ];
+        const newCount = Math.max(0, delta > 0 ? delta : 0);
+        if (newCount > 0) {
+          updated = [
+            ...studentProgress,
+            {
+              subtopicId,
+              status: 'completed',
+              studyCount: newCount,
+              lastStudiedDate: new Date().toISOString().split('T')[0],
+            },
+          ];
+        } else {
+          updated = studentProgress;
+        }
       }
 
       const res = { ...prev, [studentId]: updated };
@@ -1507,14 +1604,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...customData,
         };
 
-        setLessons((prev) => [newLesson, ...prev]);
+        const nextLessons = [newLesson, ...lessons];
+        setLessons(nextLessons);
         safeSetDoc(doc(db, 'lessons', newLessonId), newLesson);
-      }
 
-      // Update student topic progress for all subtopics in this plan
-      if (subIds.length > 0) {
-        subIds.forEach((subId) => {
-          updateStudentTopicStatus(stId, subId, 'completed');
+        // Update student topic progress accurately from active lessons
+        setProgressMap((prev) => {
+          const updatedProgress = computeStudentProgressFromLessons(
+            stId,
+            nextLessons,
+            prev[stId] || []
+          );
+          safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
+          return { ...prev, [stId]: updatedProgress };
         });
       }
     });
@@ -1775,6 +1877,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         resetAllData,
         resetToDefaultMathJuniorCourse,
+        syncAndCleanAllProgress,
       }}
     >
       {children}

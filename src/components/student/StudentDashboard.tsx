@@ -98,7 +98,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const totalSubtopics =
     activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
   const completedCount = activeStudentProgress.filter(
-    (p) => p.status === 'completed' || p.status === 'mastered'
+    (p) => (p.status === 'completed' || p.status === 'mastered') && (p.studyCount || 0) > 0
   ).length;
   const syllabusPercent =
     totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;
@@ -1360,7 +1360,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 const subs = top.subtopics || [];
                 const completedInTopic = subs.filter((sub) => {
                   const p = activeStudentProgress.find((item) => item.subtopicId === sub.id);
-                  return p && (p.status === 'completed' || p.status === 'mastered');
+                  return (
+                    p &&
+                    (p.status === 'completed' || p.status === 'mastered') &&
+                    (p.studyCount || 0) > 0
+                  );
                 }).length;
                 const isFullyDone = completedInTopic === subs.length && subs.length > 0;
 
@@ -1383,7 +1387,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       {subs.map((sub) => {
                         const prog = activeStudentProgress.find((p) => p.subtopicId === sub.id);
                         const isDone =
-                          prog && (prog.status === 'completed' || prog.status === 'mastered');
+                          prog &&
+                          (prog.status === 'completed' || prog.status === 'mastered') &&
+                          (prog.studyCount || 0) > 0;
                         const isLv2 = sub.level === 2;
                         const isLv3 = sub.level === 3;
 

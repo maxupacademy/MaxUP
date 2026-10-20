@@ -936,26 +936,15 @@ export const SyllabusManager: React.FC = () => {
 
                             if (isAll) {
                               const lessonCount = studentLessonsWithSub.length;
-                              let progressCount = 0;
-                              Object.values(progressMap).forEach((list) => {
-                                const p = list.find((item) => item.subtopicId === sub.id);
-                                if (p) {
-                                  progressCount += p.studyCount || 0;
-                                  if (p.status === 'completed' || p.status === 'mastered') isCompleted = true;
-                                  if (p.lastStudiedDate && p.lastStudiedDate > latestDate) {
-                                    latestDate = p.lastStudiedDate;
-                                  }
-                                  if (p.handwrittenSolutionUrl && !handwrittenUrl) {
-                                    handwrittenUrl = p.handwrittenSolutionUrl;
-                                  }
-                                }
-                              });
-                              totalStudyCount = Math.max(lessonCount, progressCount);
-                              if (totalStudyCount > 0) isCompleted = true;
+                              totalStudyCount = lessonCount;
+                              isCompleted = totalStudyCount > 0;
                               const firstLessonDate = studentLessonsWithSub[0]?.lessonDate;
-                              if (firstLessonDate && firstLessonDate > latestDate) {
+                              if (firstLessonDate) {
                                 latestDate = firstLessonDate;
                               }
+                              handwrittenUrl =
+                                sub.handwrittenSolutionUrl ||
+                                studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)?.handwrittenSolutionUrl;
                             } else {
                               const progress = effectiveStudentId
                                 ? (progressMap[effectiveStudentId] || []).find(
@@ -963,17 +952,14 @@ export const SyllabusManager: React.FC = () => {
                                   )
                                 : undefined;
                               const lessonCount = studentLessonsWithSub.length;
-                              const recordedCount = progress?.studyCount || 0;
-                              totalStudyCount = Math.max(lessonCount, recordedCount);
-                              isCompleted =
-                                totalStudyCount > 0 ||
-                                progress?.status === 'completed' ||
-                                progress?.status === 'mastered';
-                              latestDate = studentLessonsWithSub[0]?.lessonDate || progress?.lastStudiedDate || '';
+                              // ยึดตามคาบเรียนจริงในระบบ (Single Source of Truth) หากมีคาบเรียนให้นับตามจำนวนคาบจริงทันที
+                              totalStudyCount = lessonCount > 0 ? lessonCount : (progress?.studyCount || 0);
+                              isCompleted = totalStudyCount > 0;
+                              latestDate = studentLessonsWithSub[0]?.lessonDate || (totalStudyCount > 0 ? progress?.lastStudiedDate : '') || '';
                               handwrittenUrl =
                                 sub.handwrittenSolutionUrl ||
-                                progress?.handwrittenSolutionUrl ||
-                                studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)?.handwrittenSolutionUrl;
+                                studentLessonsWithSub.find((l) => l.handwrittenSolutionUrl)?.handwrittenSolutionUrl ||
+                                (totalStudyCount > 0 ? progress?.handwrittenSolutionUrl : undefined);
                             }
 
                             return (

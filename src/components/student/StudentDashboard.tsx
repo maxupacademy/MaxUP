@@ -1174,12 +1174,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               {courses
                 .filter((c) => {
                   if (!currentUser?.enrolledCourseIds || currentUser.enrolledCourseIds.length === 0) {
-                    return true;
+                    return false;
                   }
                   return (
                     currentUser.enrolledCourseIds.includes(c.id) ||
-                    currentUser.enrolledCourseIds.includes(c.code) ||
-                    currentUser.enrolledCourseIds.includes('chem_alevel')
+                    currentUser.enrolledCourseIds.includes(c.code)
                   );
                 })
                 .map((c) => {

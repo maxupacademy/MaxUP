@@ -420,6 +420,29 @@ export const SyllabusManager: React.FC = () => {
     return result;
   };
 
+  const isEnrolled =
+    currentUserRole === 'admin' ||
+    (currentUser?.enrolledCourseIds || []).includes(activeSubjectId);
+
+  if (!isEnrolled && currentUserRole === 'student') {
+    return (
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-12 text-center space-y-4 max-w-lg mx-auto shadow-2xs">
+        <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto text-2xl shadow-xs">
+          🔒
+        </div>
+        <h3 className="text-base sm:text-lg font-bold text-slate-900">
+          {tx('สารบัญวิชานี้ถูกจำกัดสิทธิ์', 'Subject Syllabus Restricted')}
+        </h3>
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          {tx(
+            `น้องยังไม่ได้ลงทะเบียนในวิชา "${activeSubject.name}" จึงไม่สามารถเข้าดูสารบัญได้`,
+            `You must be enrolled in "${activeSubject.name}" to view this syllabus.`
+          )}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header & Subject Selector */}
@@ -460,28 +483,38 @@ export const SyllabusManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Multi-Subject Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100">
-          <span className="text-xs font-semibold text-slate-500 whitespace-nowrap mr-1">
-            {tx('เลือกวิชา:', 'Subject:')}
-          </span>
-          {subjects.map((subj) => (
-            <button
-              key={subj.id}
-              onClick={() => {
-                setActiveSubjectId(subj.id);
-                setExpandedTopicIds(subj.topics.slice(0, 3).map((t) => t.id));
-              }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
-                activeSubjectId === subj.id
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-              }`}
-            >
-              {subj.name} ({subj.topics.length})
-            </button>
-          ))}
-        </div>
+        {/* Multi-Subject Filter Tabs (Filtered for Students) */}
+        {(() => {
+          const visibleSubjects = currentUserRole === 'admin'
+            ? subjects
+            : subjects.filter((s) => (currentUser?.enrolledCourseIds || []).includes(s.id));
+
+          if (visibleSubjects.length <= 1) return null;
+
+          return (
+            <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100">
+              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap mr-1">
+                {tx('เลือกวิชา:', 'Subject:')}
+              </span>
+              {visibleSubjects.map((subj) => (
+                <button
+                  key={subj.id}
+                  onClick={() => {
+                    setActiveSubjectId(subj.id);
+                    setExpandedTopicIds(subj.topics.slice(0, 3).map((t) => t.id));
+                  }}
+                  className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
+                    activeSubjectId === subj.id
+                      ? 'bg-blue-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                  }`}
+                >
+                  {subj.name} ({subj.topics.length})
+                </button>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Student Learning Progress & Count Tracker Bar */}

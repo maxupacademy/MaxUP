@@ -761,10 +761,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cleanPass === expectedPass) {
         setCurrentUser(matchedStudent);
         const primaryCourse =
-          matchedStudent.enrolledCourseIds?.[0] &&
-          matchedStudent.enrolledCourseIds[0] !== 'chem_alevel'
-            ? matchedStudent.enrolledCourseIds[0]
-            : 'MATH_JUNIOR_FUNDENMENTAL_01';
+          matchedStudent.enrolledCourseIds?.[0] ||
+          courses[0]?.id ||
+          'MATH_JUNIOR_FUNDENMENTAL_01';
         setActiveCourseId(primaryCourse);
         setIsAuthLoading(false);
         return;

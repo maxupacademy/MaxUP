@@ -133,23 +133,31 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right: Course Switcher, Language Switcher, Action & User Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Quick Course Selector */}
-          {courses.length > 0 && (
-            <div className="relative shrink-0 hidden sm:block">
-              <select
-                value={activeCourseId}
-                onChange={(e) => setActiveCourseId(e.target.value)}
-                className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 py-1.5 pl-2.5 pr-6 rounded-xl focus:ring-2 focus:ring-amber-500/40 focus:outline-none cursor-pointer max-w-[160px] truncate transition-colors"
-                title={tx('เลือกคอร์สเรียน', 'Select Course')}
-              >
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          {/* Quick Course Selector (Filtered for Students) */}
+          {(() => {
+            const visibleCourses = currentUserRole === 'admin'
+              ? courses
+              : courses.filter((c) => (currentUser?.enrolledCourseIds || []).includes(c.id));
+
+            if (visibleCourses.length === 0) return null;
+
+            return (
+              <div className="relative shrink-0 hidden sm:block">
+                <select
+                  value={activeCourseId}
+                  onChange={(e) => setActiveCourseId(e.target.value)}
+                  className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 py-1.5 pl-2.5 pr-6 rounded-xl focus:ring-2 focus:ring-amber-500/40 focus:outline-none cursor-pointer max-w-[160px] truncate transition-colors"
+                  title={tx('เลือกคอร์สเรียน', 'Select Course')}
+                >
+                  {visibleCourses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })()}
 
           {/* Record Lesson button for Admin */}
           {currentUserRole === 'admin' && (

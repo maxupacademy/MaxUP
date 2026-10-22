@@ -182,7 +182,10 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
               }}
               className="bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl px-3 py-1.5 text-slate-800 focus:ring-2 focus:ring-amber-500/40 focus:outline-none cursor-pointer"
             >
-              {courses.map((c) => (
+              {(currentUserRole === 'admin'
+                ? courses
+                : courses.filter((c) => (currentUser?.enrolledCourseIds || []).includes(c.id))
+              ).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -193,38 +196,40 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
 
         {/* If student is viewing a course they haven't enrolled in */}
         {!isEnrolled && currentUserRole === 'student' && (
-          <div className="p-3.5 bg-amber-50/90 border border-amber-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+          <div className="p-4 bg-amber-50/90 border border-amber-300 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0">
+                <KeyRound className="w-4 h-4" />
+              </div>
               <div>
-                <span className="font-bold text-slate-900">
+                <span className="font-bold text-slate-900 text-sm">
                   {tx(
-                    `ยังไม่ได้ลงทะเบียนในวิชา "${activeCourse.name}"`,
-                    `You are not enrolled in "${activeCourse.name}"`
+                    `คอร์ส "${activeCourse.name}" ถูกล็อคเฉพาะนักเรียนที่ลงทะเบียน`,
+                    `"${activeCourse.name}" is locked. Enrolled students only.`
                   )}
                 </span>
-                <p className="text-slate-600 text-[11px]">
+                <p className="text-slate-600 text-xs mt-0.5">
                   {tx(
-                    'กรอกรหัสเข้าคอร์สที่ครูแม็กแจ้งเพื่อปลดล็อกวิชานี้',
-                    'Enter the course passcode from Coach Max to unlock this course'
+                    'กรุณากรอกรหัสผ่าน (Passcode) ที่ได้รับจากครูแม็กเพื่อปลดล็อกเนื้อหาบทเรียนทั้งหมด',
+                    'Please enter your course passcode from Coach Max to unlock full syllabus and materials.'
                   )}
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleQuickEnroll} className="flex items-center gap-1.5 w-full sm:w-auto">
+            <form onSubmit={handleQuickEnroll} className="flex items-center gap-2 max-w-md pt-1">
               <input
                 type="text"
-                placeholder={tx('รหัสคอร์ส', 'Passcode')}
+                placeholder={tx('กรอกรหัสคอร์ส เช่น MATH-2026', 'Enter Passcode')}
                 value={passcodeInput}
                 onChange={(e) => setPasscodeInput(e.target.value)}
-                className="bg-white border border-amber-300 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold uppercase text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 w-full sm:w-36"
+                className="bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 flex-1"
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer text-xs"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl whitespace-nowrap cursor-pointer text-xs transition-colors"
               >
-                {tx('+ ปลดล็อกคอร์ส', '+ Unlock')}
+                {tx('ปลดล็อกคอร์ส', 'Unlock Course')}
               </button>
             </form>
           </div>
@@ -248,43 +253,64 @@ export const CourseLearningHub: React.FC<CourseLearningHubProps> = ({
         )}
 
         {/* 21st.dev Animated Segmented Sub-tabs */}
-        <div className="flex items-center gap-1 p-1 bg-slate-100/90 border border-slate-200/70 rounded-2xl overflow-x-auto w-fit max-w-full">
-          {subTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = currentSubTab === tab.id;
+        {isEnrolled && (
+          <div className="flex items-center gap-1 p-1 bg-slate-100/90 border border-slate-200/70 rounded-2xl overflow-x-auto w-fit max-w-full">
+            {subTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentSubTab === tab.id;
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setCurrentSubTab(tab.id as typeof currentSubTab)}
-                className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-                  isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="learning-hub-subtab"
-                    className="absolute inset-0 bg-slate-900 rounded-xl shadow-xs"
-                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  />
-                )}
-                <Icon
-                  className={`relative z-10 w-3.5 h-3.5 ${
-                    isActive ? 'text-amber-400' : 'text-slate-500'
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setCurrentSubTab(tab.id as typeof currentSubTab)}
+                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                    isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
-                />
-                <span className="relative z-10">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="learning-hub-subtab"
+                      className="absolute inset-0 bg-slate-900 rounded-xl shadow-xs"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  <Icon
+                    className={`relative z-10 w-3.5 h-3.5 ${
+                      isActive ? 'text-amber-400' : 'text-slate-500'
+                    }`}
+                  />
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Render Selected Learning View */}
-      {currentSubTab === 'syllabus' && <SyllabusManager />}
-      {currentSubTab === 'videos' && <VideoLibraryView />}
-      {currentSubTab === 'materials' && <CourseMaterialsView />}
-      {currentSubTab === 'homework' && <HomeworkSuite />}
+      {/* Render Selected Learning View (Guarded by isEnrolled) */}
+      {!isEnrolled && currentUserRole === 'student' ? (
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-12 text-center space-y-4 max-w-lg mx-auto shadow-2xs">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto text-2xl shadow-xs">
+            🔒
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">
+            {tx('เนื้อหาสารบัญและเอกสารถูกจำกัดสิทธิ์', 'Course Content Restricted')}
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            {tx(
+              `น้องยังไม่ได้ลงทะเบียนในวิชา "${activeCourse.name}" จึงไม่สามารถเข้าดูสารบัญชีทสรุปหรือคลิปการสอนได้ กรุณากรอกรหัสผ่านของคอร์สด้านบนเพื่อเข้าเรียน`,
+              `You must be enrolled in "${activeCourse.name}" to view the syllabus and materials. Please enter the course passcode above.`
+            )}
+          </p>
+        </div>
+      ) : (
+        <>
+          {currentSubTab === 'syllabus' && <SyllabusManager />}
+          {currentSubTab === 'videos' && <VideoLibraryView />}
+          {currentSubTab === 'materials' && <CourseMaterialsView />}
+          {currentSubTab === 'homework' && <HomeworkSuite />}
+        </>
+      )}
     </div>
   );
 };

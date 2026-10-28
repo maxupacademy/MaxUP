@@ -169,10 +169,13 @@ export const StudentManager: React.FC = () => {
                   onChange={(e) => setGrade(e.target.value)}
                   className="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs text-slate-800"
                 >
-                  <option value="มัธยมศึกษาปีที่ 4">{tx('มัธยมศึกษาปีที่ 4', 'Grade 10')}</option>
-                  <option value="มัธยมศึกษาปีที่ 5">{tx('มัธยมศึกษาปีที่ 5', 'Grade 11')}</option>
-                  <option value="มัธยมศึกษาปีที่ 6">{tx('มัธยมศึกษาปีที่ 6', 'Grade 12')}</option>
-                  <option value="ซิ่ว / เตรียมสอบใหม่">{tx('เตรียมสอบใหม่', 'Gap Year / Retake')}</option>
+                  <option value="มัธยมศึกษาปีที่ 1">{tx('มัธยมศึกษาปีที่ 1 (ม.1)', 'Grade 7 (M.1)')}</option>
+                  <option value="มัธยมศึกษาปีที่ 2">{tx('มัธยมศึกษาปีที่ 2 (ม.2)', 'Grade 8 (M.2)')}</option>
+                  <option value="มัธยมศึกษาปีที่ 3">{tx('มัธยมศึกษาปีที่ 3 (ม.3)', 'Grade 9 (M.3)')}</option>
+                  <option value="มัธยมศึกษาปีที่ 4">{tx('มัธยมศึกษาปีที่ 4 (ม.4)', 'Grade 10 (M.4)')}</option>
+                  <option value="มัธยมศึกษาปีที่ 5">{tx('มัธยมศึกษาปีที่ 5 (ม.5)', 'Grade 11 (M.5)')}</option>
+                  <option value="มัธยมศึกษาปีที่ 6">{tx('มัธยมศึกษาปีที่ 6 (ม.6)', 'Grade 12 (M.6)')}</option>
+                  <option value="ซิ่ว / เตรียมสอบใหม่">{tx('ซิ่ว / เตรียมสอบใหม่', 'Gap Year / Retake')}</option>
                 </select>
               </div>
 

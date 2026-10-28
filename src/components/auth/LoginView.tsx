@@ -464,7 +464,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     <option value="มัธยมศึกษาปีที่ 6">{tx('ม. 6', 'Grade 12')}</option>
                     <option value="มัธยมศึกษาปีที่ 5">{tx('ม. 5', 'Grade 11')}</option>
                     <option value="มัธยมศึกษาปีที่ 4">{tx('ม. 4', 'Grade 10')}</option>
-                    <option value="มัธยมศึกษาตอนต้น">{tx('ม. ต้น', 'Junior High')}</option>
+                    <option value="มัธยมศึกษาปีที่ 3">{tx('ม. 3', 'Grade 9')}</option>
+                    <option value="มัธยมศึกษาปีที่ 2">{tx('ม. 2', 'Grade 8')}</option>
+                    <option value="มัธยมศึกษาปีที่ 1">{tx('ม. 1', 'Grade 7')}</option>
+                    <option value="มัธยมศึกษาตอนต้น">{tx('ม. ต้น รวม', 'Junior High')}</option>
+                    <option value="ซิ่ว / เตรียมสอบใหม่">{tx('ซิ่ว / เตรียมสอบใหม่', 'Gap Year')}</option>
                   </select>
                 </div>
                 <div>

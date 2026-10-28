@@ -751,12 +751,20 @@ export const AdminContentSuite: React.FC = () => {
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">{tx('ระดับชั้น', 'Grade Level')}</label>
-                  <input
-                    type="text"
+                  <select
                     value={courseGrade}
                     onChange={(e) => setCourseGrade(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                  />
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 bg-white"
+                  >
+                    <option value="ม.ปลาย">{tx('ม.ปลาย (ม.4 - ม.6)', 'Senior High (M.4-6)')}</option>
+                    <option value="ม.ต้น">{tx('ม.ต้น (ม.1 - ม.3)', 'Junior High (M.1-3)')}</option>
+                    <option value="ม.1">{tx('มัธยมศึกษาปีที่ 1 (ม.1)', 'Grade 7 (M.1)')}</option>
+                    <option value="ม.2">{tx('มัธยมศึกษาปีที่ 2 (ม.2)', 'Grade 8 (M.2)')}</option>
+                    <option value="ม.3">{tx('มัธยมศึกษาปีที่ 3 (ม.3)', 'Grade 9 (M.3)')}</option>
+                    <option value="ม.4">{tx('มัธยมศึกษาปีที่ 4 (ม.4)', 'Grade 10 (M.4)')}</option>
+                    <option value="ม.5">{tx('มัธยมศึกษาปีที่ 5 (ม.5)', 'Grade 11 (M.5)')}</option>
+                    <option value="ม.6">{tx('มัธยมศึกษาปีที่ 6 (ม.6)', 'Grade 12 (M.6)')}</option>
+                  </select>
                 </div>
               </div>
               <div>
@@ -828,12 +836,20 @@ export const AdminContentSuite: React.FC = () => {
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">{tx('ระดับชั้น', 'Grade Level')}</label>
-                  <input
-                    type="text"
+                  <select
                     value={courseGrade}
                     onChange={(e) => setCourseGrade(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
-                  />
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 bg-white"
+                  >
+                    <option value="ม.ปลาย">{tx('ม.ปลาย (ม.4 - ม.6)', 'Senior High (M.4-6)')}</option>
+                    <option value="ม.ต้น">{tx('ม.ต้น (ม.1 - ม.3)', 'Junior High (M.1-3)')}</option>
+                    <option value="ม.1">{tx('มัธยมศึกษาปีที่ 1 (ม.1)', 'Grade 7 (M.1)')}</option>
+                    <option value="ม.2">{tx('มัธยมศึกษาปีที่ 2 (ม.2)', 'Grade 8 (M.2)')}</option>
+                    <option value="ม.3">{tx('มัธยมศึกษาปีที่ 3 (ม.3)', 'Grade 9 (M.3)')}</option>
+                    <option value="ม.4">{tx('มัธยมศึกษาปีที่ 4 (ม.4)', 'Grade 10 (M.4)')}</option>
+                    <option value="ม.5">{tx('มัธยมศึกษาปีที่ 5 (ม.5)', 'Grade 11 (M.5)')}</option>
+                    <option value="ม.6">{tx('มัธยมศึกษาปีที่ 6 (ม.6)', 'Grade 12 (M.6)')}</option>
+                  </select>
                 </div>
               </div>
               <div>

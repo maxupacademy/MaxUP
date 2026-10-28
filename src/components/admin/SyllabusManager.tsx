@@ -28,6 +28,7 @@ import {
   CornerDownRight,
   Layers,
 } from 'lucide-react';
+import { MathText } from '../ui/MathText';
 
 export const SyllabusManager: React.FC = () => {
   const {
@@ -56,9 +57,15 @@ export const SyllabusManager: React.FC = () => {
   } = useApp();
   const { tx } = useLanguage();
 
-  const [expandedTopicIds, setExpandedTopicIds] = useState<string[]>(
-    activeSubject.topics.slice(0, 3).map((t) => t.id)
-  );
+  const [expandedTopicIds, setExpandedTopicIds] = useState<string[]>([]);
+  // Multi-level subtopic accordion: track which parent subtopics are expanded
+  const [expandedSubtopicIds, setExpandedSubtopicIds] = useState<string[]>([]);
+
+  const toggleSubtopicAccordion = (subId: string) => {
+    setExpandedSubtopicIds((prev) =>
+      prev.includes(subId) ? prev.filter((id) => id !== subId) : [...prev, subId]
+    );
+  };
 
   // Student progress view filter (default to currentUser if student, or 'all' for complete overview if admin)
   const [selectedStudentFilterId, setSelectedStudentFilterId] = useState<string>('all');
@@ -347,6 +354,9 @@ export const SyllabusManager: React.FC = () => {
     level: 1 | 2 | 3 | 4;
     numbering: string;
     parentName?: string;
+    hasChildren?: boolean;
+    childCount?: number;
+    parentChain?: string[];
   }
 
   const getOrganizedSubtopics = (topic: Topic, topicIdx: number): FlattenedSubtopic[] => {
@@ -354,16 +364,36 @@ export const SyllabusManager: React.FC = () => {
     const subs = topic.subtopics || [];
     const visited = new Set<string>();
 
+    // Precalculate direct children map
+    const childrenMap = new Map<string, Subtopic[]>();
+    subs.forEach((s) => {
+      if (s.parentId) {
+        const list = childrenMap.get(s.parentId) || [];
+        list.push(s);
+        childrenMap.set(s.parentId, list);
+      }
+    });
+
+    // Helper to count all descendants
+    const countAllDescendants = (parentId: string): number => {
+      const direct = childrenMap.get(parentId) || [];
+      return direct.reduce((acc, c) => acc + 1 + countAllDescendants(c.id), 0);
+    };
+
     // 1. Level 1 items (level === 1 OR (!parentId && level !== 2 && level !== 3 && level !== 4))
     const level1Items = subs.filter((s) => !s.parentId || s.level === 1);
 
     level1Items.forEach((l1, i) => {
       visited.add(l1.id);
       const num1 = `${topicIdx + 1}.${i + 1}`;
+      const l1Children = childrenMap.get(l1.id) || [];
       result.push({
         sub: l1,
         level: 1,
         numbering: num1,
+        hasChildren: l1Children.length > 0,
+        childCount: countAllDescendants(l1.id),
+        parentChain: [],
       });
 
       // 2. Level 2 items under l1
@@ -371,11 +401,15 @@ export const SyllabusManager: React.FC = () => {
       level2Items.forEach((l2, j) => {
         visited.add(l2.id);
         const num2 = `${num1}.${j + 1}`;
+        const l2Children = childrenMap.get(l2.id) || [];
         result.push({
           sub: l2,
           level: 2,
           numbering: num2,
           parentName: l1.name,
+          hasChildren: l2Children.length > 0,
+          childCount: countAllDescendants(l2.id),
+          parentChain: [l1.id],
         });
 
         // 3. Level 3 items under l2
@@ -383,11 +417,15 @@ export const SyllabusManager: React.FC = () => {
         level3Items.forEach((l3, k) => {
           visited.add(l3.id);
           const num3 = `${num2}.${k + 1}`;
+          const l3Children = childrenMap.get(l3.id) || [];
           result.push({
             sub: l3,
             level: 3,
             numbering: num3,
             parentName: l2.name,
+            hasChildren: l3Children.length > 0,
+            childCount: countAllDescendants(l3.id),
+            parentChain: [l1.id, l2.id],
           });
 
           // 4. Level 4 items under l3 (Deep Level / K-Tips / Competition insights)
@@ -400,6 +438,9 @@ export const SyllabusManager: React.FC = () => {
               level: 4,
               numbering: num4,
               parentName: l3.name,
+              hasChildren: false,
+              childCount: 0,
+              parentChain: [l1.id, l2.id, l3.id],
             });
           });
         });
@@ -413,6 +454,9 @@ export const SyllabusManager: React.FC = () => {
           sub: s,
           level: (s.level || 1) as 1 | 2 | 3 | 4,
           numbering: `${topicIdx + 1}.${result.length + 1}`,
+          hasChildren: false,
+          childCount: 0,
+          parentChain: [],
         });
       }
     });
@@ -454,11 +498,11 @@ export const SyllabusManager: React.FC = () => {
               <span>{tx('สารบัญหลักสูตรและเอกสารประกอบ', 'Course Syllabus & Materials')}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {activeSubject.name}
+              <MathText text={activeSubject.name} />
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              {activeSubject.description}
-            </p>
+            <div className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
+              <MathText text={activeSubject.description} />
+            </div>
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto">
@@ -501,7 +545,8 @@ export const SyllabusManager: React.FC = () => {
                   key={subj.id}
                   onClick={() => {
                     setActiveSubjectId(subj.id);
-                    setExpandedTopicIds(subj.topics.slice(0, 3).map((t) => t.id));
+                    setExpandedTopicIds([]);
+                    setExpandedSubtopicIds([]);
                   }}
                   className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
                     activeSubjectId === subj.id
@@ -714,11 +759,11 @@ export const SyllabusManager: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                          {topic.name}
+                          <MathText text={topic.name} />
                         </h3>
                         {topic.nameEn && (
                           <span className="text-xs text-slate-500 hidden sm:inline">
-                            ({topic.nameEn})
+                            (<MathText text={topic.nameEn} />)
                           </span>
                         )}
                       </div>
@@ -941,7 +986,11 @@ export const SyllabusManager: React.FC = () => {
                             ยังไม่มีหัวข้อย่อยในบทนี้ คุณครูกดปุ่ม "+ เพิ่มหัวข้อย่อย" หรือพิมพ์เพิ่มด่วนด้านล่างได้เลย
                           </div>
                         ) : (
-                          getOrganizedSubtopics(topic, index).map(({ sub, level, numbering }) => {
+                          getOrganizedSubtopics(topic, index).map(({ sub, level, numbering, hasChildren, childCount, parentChain }) => {
+                            // If any ancestor in parentChain is collapsed, hide this descendant
+                            const isHiddenByParent = (parentChain || []).some((parentId) => !expandedSubtopicIds.includes(parentId));
+                            if (isHiddenByParent) return null;
+
                             const isAll = effectiveStudentId === 'all';
                             const studentLessonsWithSub = isAll
                               ? lessons.filter((l) => (l.subtopicIds || []).includes(sub.id))
@@ -1020,10 +1069,37 @@ export const SyllabusManager: React.FC = () => {
                                       </div>
                                     )}
 
-                                    {/* Numbering & Name */}
-                                    <span className="font-bold text-slate-900 text-sm">
-                                      {numbering} {sub.name}
-                                    </span>
+                                    {/* Numbering & Name with KaTeX Math rendering */}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-bold text-slate-900 text-sm">
+                                        {numbering} <MathText text={sub.name} />
+                                      </span>
+
+                                      {/* Accordion Toggle Pill for items with children */}
+                                      {hasChildren && (
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleSubtopicAccordion(sub.id)}
+                                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold cursor-pointer transition-colors shadow-2xs ${
+                                            expandedSubtopicIds.includes(sub.id)
+                                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                              : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+                                          }`}
+                                          title={expandedSubtopicIds.includes(sub.id) ? 'คลิกเพื่อยุบหัวข้อย่อย' : 'คลิกเพื่อดูหัวข้อย่อยทั้งหมด'}
+                                        >
+                                          <span>
+                                            {expandedSubtopicIds.includes(sub.id)
+                                              ? 'ยุบหัวข้อย่อย'
+                                              : `+${childCount} ข้อย่อย`}
+                                          </span>
+                                          <ChevronDown
+                                            className={`w-3 h-3 transition-transform ${
+                                              expandedSubtopicIds.includes(sub.id) ? 'rotate-180' : ''
+                                            }`}
+                                          />
+                                        </button>
+                                      )}
+                                    </div>
 
                                     {sub.difficulty && (
                                       <span
@@ -1098,7 +1174,9 @@ export const SyllabusManager: React.FC = () => {
                                   </div>
 
                                   {sub.description && (
-                                    <p className="text-slate-600 leading-relaxed text-xs">{sub.description}</p>
+                                    <div className="text-slate-600 leading-relaxed text-xs">
+                                      <MathText text={sub.description} />
+                                    </div>
                                   )}
 
                                   {sub.keyPoints && sub.keyPoints.length > 0 && (

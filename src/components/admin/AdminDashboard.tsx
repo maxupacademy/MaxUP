@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Sparkles,
 } from 'lucide-react';
+import { MathText } from '../ui/MathText';
 
 interface AdminDashboardProps {
   onOpenLessonModal: () => void;
@@ -428,9 +429,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     if (!displayText) return null;
 
                     return (
-                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-xl border border-slate-100 whitespace-pre-line">
-                        {displayText}
-                      </p>
+                      <div className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                        <MathText text={displayText} />
+                      </div>
                     );
                   })()}
 
@@ -460,7 +461,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 key={subId}
                                 className="bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md text-[11px] font-medium"
                               >
-                                {subName}
+                                <MathText text={subName} />
                               </span>
                             );
                           })}

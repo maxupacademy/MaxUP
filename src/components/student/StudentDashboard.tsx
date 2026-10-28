@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { PromptPayPaymentModal } from '../payment/PromptPayPaymentModal';
 import { StudySchedulePlan } from '../../types';
+import { MathText } from '../ui/MathText';
 
 interface StudentDashboardProps {
   currentTab: string;
@@ -310,9 +311,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         if (!displayText) return null;
 
                         return (
-                          <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 whitespace-pre-line">
-                            {displayText}
-                          </p>
+                          <div className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                            <MathText text={displayText} />
+                          </div>
                         );
                       })()}
 
@@ -332,7 +333,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                 key={subId}
                                 className="bg-blue-50 text-blue-900 border border-blue-200/80 px-2.5 py-0.5 rounded-lg text-[11px] font-medium"
                               >
-                                {subName}
+                                <MathText text={subName} />
                               </span>
                             );
                           })}
@@ -1036,7 +1037,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                   key={subId}
                                   className="bg-blue-50 text-blue-900 border border-blue-200/60 px-2 py-0.5 rounded-md text-[11px] font-medium"
                                 >
-                                  {subName}
+                                  <MathText text={subName} />
                                 </span>
                               );
                             })}

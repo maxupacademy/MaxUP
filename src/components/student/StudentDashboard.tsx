@@ -299,9 +299,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
-                        {les.contentDetail}
-                      </p>
+                      {/* Combined Lesson Notes & Teacher Feedback (100% Data Preserved) */}
+                      {(() => {
+                        const detail = (les.contentDetail || '').trim();
+                        const note = (les.teacherNote || '').trim();
+                        let displayText = detail;
+                        if (note && note !== detail) {
+                          displayText = detail ? `${detail}\n\n💬 คำแนะนำจากครูแม็ก:\n${note}` : note;
+                        }
+                        if (!displayText) return null;
+
+                        return (
+                          <p className="text-xs sm:text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                            {displayText}
+                          </p>
+                        );
+                      })()}
 
                       {(les.subtopicIds || []).length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5 text-xs">
@@ -355,17 +368,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
                       {isExpanded && (
                         <div className="pt-2 border-t border-slate-200/70 space-y-3 text-xs animate-in fade-in duration-150">
-                          {les.teacherNote && (
-                            <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80 text-slate-700 space-y-1">
-                              <strong className="text-amber-900 block font-bold">
-                                💬 {tx('คำแนะนำจากครูแม็ก:', 'Coach Max Note:')}
-                              </strong>
-                              <p className="italic text-slate-800 leading-relaxed">
-                                {les.teacherNote}
-                              </p>
-                            </div>
-                          )}
-
                           {les.homework && (
                             <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
                               <div className="flex items-center justify-between">
@@ -1041,9 +1043,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </div>
                         )}
 
-                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
-                          {les.contentDetail}
-                        </p>
+                        {/* Combined Lesson Notes & Teacher Feedback (100% Data Preserved) */}
+                        {(() => {
+                          const detail = (les.contentDetail || '').trim();
+                          const note = (les.teacherNote || '').trim();
+                          let displayText = detail;
+                          if (note && note !== detail) {
+                            displayText = detail ? `${detail}\n\n💬 คำแนะนำจากครูแม็ก:\n${note}` : note;
+                          }
+                          if (!displayText) return null;
+
+                          return (
+                            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                              {displayText}
+                            </p>
+                          );
+                        })()}
 
                         {(les.handwrittenSolutionUrl || les.googleDriveUrl) && (
                           <div className="flex flex-wrap items-center gap-2 pt-0.5">
@@ -1075,15 +1090,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
                         {isExpanded && (
                           <div className="pt-2 border-t border-slate-200/70 space-y-3 text-xs animate-in fade-in duration-150">
-                            {les.teacherNote && (
-                              <div className="bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60 text-slate-700">
-                                <strong className="text-amber-900 block mb-0.5">
-                                  {tx('คำแนะนำจากครูแม็ก:', 'Coach Max Note:')}
-                                </strong>
-                                <p className="italic">{les.teacherNote}</p>
-                              </div>
-                            )}
-
                             {les.homework && (
                               <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
                                 <div className="flex items-center justify-between">

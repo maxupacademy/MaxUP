@@ -112,10 +112,17 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         setStartTime(editLesson.startTime);
         setEndTime(editLesson.endTime);
         setSelectedSubtopicIds(editLesson.subtopicIds || []);
-        setContentDetail(editLesson.contentDetail || '');
+        // Safely merge existing notes without deleting or losing any content
+        const existingDetail = (editLesson.contentDetail || '').trim();
+        const existingNote = (editLesson.teacherNote || '').trim();
+        let combinedText = existingDetail;
+        if (existingNote && existingNote !== existingDetail) {
+          combinedText = existingDetail ? `${existingDetail}\n\n${existingNote}` : existingNote;
+        }
+        setContentDetail(combinedText);
         setScore(editLesson.score);
         setScoreScale(editLesson.scoreScale);
-        setTeacherNote(editLesson.teacherNote || '');
+        setTeacherNote(combinedText);
         setGoogleDriveUrl(editLesson.googleDriveUrl || '');
         setHandwrittenSolutionUrl(editLesson.handwrittenSolutionUrl || '');
         if (editLesson.homework) {
@@ -182,20 +189,11 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   const durationMinutes = calculateDuration(startTime, endTime);
   const durationHours = (durationMinutes / 60).toFixed(1);
 
-  // Toggle subtopic selection from course syllabus
+  // Toggle subtopic selection from course syllabus (silently tracks IDs without appending text)
   const toggleSubtopic = (id: string, name: string) => {
     setSelectedSubtopicIds((prev) => {
       const exists = prev.includes(id);
-      const updated = exists ? prev.filter((item) => item !== id) : [...prev, id];
-
-      // Auto update lesson detail text if empty or appending
-      if (!exists && !contentDetail) {
-        setContentDetail(`เรียนเรื่อง: ${name}`);
-      } else if (!exists && contentDetail && !contentDetail.includes(name)) {
-        setContentDetail((prevText) => `${prevText}, ${name}`);
-      }
-
-      return updated;
+      return exists ? prev.filter((item) => item !== id) : [...prev, id];
     });
   };
 
@@ -264,6 +262,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
       };
     }
 
+    const finalNote = contentDetail.trim();
+
     if (editLesson) {
       updateLesson({
         ...editLesson,
@@ -274,10 +274,10 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         endTime,
         durationMinutes,
         subtopicIds: selectedSubtopicIds,
-        contentDetail: contentDetail.trim(),
+        contentDetail: finalNote,
         score,
         scoreScale,
-        teacherNote: teacherNote.trim(),
+        teacherNote: finalNote,
         googleDriveUrl: googleDriveUrl.trim() || undefined,
         handwrittenSolutionUrl: handwrittenSolutionUrl.trim() || undefined,
         homework: homeworkData,
@@ -291,10 +291,10 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         endTime,
         durationMinutes,
         subtopicIds: selectedSubtopicIds,
-        contentDetail: contentDetail.trim(),
+        contentDetail: finalNote,
         score,
         scoreScale,
-        teacherNote: teacherNote.trim(),
+        teacherNote: finalNote,
         googleDriveUrl: googleDriveUrl.trim() || undefined,
         handwrittenSolutionUrl: handwrittenSolutionUrl.trim() || undefined,
         homework: homeworkData,
@@ -627,18 +627,21 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             </div>
           </div>
 
-          {/* Row 4: Detailed Content */}
+          {/* Row 4: Detailed Content & Teacher Note (Unified) */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {tx('สรุปเนื้อหาที่เรียน *', 'Lesson Summary *')}
+              {tx('สรุปเนื้อหาและคำแนะนำจากครู *', 'Lesson Summary & Teacher Feedback *')}
             </label>
             <textarea
-              rows={2}
+              rows={4}
               value={contentDetail}
-              onChange={(e) => setContentDetail(e.target.value)}
-              placeholder={tx('คลิกเลือกหัวข้อด้านบน หรือพิมพ์สรุปเนื้อหาที่สอนในคาบนี้', 'Select topics above or summarize what was covered')}
+              onChange={(e) => {
+                setContentDetail(e.target.value);
+                setTeacherNote(e.target.value);
+              }}
+              placeholder={tx('บันทึกสรุปเนื้อหาที่สอน เทคนิค หรือคำแนะนำถึงนักเรียนและผู้ปกครอง...', 'Summarize topics covered, study tips, and feedback for student/parent...')}
               required
-              className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+              className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs leading-relaxed"
             />
           </div>
 
@@ -672,20 +675,6 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
               />
             </div>
-          </div>
-
-          {/* Row 6: Teacher Note */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {tx('โน้ตถึงผู้ปกครอง / นักเรียน', 'Feedback for Student / Parent')}
-            </label>
-            <input
-              type="text"
-              value={teacherNote}
-              onChange={(e) => setTeacherNote(e.target.value)}
-              placeholder={tx('เช่น ทำความเข้าใจได้ดีมาก แนะนำให้ทำโจทย์ข้อ 4 เพิ่ม', 'e.g., Great progress today, review problem #4')}
-              className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-            />
           </div>
 
           {/* Row 7: Homework Toggle */}

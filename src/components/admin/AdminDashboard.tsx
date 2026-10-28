@@ -417,10 +417,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
 
-                  {/* Content Detail */}
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                    {les.contentDetail}
-                  </p>
+                  {/* Combined Lesson Notes & Teacher Feedback (100% Data Preserved) */}
+                  {(() => {
+                    const detail = (les.contentDetail || '').trim();
+                    const note = (les.teacherNote || '').trim();
+                    let displayText = detail;
+                    if (note && note !== detail) {
+                      displayText = detail ? `${detail}\n\n💬 โน้ตครู: ${note}` : note;
+                    }
+                    if (!displayText) return null;
+
+                    return (
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-xl border border-slate-100 whitespace-pre-line">
+                        {displayText}
+                      </p>
+                    );
+                  })()}
 
                   {/* Progressive Disclosure for Subtopics */}
                   {subCount > 0 && (
@@ -486,24 +498,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   )}
 
-                  {/* Homework & Teacher Notes */}
-                  {(les.homework || les.teacherNote) && (
+                  {/* Homework info */}
+                  {les.homework && (
                     <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1 border-t border-slate-100">
-                      {les.homework && (
-                        <span className="flex items-center gap-1.5 text-blue-900 font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                          {tx('การบ้าน:', 'HW:')} {les.homework.title} (
-                          {les.homework.status === 'submitted'
-                            ? tx('ส่งแล้ว ✅', 'Done ✅')
-                            : tx('รอส่ง ⏳', 'Pending ⏳')}
-                          )
-                        </span>
-                      )}
-                      {les.teacherNote && (
-                        <span className="text-slate-500 italic">
-                          {tx('โน้ตครู:', 'Note:')} "{les.teacherNote}"
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1.5 text-blue-900 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                        {tx('การบ้าน:', 'HW:')} {les.homework.title} (
+                        {les.homework.status === 'submitted'
+                          ? tx('ส่งแล้ว ✅', 'Done ✅')
+                          : tx('รอส่ง ⏳', 'Pending ⏳')}
+                        )
+                      </span>
                     </div>
                   )}
                 </div>

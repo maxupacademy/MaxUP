@@ -27,6 +27,8 @@ import {
   Link as LinkIcon,
   CornerDownRight,
   Layers,
+  FolderOpen,
+  Check,
 } from 'lucide-react';
 import { MathText } from '../ui/MathText';
 
@@ -117,7 +119,7 @@ export const SyllabusManager: React.FC = () => {
   const [editSubName, setEditSubName] = useState('');
   const [editSubDesc, setEditSubDesc] = useState('');
   const [editSubDifficulty, setEditSubDifficulty] = useState<Subtopic['difficulty']>('intermediate');
-  const [editSubLevel, setEditSubLevel] = useState<1 | 2 | 3>(1);
+  const [editSubLevel, setEditSubLevel] = useState<1 | 2 | 3 | 4>(1);
   const [editSubParentId, setEditSubParentId] = useState<string>('');
   const [editSubGoogleDriveUrl, setEditSubGoogleDriveUrl] = useState('');
   const [editSubHandwrittenSolutionUrl, setEditSubHandwrittenSolutionUrl] = useState('');
@@ -1562,7 +1564,7 @@ export const SyllabusManager: React.FC = () => {
                 <label className="block font-semibold text-slate-700 mb-1">
                   ระดับขั้นของหัวข้อ (Hierarchy Level)
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -1617,14 +1619,38 @@ export const SyllabusManager: React.FC = () => {
                   >
                     ขั้นที่ 3 (ย่อยลึก)
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditSubLevel(4);
+                      const currentTopic = activeSubject.topics.find((t) => t.id === editingSub.topicId);
+                      const otherItems = (currentTopic?.subtopics || []).filter(
+                        (s) => s.id !== editingSub.sub.id
+                      );
+                      if (otherItems.length > 0 && !editSubParentId) {
+                        setEditSubParentId(otherItems[0].id);
+                      }
+                    }}
+                    className={`py-1.5 px-2 rounded-xl border text-center font-semibold transition-all cursor-pointer ${
+                      editSubLevel === 4
+                        ? 'bg-rose-600 text-white border-rose-700 shadow-2xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    ขั้นที่ 4 (K-Tips)
+                  </button>
                 </div>
               </div>
 
-              {/* Parent selector if Level 2 or 3 */}
+              {/* Parent selector if Level 2, 3 or 4 */}
               {editSubLevel > 1 && (
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {editSubLevel === 2 ? 'เลือกหัวข้อแม่ (ขั้นที่ 1)' : 'เลือกหัวข้อแม่ (ขั้นที่ 2 หรือ 1)'}
+                    {editSubLevel === 2
+                      ? 'เลือกหัวข้อแม่ (ขั้นที่ 1)'
+                      : editSubLevel === 3
+                      ? 'เลือกหัวข้อแม่ (ขั้นที่ 2 หรือ 1)'
+                      : 'เลือกหัวข้อแม่ (ขั้นที่ 3 หรือ 2)'}
                   </label>
                   <select
                     value={editSubParentId}

@@ -1063,10 +1063,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const parentSub = subtopicData.parentId
                 ? t.subtopics.find((s) => s.id === subtopicData.parentId)
                 : undefined;
-              const calculatedLevel: 1 | 2 | 3 = subtopicData.level
+              const calculatedLevel: 1 | 2 | 3 | 4 = subtopicData.level
                 ? subtopicData.level
                 : parentSub
-                ? ((Math.min(3, (parentSub.level || 1) + 1)) as 1 | 2 | 3)
+                ? ((Math.min(4, (parentSub.level || 1) + 1)) as 1 | 2 | 3 | 4)
                 : 1;
 
               const newSub: Subtopic = {

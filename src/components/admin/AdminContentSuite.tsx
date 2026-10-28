@@ -24,6 +24,7 @@ import {
   KeyRound,
   FolderOpen,
   RotateCcw,
+  ExternalLink,
 } from 'lucide-react';
 
 export const AdminContentSuite: React.FC = () => {

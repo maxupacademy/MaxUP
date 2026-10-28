@@ -430,7 +430,7 @@ export const SyllabusManager: React.FC = () => {
             parentChain: [l1.id, l2.id],
           });
 
-          // 4. Level 4 items under l3 (Deep Level / K-Tips / Competition insights)
+          // 4. Level 4 items under l3 (Deep Level / Advanced Techniques / Competition insights)
           const level4Items = subs.filter((s) => s.parentId === l3.id || (s.level === 4 && s.parentId === l3.id));
           level4Items.forEach((l4, m) => {
             visited.add(l4.id);
@@ -1637,7 +1637,7 @@ export const SyllabusManager: React.FC = () => {
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    ขั้นที่ 4 (K-Tips)
+                    ขั้นที่ 4 (เทคนิค/ข้อสอบ)
                   </button>
                 </div>
               </div>

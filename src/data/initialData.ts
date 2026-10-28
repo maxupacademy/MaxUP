@@ -10,7 +10,10 @@ import {
   StudySchedulePlan,
 } from '../types';
 import { COURSE_MATH_JUNIOR } from './mathJuniorCourse';
+import { COURSE_MATH_SENIOR } from './mathSeniorCourse';
+import { COURSE_PHYS_SENIOR } from './physSeniorCourse';
 import { COURSE_CHEM_SENIOR } from './chemSeniorCourse';
+import { COURSE_BIO_SENIOR } from './bioSeniorCourse';
 
 export const INITIAL_ADMIN: UserProfile = {
   id: 'admin_max',
@@ -34,8 +37,14 @@ export const INITIAL_STUDENTS: UserProfile[] = [
     password: 'Ready',
     school: 'สามเสนวิทยาลัย',
     grade: 'มัธยมศึกษาปีที่ 4',
-    enrolledCourseIds: ['CHEM_SENIOR_FUNDAMENTAL_01'],
-    targetExam: 'A-Level เคมี / สอวน. เคมี',
+    enrolledCourseIds: [
+      'CHEM_SENIOR_FUNDAMENTAL_01',
+      'MATH_JUNIOR_FUNDENMENTAL_01',
+      'MATH_SENIOR_FUNDAMENTAL_01',
+      'PHYS_SENIOR_FUNDAMENTAL_01',
+      'BIO_SENIOR_FUNDAMENTAL_01',
+    ],
+    targetExam: 'A-Level วิทย์-คณิต / สอวน.',
     targetFaculty: 'สายวิทยาศาสตร์สุขภาพ / วิศวกรรมศาสตร์',
     isActive: true,
     createdAt: '2026-04-24',
@@ -43,7 +52,13 @@ export const INITIAL_STUDENTS: UserProfile[] = [
   },
 ];
 
-export const ALL_INITIAL_SUBJECTS: Course[] = [COURSE_MATH_JUNIOR, COURSE_CHEM_SENIOR];
+export const ALL_INITIAL_SUBJECTS: Course[] = [
+  COURSE_MATH_JUNIOR,
+  COURSE_MATH_SENIOR,
+  COURSE_PHYS_SENIOR,
+  COURSE_CHEM_SENIOR,
+  COURSE_BIO_SENIOR,
+];
 
 export const INITIAL_LESSONS: Lesson[] = [
   {

@@ -68,8 +68,12 @@ const deepCleanSanitize = (val: any): any => {
 const safeSetDoc = (docRef: any, data: any) => {
   try {
     const sanitized = deepCleanSanitize(data);
-    return setDoc(docRef, sanitized).catch((err) => {
-      console.warn('Firestore offline note:', err);
+    return setDoc(docRef, sanitized).catch((err: any) => {
+      if (err?.code === 'resource-exhausted') {
+        console.warn('Firestore write paused: daily quota limit reached.');
+      } else {
+        console.warn('Firestore offline note:', err);
+      }
     });
   } catch (err) {
     console.warn('Firestore serialize note:', err);
@@ -233,6 +237,46 @@ interface AppContextType {
 }
 
 const STORAGE_KEY_PREFIX = 'maxup_v19_math_';
+
+export const sanitizeForStorage = (data: any): any => {
+  if (!data) return data;
+  if (Array.isArray(data)) {
+    return data.map(sanitizeForStorage);
+  }
+  if (typeof data === 'object') {
+    const res: Record<string, any> = {};
+    for (const [k, v] of Object.entries(data)) {
+      // Do not store large base64 data URLs in localStorage (~5MB limit per origin)
+      if (typeof v === 'string' && v.startsWith('data:') && v.length > 50000) {
+        res[k] = '';
+      } else {
+        res[k] = sanitizeForStorage(v);
+      }
+    }
+    return res;
+  }
+  return data;
+};
+
+export const safeSetLocalStorage = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (err: any) {
+    console.warn(`[safeSetLocalStorage] Storage quota exceeded or blocked for "${key}":`, err);
+    try {
+      // Prune heavy non-essential caches that can be restored on demand
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}materials`);
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}homeworks`);
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}videos`);
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}progress`);
+      // Retry once after pruning
+      localStorage.setItem(key, value);
+    } catch {
+      console.warn(`[safeSetLocalStorage] Memory-only fallback active for "${key}".`);
+    }
+  }
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -366,7 +410,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}schedules`, JSON.stringify(schedulePlans));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}schedules`, JSON.stringify(schedulePlans));
   }, [schedulePlans]);
 
   // Teacher PromptPay Settings
@@ -387,7 +431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setTeacherPromptPay = (data: { number: string; name: string; qrUrl?: string }) => {
     setTeacherPromptPayState(data);
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}teacher_promptpay`, JSON.stringify(data));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}teacher_promptpay`, JSON.stringify(data));
     setDoc(doc(db, 'settings', 'promptpay'), data).catch(() => {});
   };
 
@@ -460,53 +504,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncAndCleanAllProgress = () => {
     const cleanMap = recomputeAllStudentsProgress(lessons);
     setProgressMap(cleanMap);
-    Object.entries(cleanMap).forEach(([stId, progList]) => {
-      safeSetDoc(doc(db, 'progress', stId), { progress: progList });
-    });
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
   };
 
   // Persistence to localStorage (Instant, durable and completely stable without layout jitter)
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}auth_user`, JSON.stringify(currentUser));
+      safeSetLocalStorage(`${STORAGE_KEY_PREFIX}auth_user`, JSON.stringify(currentUser));
     } else {
       localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth_user`);
     }
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}students`, JSON.stringify(students));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}students`, JSON.stringify(students));
   }, [students]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}courses`, JSON.stringify(courses));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}courses`, JSON.stringify(courses));
   }, [courses]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}active_course_id`, activeCourseId);
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}active_course_id`, activeCourseId);
   }, [activeCourseId]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}lessons`, JSON.stringify(lessons));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}lessons`, JSON.stringify(lessons));
   }, [lessons]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}materials`, JSON.stringify(materials));
+    safeSetLocalStorage(
+      `${STORAGE_KEY_PREFIX}materials`,
+      JSON.stringify(sanitizeForStorage(materials))
+    );
   }, [materials]);
 
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}homeworks`, JSON.stringify(homeworks));
+    safeSetLocalStorage(
+      `${STORAGE_KEY_PREFIX}homeworks`,
+      JSON.stringify(sanitizeForStorage(homeworks))
+    );
   }, [homeworks]);
 
   // Synchronize progressMap strictly from active lessons in real-time
   useEffect(() => {
     const cleanMap = recomputeAllStudentsProgress(lessons);
     setProgressMap(cleanMap);
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
-    // Clean Firestore progress documents to match current active lessons
-    Object.entries(cleanMap).forEach(([stId, progList]) => {
-      safeSetDoc(doc(db, 'progress', stId), { progress: progList });
-    });
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
   }, [lessons, students]);
 
   // Realtime background sync with Firestore for all collections (Lessons, Progress, Schedules, Users, Courses, Homeworks, Materials, Settings)
@@ -525,9 +569,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // คำนวณความคืบหน้าของนักเรียนทุกคนใหม่ทันทีจากคาบเรียนจริงที่อัปเดตจาก Firestore (Single Source of Truth)
         const updatedMap = recomputeAllStudentsProgress(remoteLessons);
         setProgressMap(updatedMap);
-        Object.entries(updatedMap).forEach(([stId, progList]) => {
-          safeSetDoc(doc(db, 'progress', stId), { progress: progList });
-        });
       },
       (err) => console.warn('Lessons realtime note:', err)
     );
@@ -597,14 +638,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             );
             if (idx === -1) {
               finalCourses.push(defCourse);
-              safeSetDoc(doc(db, 'courses', defCourse.id), defCourse);
             } else {
               if (
                 !finalCourses[idx].topics ||
                 finalCourses[idx].topics.length < defCourse.topics.length
               ) {
                 finalCourses[idx] = defCourse;
-                safeSetDoc(doc(db, 'courses', defCourse.id), defCourse);
               }
             }
           });
@@ -613,9 +652,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setCourses(finalCourses);
           }
         } else {
-          OFFICIAL_DEFAULT_COURSES.forEach((c) => {
-            safeSetDoc(doc(db, 'courses', c.id), c);
-          });
           setCourses(OFFICIAL_DEFAULT_COURSES);
         }
       },
@@ -1680,11 +1716,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setCourses(OFFICIAL_DEFAULT_COURSES);
     setActiveCourseId(COURSE_MATH_JUNIOR.id);
-    localStorage.setItem(
+    safeSetLocalStorage(
       `${STORAGE_KEY_PREFIX}courses`,
       JSON.stringify(OFFICIAL_DEFAULT_COURSES)
     );
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}active_course_id`, COURSE_MATH_JUNIOR.id);
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}active_course_id`, COURSE_MATH_JUNIOR.id);
   };
 
   const resetAllData = () => {

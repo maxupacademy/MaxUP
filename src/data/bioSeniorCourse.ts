@@ -20,7 +20,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t1_s1",
           "topicId": "bio_s_t1",
           "level": 1,
-          "name": "1.1 ธรรมชาติและคุณสมบัติของสิ่งมีชีวิต",
+          "name": "ธรรมชาติและคุณสมบัติของสิ่งมีชีวิต",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การสืบพันธุ์ การเจริญเติบโต เมแทบอลิซึม การตอบสนอง ดุลยภาพ และการจัดระบบสิ่งมีชีวิต"
@@ -58,7 +58,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t2_s1",
           "topicId": "bio_s_t2",
           "level": 1,
-          "name": "2.1 น้ำ แร่ธาตุ และสมบัติทางกายภาพที่มีผลต่อชีวิต",
+          "name": "น้ำ แร่ธาตุ และสมบัติทางกายภาพที่มีผลต่อชีวิต",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "พันธะไฮโดรเจนในน้ำ ความจุความร้อนสูง แรงโคฮีชัน แรงแอดฮีชัน และการรักษาดุลยภาพ"
@@ -116,7 +116,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t3_s1",
           "topicId": "bio_s_t3",
           "level": 1,
-          "name": "3.1 กล้องจุลทรรศน์และโครงสร้างออร์แกเนลล์ของเซลล์",
+          "name": "กล้องจุลทรรศน์และโครงสร้างออร์แกเนลล์ของเซลล์",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "กล้องจุลทรรศน์ใช้แสง (LM) vs อิเล็กตรอน (SEM/TEM), ออร์แกเนลล์ไม่มีเยื่อหุ้ม (ไรโบโซม เซนทริโอล), เยื่อหุ้ม 1 ชั้น (ER, กอลจิ, ไลโซโซม, แวคิวโอล), เยื่อหุ้ม 2 ชั้น (ไมโทคอนเดรีย, คลอโรพลาสต์, นิวเคลียส)"
@@ -184,7 +184,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t4_s1",
           "topicId": "bio_s_t4",
           "level": 1,
-          "name": "4.1 โครงสร้างของ DNA และการทดลองพิสูจน์สารพันธุกรรม",
+          "name": "โครงสร้างของ DNA และการทดลองพิสูจน์สารพันธุกรรม",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การทดลองของกริฟฟิท แอเวอรี เฮอร์ชี-เชส, โครงสร้างเกลียวคู่ (Double Helix) ของวัตสัน-คลิก, กฎชาร์กาฟฟ์ ($A=T, G=C$)"
@@ -242,7 +242,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t5_s1",
           "topicId": "bio_s_t5",
           "level": 1,
-          "name": "5.1 กฎของเมนเดลข้อที่ 1 และข้อที่ 2 (Segregation & Independent Assortment)",
+          "name": "กฎของเมนเดลข้อที่ 1 และข้อที่ 2 (Segregation & Independent Assortment)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การผสมพิจารณาลักษณะเดียว (Monohybrid Cross: อัตราส่วนฟีโนไทป์ $3:1$), การผสมพิจารณาสองลักษณะ (Dihybrid Cross: $9:3:3:1$), พันธุ์แท้ vs พันธุ์ทาง"
@@ -300,7 +300,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t6_s1",
           "topicId": "bio_s_t6",
           "level": 1,
-          "name": "6.1 เทคโนโลยีดีเอ็นเอรีคอมบิแนนท์ (Recombinant DNA Technology)",
+          "name": "เทคโนโลยีดีเอ็นเอรีคอมบิแนนท์ (Recombinant DNA Technology)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "เอนไซม์ตัดจำเพาะ (Restriction Enzymes), เอนไซม์ DNA ไลเกส, เวกเตอร์พลาสมิด (Plasmid), การโคลนยีนในแบคทีเรีย"
@@ -338,7 +338,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t7_s1",
           "topicId": "bio_s_t7",
           "level": 1,
-          "name": "7.1 หลักฐานและทฤษฎีวิวัฒนาการ (ลามาร์ก vs ชาลส์ ดาร์วิน)",
+          "name": "หลักฐานและทฤษฎีวิวัฒนาการ (ลามาร์ก vs ชาลส์ ดาร์วิน)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "หลักฐานซากดึกดำบรรพ์ กายวิภาคเปรียบเทียบ (Homologous vs Analogous Structures), ทฤษฎีการคัดเลือกโดยธรรมชาติ (Natural Selection)"
@@ -386,7 +386,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t8_s1",
           "topicId": "bio_s_t8",
           "level": 1,
-          "name": "8.1 เนื้อเยื่อพืช: เนื้อเยื่อเจริญ (Meristem) และเนื้อเยื่อถาวร (Permanent Tissue)",
+          "name": "เนื้อเยื่อพืช: เนื้อเยื่อเจริญ (Meristem) และเนื้อเยื่อถาวร (Permanent Tissue)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "เนื้อเยื่อเจริญส่วนปลาย ส่วนข้าง (แคมเบียม), เนื้อเยื่อถาวรเชิงเดี่ยว (พาเรงคิมา คอลเลงคิมา สเกลอเรนคิมา) และเชิงซ้อน (ไซเลม โฟลเอม)"
@@ -424,7 +424,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t9_s1",
           "topicId": "bio_s_t9",
           "level": 1,
-          "name": "9.1 การดูดน้ำและแร่ธาตุเข้าสู่ราก: อโพพลาสต์ ซิมพลาสต์ และแถบแคสพาเรียน",
+          "name": "การดูดน้ำและแร่ธาตุเข้าสู่ราก: อโพพลาสต์ ซิมพลาสต์ และแถบแคสพาเรียน",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "Apoplast (ผ่านผนังเซลล์), Symplast (ผ่านพลาสโมเดสมาตา), Casparian strip บังคับให้น้ำเข้าสู่ซิมพลาสต์ที่เอนโดเดอร์มิส"
@@ -462,7 +462,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t10_s1",
           "topicId": "bio_s_t10",
           "level": 1,
-          "name": "10.1 ปฏิกิริยาแสง (Light Reactions) ในไทลาคอยด์",
+          "name": "ปฏิกิริยาแสง (Light Reactions) ในไทลาคอยด์",
           "sortOrder": 1,
           "difficulty": "intermediate",
           "description": "ระบบแสง I ($P_{700}$) และระบบแสง II ($P_{680}$), การถ่ายทอดอิเล็กตรอนแบบเป็นวัฏจักรและไม่เป็นวัฏจักร, การแตกตัวของน้ำ (Photolysis) ได้ $O_2$, การสังเคราะห์ $ATP$ และ $NADPH$"
@@ -510,7 +510,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t11_s1",
           "topicId": "bio_s_t11",
           "level": 1,
-          "name": "11.1 โครงสร้างของดอกและการสร้างเซลล์สืบพันธุ์",
+          "name": "โครงสร้างของดอกและการสร้างเซลล์สืบพันธุ์",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "วัฏจักรชีวิตแบบสลับ (สปอโรไฟต์ $2n$ เด่น vs แกมีโทไฟต์ $n$), การสร้างละอองเรณูในอับเรณู และการสร้างถุงเอ็มบริโอในออวุล (มี 7 เซลล์ 8 นิวเคลียส)"
@@ -548,7 +548,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t12_s1",
           "topicId": "bio_s_t12",
           "level": 1,
-          "name": "12.1 ฮอร์โมนพืช 5 กลุ่มหลัก (Auxin, Gibberellin, Cytokinin, Ethylene, ABA)",
+          "name": "ฮอร์โมนพืช 5 กลุ่มหลัก (Auxin, Gibberellin, Cytokinin, Ethylene, ABA)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ออกซิน (การยืดตัวของเซลล์ ปลายยอดเอนหาแสง), จิบเบอเรลลิน (ลำต้นยืด พักตัวของเมล็ดแตก), ไซโทไคนิน (การแบ่งเซลล์ ชะลอความชรา), เอทิลีน (ผลไม้สุก ใบไม้ร่วง), กรดแอบไซซิก (กระตุ้นปากใบปิดเมื่อขาดน้ำ)"
@@ -576,7 +576,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t13_s1",
           "topicId": "bio_s_t13",
           "level": 1,
-          "name": "13.1 การย่อยอาหารของสัตว์เซลล์เดียว สัตว์ไม่มีกระดูกสันหลัง และสัตว์เคี้ยวเอื้อง",
+          "name": "การย่อยอาหารของสัตว์เซลล์เดียว สัตว์ไม่มีกระดูกสันหลัง และสัตว์เคี้ยวเอื้อง",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การย่อยภายในเซลล์ (อะมีบา พารามีเซียม ฟองน้ำ), การย่อยภายนอกเซลล์ (ไฮดรา พลานาเรีย แมลง), กระเพาะ 4 ส่วนของสัตว์เคี้ยวเอื้อง (รูเมน เรติคิวลัม โอมาซัม อะโบมาซัม)"
@@ -624,7 +624,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t14_s1",
           "topicId": "bio_s_t14",
           "level": 1,
-          "name": "14.1 โครงสร้างแลกเปลี่ยนแก๊สของสัตว์: ผิวหนัง เหงือก ท่อลม ปอด",
+          "name": "โครงสร้างแลกเปลี่ยนแก๊สของสัตว์: ผิวหนัง เหงือก ท่อลม ปอด",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ไส้เดือนดิน (ผิวหนังชุ่มชื้น), ปลา (เหงือกแบบ Countercurrent Exchange), แมลง (ระบบท่อลม Tracheal System ไม่อาศัยเลือด), นก (ปอดพร้อมถุงลม Air sacs ไหลทางเดียว)"
@@ -672,7 +672,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t15_s1",
           "topicId": "bio_s_t15",
           "level": 1,
-          "name": "15.1 ระบบหมุนเวียนเลือดแบบเปิด vs แบบปิด และโครงสร้างหัวใจมนุษย์",
+          "name": "ระบบหมุนเวียนเลือดแบบเปิด vs แบบปิด และโครงสร้างหัวใจมนุษย์",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ระบบเปิด (แมลง เลือดปนของเหลวเนื้อเยื่อ Hemolymph), ระบบปิด (ไส้เดือน สัตว์มีกระดูกสันหลัง), หัวใจ 4 ห้อง ลิ้นหัวใจ ไบคัสปิด ไตรคัสปิด เซมิลูนาร์"
@@ -720,7 +720,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t16_s1",
           "topicId": "bio_s_t16",
           "level": 1,
-          "name": "16.1 การจำแนกของเสียไนโตรเจน (แอมโมเนีย ยูเรีย กรดยูริก) ของสัตว์ชนิดต่าง ๆ",
+          "name": "การจำแนกของเสียไนโตรเจน (แอมโมเนีย ยูเรีย กรดยูริก) ของสัตว์ชนิดต่าง ๆ",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "แอมโมเนีย (สัตว์น้ำ เป็นพิษสูงใช้น้ำขับมาก), ยูเรีย (สัตว์เลี้ยงลูกด้วยน้ำนม สัตว์สะเทินน้ำสะเทินบก), กรดยูริก (สัตว์ปีก สัตว์เลื้อยคลาน แมลง พิษต่ำสุด ไม่สูญเสียน้ำ)"
@@ -768,7 +768,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t17_s1",
           "topicId": "bio_s_t17",
           "level": 1,
-          "name": "17.1 โครงสร้างเซลล์ประสาทและการเกิดกระแสประสาท (Action Potential)",
+          "name": "โครงสร้างเซลล์ประสาทและการเกิดกระแสประสาท (Action Potential)",
           "sortOrder": 1,
           "difficulty": "intermediate",
           "description": "ระยะพัก (Resting $-70\\text{ mV}$ เกิดจาก $Na^+/K^+$ pump), เดโพลาไรเซชัน ($Na^+$ ไหลเข้าข้างในกลายเป็น $+30\\text{ mV}$), รีโพลาไรเซชัน ($K^+$ ไหลออก), ไฮเพอร์โพลาไรเซชัน"
@@ -826,7 +826,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t18_s1",
           "topicId": "bio_s_t18",
           "level": 1,
-          "name": "18.1 การเคลื่อนที่ของสิ่งมีชีวิตเซลล์เดียวและสัตว์ไม่มีกระดูกสันหลัง",
+          "name": "การเคลื่อนที่ของสิ่งมีชีวิตเซลล์เดียวและสัตว์ไม่มีกระดูกสันหลัง",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "เท้าเทียม (Pseudopodium ของอะมีบาด้วยไซโคลซิส), ซิเลียและแฟลเจลลัม (โครงสร้างไมโครทูบูล $9+2$), การทำงานตรงข้ามของกล้ามเนื้อวงและกล้ามเนื้อตามยาวในไส้เดือนดิน"
@@ -864,7 +864,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t19_s1",
           "topicId": "bio_s_t19",
           "level": 1,
-          "name": "19.1 ประเภทฮอร์โมนและกลไกการควบคุมแบบป้อนกลับ (Feedback Mechanism)",
+          "name": "ประเภทฮอร์โมนและกลไกการควบคุมแบบป้อนกลับ (Feedback Mechanism)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ฮอร์โมนเพปไทด์ (จับตัวรับบนเยื่อหุ้มเซลล์) vs ฮอร์โมนสเตียรอยด์ (ซึมผ่านเยื่อหุ้มเซลล์จับตัวรับในไซโทพลาซึม/นิวเคลียส), การควบคุมแบบป้อนกลับยับยั้ง (Negative Feedback)"
@@ -912,7 +912,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t20_s1",
           "topicId": "bio_s_t20",
           "level": 1,
-          "name": "20.1 โครงสร้างและการสร้างเซลล์สืบพันธุ์เพศชายและเพศหญิง",
+          "name": "โครงสร้างและการสร้างเซลล์สืบพันธุ์เพศชายและเพศหญิง",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "อัณฑะ เซลล์เลย์ดิก เซลล์เซอร์โตลิ การสร้างสเปิร์ม (Spermatogenesis ได้ 4 อสุจิ), รังไข่ การสร้างเซลล์ไข่ (Oogenesis ได้ 1 ไข่ + 3 โพลาร์บอดี)"
@@ -960,7 +960,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t21_s1",
           "topicId": "bio_s_t21",
           "level": 1,
-          "name": "21.1 พฤติกรรมแต่กำเนิด (Innate Behavior): โอเรียนเทชัน รีเฟล็กซ์ และ FAP",
+          "name": "พฤติกรรมแต่กำเนิด (Innate Behavior): โอเรียนเทชัน รีเฟล็กซ์ และ FAP",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ไคนีซิส (เคลื่อนที่ไร้ทิศทาง เช่น ตัวกะปิ), แทกซิส (เคลื่อนที่มีทิศทางสัมพันธ์กับสิ่งเร้า เช่น แมลงเม่าบินเข้าหาแสง), รีเฟล็กซ์ต่อเนื่อง (Fixed Action Pattern: FAP เช่น การกกไข่ของห่าน)"
@@ -998,7 +998,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t22_s1",
           "topicId": "bio_s_t22",
           "level": 1,
-          "name": "22.1 อนุกรมวิธาน การจัดหมวดหมู่ และการตั้งชื่อวิทยาศาสตร์ (Binomial Nomenclature)",
+          "name": "อนุกรมวิธาน การจัดหมวดหมู่ และการตั้งชื่อวิทยาศาสตร์ (Binomial Nomenclature)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ลำดับขั้นอนุกรมวิธาน (Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species), การเขียนชื่อวิทยาศาสตร์ระบบทวินามของลินเนียส"
@@ -1056,7 +1056,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t23_s1",
           "topicId": "bio_s_t23",
           "level": 1,
-          "name": "23.1 ไบโอมบนบกและในน้ำ (Biomes)",
+          "name": "ไบโอมบนบกและในน้ำ (Biomes)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ทุนดรา (มีเพอร์มาฟรอสต์ น้ำแข็งใต้ดิน), ไทกา (ป่าสน), ป่าผลัดใบเขตอบอุ่น, ทุ่งหญ้าสะวันนา, ทะเลทราย, ป่าดิบชื้น (ความหลากหลายสูงสุด)"
@@ -1114,7 +1114,7 @@ export const COURSE_BIO_SENIOR: Course = {
           "id": "bio_s_t24_s1",
           "topicId": "bio_s_t24",
           "level": 1,
-          "name": "24.1 ปัญหาสิ่งแวดล้อมระดับโลก: ภาวะโลกร้อน ฝนกรด และการลดลงของโอโซน",
+          "name": "ปัญหาสิ่งแวดล้อมระดับโลก: ภาวะโลกร้อน ฝนกรด และการลดลงของโอโซน",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "แก๊สเรือนกระจก ($CO_2, CH_4, N_2O, CFCs$), ฝนกรด ($SO_2, NO_x$), สาร $CFCs$ ทำลายชั้นโอโซน ($O_3$)"

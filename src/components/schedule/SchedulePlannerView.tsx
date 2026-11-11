@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { NumberTicker } from '../ui/NumberTicker';
 import { StudySchedulePlan } from '../../types';
+import { StudentGroupSelector } from '../common/StudentGroupSelector';
 import {
   Calendar,
   Clock,
@@ -31,6 +32,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { PromptPayPaymentModal } from '../payment/PromptPayPaymentModal';
+import { MathText } from '../ui/MathText';
 
 export const SchedulePlannerView: React.FC = () => {
   const {
@@ -79,6 +81,8 @@ export const SchedulePlannerView: React.FC = () => {
   // Form Fields
   const [formCourseId, setFormCourseId] = useState<string>(activeCourseId);
   const [formStudentId, setFormStudentId] = useState<string>('all');
+  const [formStudentIds, setFormStudentIds] = useState<string[]>([]);
+  const [formGroupId, setFormGroupId] = useState<string | undefined>(undefined);
   const [formTitle, setFormTitle] = useState('');
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
   const [formStartTime, setFormStartTime] = useState('17:00');
@@ -170,14 +174,20 @@ export const SchedulePlannerView: React.FC = () => {
 
   // Filter plans based on role and active filters
   const visiblePlans = unifiedSchedulePlans.filter((plan) => {
-    // If student, only show plans where studentId is 'all' or matches current user
+    // If student, show if for all or matches current user or in studentIds
     if (currentUserRole === 'student') {
-      const isForMe = plan.studentId === 'all' || plan.studentId === currentUser?.id;
+      const isForMe =
+        plan.studentId === 'all' ||
+        plan.studentId === currentUser?.id ||
+        (plan.studentIds && plan.studentIds.includes(currentUser?.id || ''));
       if (!isForMe) return false;
     } else {
       // Teacher filter by student
-      if (filterStudentId !== 'all' && plan.studentId !== filterStudentId) {
-        return false;
+      if (filterStudentId !== 'all') {
+        const matches =
+          plan.studentId === filterStudentId ||
+          (plan.studentIds && plan.studentIds.includes(filterStudentId));
+        if (!matches) return false;
       }
     }
 
@@ -218,6 +228,8 @@ export const SchedulePlannerView: React.FC = () => {
     setEditingPlan(null);
     setFormCourseId(activeCourseId || courses[0]?.id || '');
     setFormStudentId(students[0]?.id || 'all');
+    setFormStudentIds(students[0]?.id ? [students[0].id] : []);
+    setFormGroupId(undefined);
     setFormTitle('คาบเรียนที่ ' + (schedulePlans.length + 1));
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 1);
@@ -246,6 +258,8 @@ export const SchedulePlannerView: React.FC = () => {
     setEditingPlan(null);
     setFormCourseId(activeCourseId || courses[0]?.id || '');
     setFormStudentId(students[0]?.id || 'all');
+    setFormStudentIds(students[0]?.id ? [students[0].id] : []);
+    setFormGroupId(undefined);
     setFormTitle('คาบเรียนที่ ' + (schedulePlans.length + 1));
     setFormDate(dateStr);
     setFormStartTime('17:00');
@@ -272,6 +286,8 @@ export const SchedulePlannerView: React.FC = () => {
     setEditingPlan(plan);
     setFormCourseId(plan.courseId);
     setFormStudentId(plan.studentId);
+    setFormStudentIds(plan.studentIds && plan.studentIds.length > 0 ? plan.studentIds : plan.studentId !== 'all' ? [plan.studentId] : []);
+    setFormGroupId(plan.groupId);
     setFormTitle(plan.title);
     setFormDate(plan.date);
     setFormStartTime(plan.startTime);
@@ -294,15 +310,16 @@ export const SchedulePlannerView: React.FC = () => {
   };
 
   const toggleSubtopicSelect = (subId: string, subName: string) => {
+    const cleanSubName = subName.replace(/^\d+(\.\d+)+\s*/, '');
     setFormSelectedSubtopicIds((prev) => {
       const exists = prev.includes(subId);
       const next = exists ? prev.filter((id) => id !== subId) : [...prev, subId];
 
       // Auto update description if empty or updating
       if (!exists && !formDescription) {
-        setFormDescription(`เรียนหัวข้อ: ${subName}`);
+        setFormDescription(`เรียนหัวข้อ: ${cleanSubName}`);
       } else if (!exists && formDescription) {
-        setFormDescription((prevDesc) => prevDesc + `, ${subName}`);
+        setFormDescription((prevDesc) => prevDesc + `, ${cleanSubName}`);
       }
 
       return next;
@@ -354,7 +371,9 @@ export const SchedulePlannerView: React.FC = () => {
       updateSchedulePlan({
         ...editingPlan,
         courseId: formCourseId,
-        studentId: formStudentId,
+        studentId: formStudentIds.length > 0 ? formStudentIds[0] : formStudentId,
+        studentIds: formStudentIds,
+        groupId: formGroupId,
         title: formTitle.trim(),
         date: formDate,
         startTime: formStartTime,
@@ -378,7 +397,9 @@ export const SchedulePlannerView: React.FC = () => {
     } else {
       addSchedulePlan({
         courseId: formCourseId,
-        studentId: formStudentId,
+        studentId: formStudentIds.length > 0 ? formStudentIds[0] : formStudentId,
+        studentIds: formStudentIds,
+        groupId: formGroupId,
         title: formTitle.trim(),
         date: formDate,
         startTime: formStartTime,
@@ -866,7 +887,13 @@ export const SchedulePlannerView: React.FC = () => {
                               <div className="text-[9px] text-slate-500 truncate flex items-center gap-1 mt-0.5">
                                 {course && <span className="text-slate-700 font-semibold">{course.code}</span>}
                                 <span>·</span>
-                                <span>{plan.studentId === 'all' ? 'ทุกคน' : student?.nickname || 'นร.'}</span>
+                                <span>
+  {plan.studentIds && plan.studentIds.length > 1
+    ? `${plan.studentIds.map((id) => students.find((s) => s.id === id)?.nickname || 'นร.').join(', ')} (${plan.studentIds.length} คน)`
+    : plan.studentId === 'all'
+    ? 'ทุกคน'
+    : student?.nickname || 'นร.'}
+</span>
                               </div>
                             </div>
                           );
@@ -1000,10 +1027,18 @@ export const SchedulePlannerView: React.FC = () => {
                           </div>
 
                           <div>
-                            <h4 className="text-sm font-bold text-slate-900">{plan.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-900">
+                              <MathText text={plan.title} />
+                            </h4>
                             <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                               <Users className="w-3 h-3 text-slate-400" />
-                              <span>{plan.studentId === 'all' ? 'นักเรียนทุกคนในคอร์ส' : student?.nickname || 'นร.'}</span>
+                              <span>
+  {plan.studentIds && plan.studentIds.length > 1
+    ? `กลุ่มเรียน: ${plan.studentIds.map((id) => students.find((s) => s.id === id)?.nickname || 'นร.').join(', ')} (${plan.studentIds.length} คน)`
+    : plan.studentId === 'all'
+    ? 'นักเรียนทุกคนในคอร์ส'
+    : student?.nickname || 'นร.'}
+</span>
                             </div>
                           </div>
 
@@ -1015,7 +1050,7 @@ export const SchedulePlannerView: React.FC = () => {
                                 <span>หัวข้อ Syllabus ที่จะเรียน:</span>
                               </div>
                               <p className="text-slate-700 leading-relaxed font-medium">
-                                {plan.plannedContentDescription}
+                                <MathText text={plan.plannedContentDescription} />
                               </p>
                             </div>
                           )}
@@ -1217,7 +1252,9 @@ export const SchedulePlannerView: React.FC = () => {
 
                   {/* Title & Student/Course Tags */}
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 leading-snug">{plan.title}</h3>
+                    <h3 className="text-base font-bold text-slate-900 leading-snug">
+                      <MathText text={plan.title} />
+                    </h3>
                     <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 flex-wrap">
                       {course && (
                         <span className="text-slate-700 font-semibold bg-slate-100 px-2 py-0.5 rounded">
@@ -1240,7 +1277,7 @@ export const SchedulePlannerView: React.FC = () => {
                         <span>เนื้อหาที่จะเรียนในคาบนี้ (ตาม Syllabus):</span>
                       </div>
                       <p className="text-slate-700 leading-relaxed font-medium">
-                        {plan.plannedContentDescription}
+                        <MathText text={plan.plannedContentDescription} />
                       </p>
                     </div>
                   )}
@@ -1429,22 +1466,19 @@ export const SchedulePlannerView: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    นักเรียนที่เรียนในคาบนี้ *
-                  </label>
-                  <select
-                    value={formStudentId}
-                    onChange={(e) => setFormStudentId(e.target.value)}
-                    className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                  >
-                    <option value="all">นักเรียนทุกคนในคอร์ส (คลาสกลุ่ม)</option>
-                    {students.map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.nickname} ({st.fullName})
-                      </option>
-                    ))}
-                  </select>
+                <div className="sm:col-span-2">
+                  <StudentGroupSelector
+                    selectedStudentIds={formStudentIds}
+                    onChangeSelected={(ids, grpId) => {
+                      setFormStudentIds(ids);
+                      setFormGroupId(grpId);
+                      if (ids.length === 1) setFormStudentId(ids[0]);
+                      else if (ids.length > 1) setFormStudentId('group');
+                      else setFormStudentId('all');
+                    }}
+                    courseId={formCourseId}
+                    label="นักเรียนที่เรียนในคาบนี้ (เลือกเดี่ยวหรือเลือกเป็นกลุ่ม) *"
+                  />
                 </div>
               </div>
 
@@ -1600,7 +1634,7 @@ export const SchedulePlannerView: React.FC = () => {
                                 <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center justify-center shrink-0">
                                   {top.sortOrder}
                                 </span>
-                                <span>{top.name}</span>
+                                <span><MathText text={top.name} /></span>
                               </div>
 
                               {subtopics.length > 0 && (
@@ -1644,8 +1678,8 @@ export const SchedulePlannerView: React.FC = () => {
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                      <div className="text-xs font-semibold leading-tight truncate">
-                                        {sub.name}
+                                      <div className="text-xs font-semibold leading-tight line-clamp-2">
+                                        <MathText text={sub.name.replace(/^\d+(\.\d+)+\s*/, '')} />
                                       </div>
 
                                       {/* Tags: Difficulty & Resources */}

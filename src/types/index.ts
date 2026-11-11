@@ -1,4 +1,14 @@
 export type UserRole = 'admin' | 'student';
+export interface StudyGroup {
+  id: string;
+  name: string; // เช่น "กลุ่มติวเข้ม สอวน.", "กลุ่ม ม.6 ตะลุยโจทย์"
+  studentIds: string[]; // รายชื่อ ID นักเรียนในกลุ่ม
+  courseId?: string; // วิชาหลักที่เรียนด้วยกัน
+  description?: string;
+  color?: string; // สีสำหรับ Badge แสดงผล
+  createdAt: string;
+}
+
 
 export interface UserProfile {
   id: string;
@@ -125,6 +135,8 @@ export interface Lesson {
   googleDriveUrl?: string;
   handwrittenSolutionUrl?: string; // ลิงก์เฉลยจากการเขียนลายมือครู Max
   schedulePlanId?: string; // เชื่อมโยงกับตารางสอน (StudySchedulePlan)
+  groupId?: string; // เชื่อมโยงกับกลุ่มเรียน (StudyGroup) หากเรียนเป็นกลุ่ม
+  studentIds?: string[]; // รายชื่อเพื่อนร่วมคลาส
   createdAt: string;
 }
 
@@ -165,7 +177,9 @@ export interface VideoProgress {
 export interface StudySchedulePlan {
   id: string;
   courseId: string;
-  studentId: string; // 'all' หรือ studentId เฉพาะ
+  studentId: string; // 'all' หรือ studentId เฉพาะ หรือ 'group'
+  studentIds?: string[]; // รายชื่อนักเรียนทุกคนในคาบนี้ (กรณีเรียนเป็นกลุ่ม)
+  groupId?: string; // เชื่อมโยงกับกลุ่มเรียน (StudyGroup)
   title: string;
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm

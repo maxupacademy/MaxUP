@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Lesson, Homework } from '../../types';
+import { StudentGroupSelector } from '../common/StudentGroupSelector';
 import {
   X,
   Clock,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import { MathText } from '../ui/MathText';
 
 interface LessonLoggerModalProps {
   isOpen: boolean;
@@ -38,11 +40,14 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     schedulePlans,
     toggleSchedulePlanStatus,
     addSchedulePlan,
+    addLessonsBatch,
   } = useApp();
   const { tx } = useLanguage();
 
   const [sessionType, setSessionType] = useState<'completed' | 'upcoming'>('completed');
   const [studentId, setStudentId] = useState<string>('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(undefined);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [lessonDate, setLessonDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState<string>('17:00');
@@ -67,9 +72,14 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     const plan = schedulePlans.find((p) => p.id === planId);
     if (!plan) return;
 
-    if (plan.studentId && plan.studentId !== 'all') {
+    if (plan.studentIds && plan.studentIds.length > 0) {
+      setSelectedStudentIds(plan.studentIds);
+      setStudentId(plan.studentIds[0]);
+    } else if (plan.studentId && plan.studentId !== 'all') {
+      setSelectedStudentIds([plan.studentId]);
       setStudentId(plan.studentId);
-    } else if (students.length > 0 && !studentId) {
+    } else if (students.length > 0 && selectedStudentIds.length === 0) {
+      setSelectedStudentIds([students[0].id]);
       setStudentId(students[0].id);
     }
     if (plan.courseId) {
@@ -109,6 +119,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     if (isOpen) {
       if (editLesson) {
         setStudentId(editLesson.studentId);
+        setSelectedStudentIds(editLesson.studentIds && editLesson.studentIds.length > 0 ? editLesson.studentIds : [editLesson.studentId]);
+        setSelectedGroupId(editLesson.groupId);
         setSelectedSubjectId(editLesson.subjectId);
         setLessonDate(editLesson.lessonDate);
         setStartTime(editLesson.startTime);
@@ -137,8 +149,9 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         }
       } else {
         // Default new lesson
-        if (students.length > 0 && !studentId) {
+        if (students.length > 0 && (!selectedStudentIds || selectedStudentIds.length === 0)) {
           setStudentId(students[0].id);
+          setSelectedStudentIds([students[0].id]);
         }
         const defaultCourseId = activeSubjectId || courses[0]?.id || '';
         setSelectedSubjectId(defaultCourseId);
@@ -232,16 +245,19 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     e.preventDefault();
     setErrorMessage('');
 
-    // If no student exists yet
-    let finalStudentId = studentId;
-    if (!finalStudentId) {
-      if (students.length > 0) {
-        finalStudentId = students[0].id;
+    // Ensure students are selected
+    let targetStudentIds = selectedStudentIds;
+    if (targetStudentIds.length === 0) {
+      if (studentId) {
+        targetStudentIds = [studentId];
+      } else if (students.length > 0) {
+        targetStudentIds = [students[0].id];
       } else {
-        setErrorMessage('กรุณาเพิ่มนักเรียนในระบบก่อนบันทึกคาบเรียน (กดปุ่ม "เพิ่มนักเรียนด่วน" ด้านบน)');
+        setErrorMessage('กรุณาเลือกหรือเพิ่มนักเรียนในระบบก่อนบันทึก');
         return;
       }
     }
+    const finalStudentId = targetStudentIds[0];
 
     if (!contentDetail.trim()) {
       setErrorMessage('กรุณากรอกรายละเอียดเนื้อหาที่เรียนในคาบนี้');
@@ -271,6 +287,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
       addSchedulePlan({
         courseId: finalCourseId,
         studentId: finalStudentId,
+        studentIds: targetStudentIds,
+        groupId: selectedGroupId,
         title: finalNote.split('\n')[0].slice(0, 50) || `คาบเรียน ${lessonDate}`,
         date: lessonDate,
         startTime,
@@ -285,6 +303,8 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
       updateLesson({
         ...editLesson,
         studentId: finalStudentId,
+        studentIds: targetStudentIds,
+        groupId: selectedGroupId || editLesson.groupId,
         subjectId: finalCourseId,
         lessonDate,
         startTime,
@@ -299,9 +319,30 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         handwrittenSolutionUrl: handwrittenSolutionUrl.trim() || undefined,
         homework: homeworkData,
       });
+    } else if (targetStudentIds.length > 1) {
+      // Batch log for multiple students
+      addLessonsBatch(targetStudentIds, {
+        subjectId: finalCourseId,
+        lessonDate,
+        startTime,
+        endTime,
+        durationMinutes,
+        subtopicIds: selectedSubtopicIds,
+        contentDetail: finalNote,
+        score,
+        scoreScale,
+        teacherNote: finalNote,
+        googleDriveUrl: googleDriveUrl.trim() || undefined,
+        handwrittenSolutionUrl: handwrittenSolutionUrl.trim() || undefined,
+        homework: homeworkData,
+        groupId: selectedGroupId,
+        schedulePlanId: selectedSchedulePlanId || undefined,
+      });
     } else {
       addLesson({
         studentId: finalStudentId,
+        studentIds: targetStudentIds,
+        groupId: selectedGroupId,
         subjectId: finalCourseId,
         lessonDate,
         startTime,
@@ -479,24 +520,15 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 </div>
               )}
 
-              {students.length === 0 ? (
-                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-                  <span>{tx('ยังไม่มีนักเรียนในระบบ กรุณากดปุ่มเพิ่มนักเรียนด่วนด้านบน', 'No students yet. Use Quick Add Student above.')}</span>
-                </div>
-              ) : (
-                <select
-                  value={studentId || students[0]?.id || ''}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  required
-                  className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                >
-                  {students.map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.nickname} {st.fullName ? `— ${st.fullName}` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <StudentGroupSelector
+                selectedStudentIds={selectedStudentIds}
+                onChangeSelected={(ids, grpId) => {
+                  setSelectedStudentIds(ids);
+                  if (ids.length > 0) setStudentId(ids[0]);
+                  setSelectedGroupId(grpId);
+                }}
+                courseId={selectedSubjectId}
+              />
             </div>
 
             <div>
@@ -633,7 +665,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                   return (
                     <div key={top.id} className="text-xs border-b border-slate-100 pb-2 last:border-b-0 last:pb-0">
                       <div className="font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                        <span>{top.sortOrder}. {top.name}</span>
+                        <span>{top.sortOrder}. <MathText text={top.name} /></span>
                         <span className="text-[10px] text-slate-400 font-normal">
                           {subs.length} {tx('ข้อย่อย', 'subtopics')}
                         </span>
@@ -662,7 +694,9 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                             >
                               {isSelected && <Check className="w-3 h-3" />}
                             </div>
-                            <span className="leading-snug text-xs">{sub.name}</span>
+                            <span className="leading-snug text-xs">
+                              <MathText text={sub.name.replace(/^\d+(\.\d+)+\s*/, '')} />
+                            </span>
                           </button>
                         );
                       })}

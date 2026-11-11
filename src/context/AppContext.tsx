@@ -14,6 +14,7 @@ import {
   StudySchedulePlan,
   CourseMaterial,
   HomeworkSubmission,
+  StudyGroup,
 } from '../types';
 import {
   INITIAL_ADMIN,
@@ -157,6 +158,10 @@ interface AppContextType {
   addLesson: (lessonData: Omit<Lesson, 'id' | 'createdAt'>) => void;
   updateLesson: (lesson: Lesson) => void;
   deleteLesson: (lessonId: string) => void;
+  addLessonsBatch: (
+    targetStudentIds: string[],
+    lessonData: Omit<Lesson, 'id' | 'studentId' | 'createdAt'>
+  ) => void;
 
   // Progress Tracking
   progressMap: Record<string, StudentTopicProgress[]>;
@@ -211,6 +216,12 @@ interface AppContextType {
     planId: string,
     confirmed: boolean
   ) => void;
+  // Study Groups (กลุ่มเรียนที่ตั้งค่าไว้ล่วงหน้า)
+  studyGroups: StudyGroup[];
+  addStudyGroup: (group: Omit<StudyGroup, 'id' | 'createdAt'>) => void;
+  updateStudyGroup: (group: StudyGroup) => void;
+  deleteStudyGroup: (groupId: string) => void;
+
   teacherPromptPay: {
     number: string;
     name: string;
@@ -279,6 +290,19 @@ export const safeSetLocalStorage = (key: string, value: string) => {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const sanitizeCourseTopics = (courseList: Course[]): Course[] => {
+  return courseList.map((course) => ({
+    ...course,
+    topics: (course.topics || []).map((topic) => ({
+      ...topic,
+      subtopics: (topic.subtopics || []).map((sub) => ({
+        ...sub,
+        name: sub.name.replace(/^\d+(\.\d+)+\s*/, ''),
+      })),
+    })),
+  }));
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Authentication state - Starts strictly as NULL so user lands on login page!
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
@@ -346,12 +370,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-        return validCourses;
+        return sanitizeCourseTopics(validCourses);
       } catch {
-        return ALL_INITIAL_SUBJECTS;
+        return sanitizeCourseTopics(ALL_INITIAL_SUBJECTS);
       }
     }
-    return ALL_INITIAL_SUBJECTS;
+    return sanitizeCourseTopics(ALL_INITIAL_SUBJECTS);
   });
 
   const [activeCourseId, setActiveCourseId] = useState<string>(() => {
@@ -402,6 +426,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}video_progress`);
     return saved ? JSON.parse(saved) : INITIAL_VIDEO_PROGRESS;
   });
+
+  // Study Groups (กลุ่มเรียนที่ตั้งค่าล่วงหน้า)
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}study_groups`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}study_groups`, JSON.stringify(studyGroups));
+  }, [studyGroups]);
 
   // Study Schedule Plans (ตารางเรียนและวางแผนล่วงหน้า)
   const [schedulePlans, setSchedulePlans] = useState<StudySchedulePlan[]>(() => {
@@ -715,10 +749,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
 
           if (finalCourses.length > 0) {
-            setCourses(finalCourses);
+            setCourses(sanitizeCourseTopics(finalCourses));
           }
         } else {
-          setCourses(OFFICIAL_DEFAULT_COURSES);
+          setCourses(sanitizeCourseTopics(OFFICIAL_DEFAULT_COURSES));
         }
       },
       (err) => console.warn('Courses realtime note:', err)
@@ -768,7 +802,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       (err) => console.warn('PromptPay realtime note:', err)
     );
 
+    // 9. Realtime Study Groups Listener
+    const unsubStudyGroups = onSnapshot(
+      collection(db, 'study_groups'),
+      (snapshot) => {
+        const remoteGroups: StudyGroup[] = [];
+        snapshot.forEach((docItem) => {
+          remoteGroups.push(docItem.data() as StudyGroup);
+        });
+        if (remoteGroups.length > 0) {
+          setStudyGroups(remoteGroups);
+        }
+      },
+      (err) => console.warn('StudyGroups realtime note:', err)
+    );
+
     return () => {
+      unsubStudyGroups();
       unsubLessons();
       unsubProgress();
       unsubSchedules();
@@ -1248,6 +1298,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return c;
       })
     );
+  };
+
+
+  const addStudyGroup = (groupData: Omit<StudyGroup, 'id' | 'createdAt'>) => {
+    const newId = `grp_${Date.now()}`;
+    const newGroup: StudyGroup = {
+      ...groupData,
+      id: newId,
+      createdAt: new Date().toISOString(),
+    };
+    setStudyGroups((prev) => [newGroup, ...prev]);
+    safeSetDoc(doc(db, 'study_groups', newId), newGroup);
+  };
+
+  const updateStudyGroup = (group: StudyGroup) => {
+    setStudyGroups((prev) => prev.map((g) => (g.id === group.id ? group : g)));
+    safeSetDoc(doc(db, 'study_groups', group.id), group);
+  };
+
+  const deleteStudyGroup = (groupId: string) => {
+    setStudyGroups((prev) => prev.filter((g) => g.id !== groupId));
+    safeDeleteDoc(doc(db, 'study_groups', groupId));
+  };
+
+  const addLessonsBatch = (
+    targetStudentIds: string[],
+    lessonData: Omit<Lesson, 'id' | 'studentId' | 'createdAt'>
+  ) => {
+    if (targetStudentIds.length === 0) return;
+    const baseId = `les_grp_${Date.now()}`;
+    const planId = lessonData.schedulePlanId || `sch_${baseId}`;
+
+    const createdLessons: Lesson[] = [];
+    targetStudentIds.forEach((stId, idx) => {
+      const lessonId = `${baseId}_${idx}`;
+      const newLesson: Lesson = {
+        ...lessonData,
+        id: lessonId,
+        studentId: stId,
+        studentIds: targetStudentIds,
+        schedulePlanId: planId,
+        subtopicIds: lessonData.subtopicIds || [],
+        contentDetail: lessonData.contentDetail || '',
+        durationMinutes: lessonData.durationMinutes || 0,
+        createdAt: new Date().toISOString(),
+      };
+      createdLessons.push(newLesson);
+      safeSetDoc(doc(db, 'lessons', lessonId), newLesson);
+    });
+
+    const nextLessons = [...createdLessons, ...lessons];
+    setLessons(nextLessons);
+
+    targetStudentIds.forEach((stId) => {
+      const updatedProgress = computeStudentProgressFromLessons(stId, nextLessons);
+      setProgressMap((prev) => ({ ...prev, [stId]: updatedProgress }));
+      safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
+    });
+
+    // Create / sync unified schedule plan
+    const durationHours =
+      (lessonData.durationMinutes || 0) > 0
+        ? parseFloat(((lessonData.durationMinutes || 120) / 60).toFixed(1))
+        : 2.0;
+
+    const nicknames = targetStudentIds
+      .map((id) => students.find((s) => s.id === id)?.nickname || 'นร.')
+      .join(', ');
+
+    const linkedPlan: StudySchedulePlan = {
+      id: planId,
+      courseId: lessonData.subjectId,
+      studentId: targetStudentIds[0] || 'group',
+      studentIds: targetStudentIds,
+      groupId: lessonData.groupId,
+      title:
+        (lessonData.contentDetail || '').split('\n')[0].slice(0, 50) ||
+        `คาบเรียนกลุ่ม (${nicknames})`,
+      date: lessonData.lessonDate,
+      startTime: lessonData.startTime || '17:00',
+      endTime: lessonData.endTime || '19:00',
+      durationHours,
+      plannedSubtopicIds: lessonData.subtopicIds || [],
+      plannedContentDescription: lessonData.contentDetail || '',
+      googleDriveUrl: lessonData.googleDriveUrl,
+      handwrittenSolutionUrl: lessonData.handwrittenSolutionUrl,
+      score: lessonData.score,
+      scoreScale: lessonData.scoreScale,
+      homework: lessonData.homework,
+      status: 'completed',
+      lessonId: baseId,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSchedulePlans((prev) => {
+      const exists = prev.some((p) => p.id === planId);
+      if (exists) {
+        return prev.map((p) => (p.id === planId ? linkedPlan : p));
+      }
+      return [linkedPlan, ...prev];
+    });
+    safeSetDoc(doc(db, 'schedules', planId), linkedPlan);
   };
 
   // Lessons - Instant local state without layout jumping
@@ -1758,9 +1910,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const plan = schedulePlans.find((p) => p.id === planId);
     if (!plan) return;
 
-    // 1. Identify target students
+    // 1. Identify target students (supports multiple students & groups)
     let targetStudentIds: string[] = [];
-    if (plan.studentId && plan.studentId !== 'all') {
+    if (plan.studentIds && plan.studentIds.length > 0) {
+      targetStudentIds = plan.studentIds;
+    } else if (plan.studentId && plan.studentId !== 'all') {
       targetStudentIds = [plan.studentId];
     } else {
       const enrolled = students.filter(
@@ -1971,18 +2125,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // offline fallback
     }
 
-    setCourses(OFFICIAL_DEFAULT_COURSES);
+    setCourses(sanitizeCourseTopics(OFFICIAL_DEFAULT_COURSES));
     setActiveCourseId(COURSE_MATH_JUNIOR.id);
     safeSetLocalStorage(
       `${STORAGE_KEY_PREFIX}courses`,
-      JSON.stringify(OFFICIAL_DEFAULT_COURSES)
+      JSON.stringify(sanitizeCourseTopics(OFFICIAL_DEFAULT_COURSES))
     );
     safeSetLocalStorage(`${STORAGE_KEY_PREFIX}active_course_id`, COURSE_MATH_JUNIOR.id);
   };
 
   const resetAllData = () => {
     localStorage.clear();
-    setCourses(OFFICIAL_DEFAULT_COURSES);
+    setCourses(sanitizeCourseTopics(OFFICIAL_DEFAULT_COURSES));
     setActiveCourseId(COURSE_MATH_JUNIOR.id);
     setStudents([]);
     setLessons([]);
@@ -2063,6 +2217,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addLesson,
         updateLesson,
         deleteLesson,
+        addLessonsBatch,
+        studyGroups,
+        addStudyGroup,
+        updateStudyGroup,
+        deleteStudyGroup,
 
         progressMap,
         updateStudentTopicStatus,

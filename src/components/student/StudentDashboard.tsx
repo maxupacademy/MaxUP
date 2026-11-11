@@ -567,9 +567,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           {(() => {
             const myPlans = schedulePlans
               .filter((plan) => {
+                const myId = activeStudent?.id || currentUser?.id || '';
                 const isForMe =
                   plan.studentId === 'all' ||
-                  plan.studentId === (activeStudent?.id || currentUser?.id);
+                  plan.studentId === myId ||
+                  (plan.studentIds && plan.studentIds.includes(myId));
                 const isForMyCourse =
                   plan.courseId === activeCourseId ||
                   (currentUser?.enrolledCourseIds || []).includes(plan.courseId);

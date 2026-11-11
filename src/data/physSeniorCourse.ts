@@ -20,7 +20,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t1_s1",
           "topicId": "phys_s_t1",
           "level": 1,
-          "name": "1.1 การวัด ระบบหน่วยเอสไอ และเลขนัยสำคัญ",
+          "name": "การวัด ระบบหน่วยเอสไอ และเลขนัยสำคัญ",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ปริมาณฐาน 7 ตัว หน่วยอนุพัทธ์ คำอุปสรรค ($n, \\mu, m, k, M, G$) กฎการนับเลขนัยสำคัญและการบวก ลบ คูณ หาร"
@@ -68,7 +68,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t2_s1",
           "topicId": "phys_s_t2",
           "level": 1,
-          "name": "2.1 ปริมาณการเคลื่อนที่และกราฟการเคลื่อนที่ ($s-t, v-t, a-t$)",
+          "name": "ปริมาณการเคลื่อนที่และกราฟการเคลื่อนที่ ($s-t, v-t, a-t$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ตำแหน่ง ระยะทาง การกระจัด อัตราเร็ว ความเร็ว ความเร่ง และการแปลความชัน/พื้นที่ใต้กราฟ"
@@ -116,7 +116,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t3_s1",
           "topicId": "phys_s_t3",
           "level": 1,
-          "name": "3.1 เวกเตอร์ของแรงและการรวมแรง (Free Body Diagram: FBD)",
+          "name": "เวกเตอร์ของแรงและการรวมแรง (Free Body Diagram: FBD)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การแตกแรงเข้าแกน $X, Y$, แรงตั้งฉาก ($N$), แรงตึงเชือก ($T$), และการเขียน FBD แยกก้อนวัตถุ"
@@ -174,7 +174,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t4_s1",
           "topicId": "phys_s_t4",
           "level": 1,
-          "name": "4.1 สมดุลต่อการเลื่อนที่ ($\\sum F = 0$) และทฤษฎีบทลามี (Lami's Theorem)",
+          "name": "สมดุลต่อการเลื่อนที่ ($\\sum F = 0$) และทฤษฎีบทลามี (Lami's Theorem)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "สมดุลของแรง 3 แรงพบกันที่จุดเดียว สามเหลี่ยมแทนแรง และสูตรลามี $\\frac{F_1}{\\sin \\alpha} = \\frac{F_2}{\\sin \\beta} = \\frac{F_3}{\\sin \\gamma}$"
@@ -222,7 +222,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t5_s1",
           "topicId": "phys_s_t5",
           "level": 1,
-          "name": "5.1 งานจากแรงคงตัว งานจากแรงไม่คงตัว และกำลัง ($P$)",
+          "name": "งานจากแรงคงตัว งานจากแรงไม่คงตัว และกำลัง ($P$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "$W = \\vec{F} \\cdot \\vec{s} = F s \\cos \\theta$, พื้นที่ใต้กราฟ $F-s$, กำลังเฉลี่ย $P = \\frac{W}{t} = \\vec{F} \\cdot \\vec{v}$ หน่วยวัตต์ ($W$)"
@@ -280,7 +280,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t6_s1",
           "topicId": "phys_s_t6",
           "level": 1,
-          "name": "6.1 โมเมนตัม ($\\vec{p} = m\\vec{v}$) และแรงดล-การดล ($\\vec{I} = \\Delta \\vec{p}$)",
+          "name": "โมเมนตัม ($\\vec{p} = m\\vec{v}$) และแรงดล-การดล ($\\vec{I} = \\Delta \\vec{p}$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "โมเมนตัมเป็นปริมาณเวกเตอร์, การดล $\\vec{I} = \\vec{F} \\Delta t = m\\vec{v} - m\\vec{u}$, พื้นที่ใต้กราฟ $F-t$"
@@ -338,7 +338,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t7_s1",
           "topicId": "phys_s_t7",
           "level": 1,
-          "name": "7.1 การเคลื่อนที่แบบโพรเจกไทล์ (Projectile Motion)",
+          "name": "การเคลื่อนที่แบบโพรเจกไทล์ (Projectile Motion)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การเคลื่อนที่ 2 มิติอิสระต่อกัน: แกนราบความเร็วคงที่ ($s_x = u_x t$), แกนดิ่งความเร่งคงที่ ($g$)"
@@ -357,7 +357,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t7_s2",
           "topicId": "phys_s_t7",
           "level": 1,
-          "name": "7.2 การเคลื่อนที่แบบวงกลมสม่ำเสมอ (Uniform Circular Motion)",
+          "name": "การเคลื่อนที่แบบวงกลมสม่ำเสมอ (Uniform Circular Motion)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "คาบ ($T$), ความถี่ ($f$), อัตราเร็วเชิงเส้น ($v = \\omega r$), อัตราเร็วเชิงมุม ($\\omega = \\frac{2\\pi}{T}$), ความเร่งสู่ศูนย์กลาง $a_c = \\frac{v^2}{r} = \\omega^2 r$"
@@ -405,7 +405,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t8_s1",
           "topicId": "phys_s_t8",
           "level": 1,
-          "name": "8.1 นิยามและสมการของการเคลื่อนที่แบบ SHM",
+          "name": "นิยามและสมการของการเคลื่อนที่แบบ SHM",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การกระจัด $x = A\\sin(\\omega t + \\phi)$, ความเร็ว $v = \\omega \\sqrt{A^2 - x^2}$, ความเร่ง $a = -\\omega^2 x$, จุดสมดุล $v_{\\max} = \\omega A$, จุดปลาย $a_{\\max} = \\omega^2 A$"
@@ -463,7 +463,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t9_s1",
           "topicId": "phys_s_t9",
           "level": 1,
-          "name": "9.1 ธรรมชาติของคลื่น ชนิดคลื่น และสมการอัตราเร็ว ($v = f\\lambda$)",
+          "name": "ธรรมชาติของคลื่น ชนิดคลื่น และสมการอัตราเร็ว ($v = f\\lambda$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "คลื่นกล vs คลื่นแม่เหล็กไฟฟ้า, คลื่นตามยาว vs คลื่นตามขวาง, เฟสตรงกัน/เฟสตรงข้าม, อัตราเร็วคลื่นในเส้นเชือก $v = \\sqrt{\\frac{T}{\\mu}}$"
@@ -521,7 +521,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t10_s1",
           "topicId": "phys_s_t10",
           "level": 1,
-          "name": "10.1 การแทรกสอดผ่านสลิตคู่ของยัง (Young's Double-Slit Experiment)",
+          "name": "การแทรกสอดผ่านสลิตคู่ของยัง (Young's Double-Slit Experiment)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "แถบสว่าง $d\\sin\\theta = d\\frac{x}{L} = n\\lambda$, แถบมืด $d\\frac{x}{L} = (n-\\frac{1}{2})\\lambda$, ระยะห่างระหว่างแถบ $\\Delta x = \\frac{\\lambda L}{d}$"
@@ -569,7 +569,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t11_s1",
           "topicId": "phys_s_t11",
           "level": 1,
-          "name": "11.1 การสะท้อนของแสง กระจกเงาราบ และกระจกโค้ง (เว้า/นูน)",
+          "name": "การสะท้อนของแสง กระจกเงาราบ และกระจกโค้ง (เว้า/นูน)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "กระจกเว้า ($f > 0$) เกิดทั้งภาพจริงและภาพเสมือน, กระจกนูน ($f < 0$) เกิดเฉพาะภาพเสมือนขนาดเล็กกว่าวัตถุ, สูตรกระจก $\\frac{1}{f} = \\frac{1}{s} + \\frac{1}{s'}$"
@@ -627,7 +627,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t12_s1",
           "topicId": "phys_s_t12",
           "level": 1,
-          "name": "12.1 อัตราเร็วของเสียงและสมบัติของเสียง",
+          "name": "อัตราเร็วของเสียงและสมบัติของเสียง",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "อัตราเร็วเสียงในอากาศ $v = 331 + 0.6T_c\\text{ m/s}$, การสะท้อน (เสียงก้อง Echo เมื่อ $t \\ge 0.1\\text{ s}$), การหักเหเลี้ยวเบน"
@@ -685,7 +685,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t13_s1",
           "topicId": "phys_s_t13",
           "level": 1,
-          "name": "13.1 กฎของคูลอมบ์ ($F = \\frac{k|q_1 q_2|}{r^2}$) และสนามไฟฟ้า ($\\vec{E} = \\frac{kQ}{r^2}$)",
+          "name": "กฎของคูลอมบ์ ($F = \\frac{k|q_1 q_2|}{r^2}$) และสนามไฟฟ้า ($\\vec{E} = \\frac{kQ}{r^2}$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ค่าคงที่ $k = 9 \\times 10^9\\text{ N}\\cdot\\text{m}^2/\\text{C}^2$, เวกเตอร์สนามไฟฟ้าพุ่งออกจากประจุบวกเข้าหาประจุลบ, จุดสะเทิน ($E=0$)"
@@ -733,7 +733,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t14_s1",
           "topicId": "phys_s_t14",
           "level": 1,
-          "name": "14.1 กระแสไฟฟ้า ($I = \\frac{Q}{t} = neAv_d$) และกฎของโอห์ม ($V = IR$)",
+          "name": "กระแสไฟฟ้า ($I = \\frac{Q}{t} = neAv_d$) และกฎของโอห์ม ($V = IR$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ความเร็วลอยเลื่อน $v_d$, ความต้านทาน $R = \\rho \\frac{l}{A}$, สภาพต้านทาน $\\rho$, ผลของอุณหภูมิต่อความต้านทาน"
@@ -801,7 +801,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t15_s1",
           "topicId": "phys_s_t15",
           "level": 1,
-          "name": "15.1 ฟลักซ์แม่เหล็ก ($\\Phi = BA\\cos\\theta$) และแรงแม่เหล็กกระทำต่อประจุ ($F = qvB\\sin\\theta$)",
+          "name": "ฟลักซ์แม่เหล็ก ($\\Phi = BA\\cos\\theta$) และแรงแม่เหล็กกระทำต่อประจุ ($F = qvB\\sin\\theta$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "กฎมือขวาหาทิศทางของแรง $\\vec{F} = q(\\vec{v} \\times \\vec{B})$, รัศมีความโค้งของประจุในสนามแม่เหล็ก $R = \\frac{mv}{qB}$"
@@ -859,7 +859,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t16_s1",
           "topicId": "phys_s_t16",
           "level": 1,
-          "name": "16.1 ความร้อนจำเพาะ ($Q = mc\\Delta T$), ความร้อนแฝง ($Q = mL$) และสมดุลความร้อน",
+          "name": "ความร้อนจำเพาะ ($Q = mc\\Delta T$), ความร้อนแฝง ($Q = mL$) และสมดุลความร้อน",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การเปลี่ยนอุณหภูมิและการเปลี่ยนสถานะ, การถ่ายโอนความร้อน นำ พา แผ่รังสี, กฎสมดุลความร้อน $Q_{\\text{คาย}} = Q_{\\text{ดูด}}$"
@@ -917,7 +917,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t17_s1",
           "topicId": "phys_s_t17",
           "level": 1,
-          "name": "17.1 สภาพยืดหยุ่นของของแข็ง: ความเค้น ความเครียด และยังมอดูลัส ($Y = \\frac{\\sigma}{\\epsilon}$)",
+          "name": "สภาพยืดหยุ่นของของแข็ง: ความเค้น ความเครียด และยังมอดูลัส ($Y = \\frac{\\sigma}{\\epsilon}$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ความเค้น $\\sigma = \\frac{F}{A}$, ความเครียด $\\epsilon = \\frac{\\Delta L}{L}$, ยังมอดูลัส $Y = \\frac{FL}{A\\Delta L}$, ขีดจำกัดสภาพยืดหยุ่น"
@@ -985,7 +985,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t18_s1",
           "topicId": "phys_s_t18",
           "level": 1,
-          "name": "18.1 สเปกตรัมคลื่นแม่เหล็กไฟฟ้าและการแผ่คลื่น",
+          "name": "สเปกตรัมคลื่นแม่เหล็กไฟฟ้าและการแผ่คลื่น",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การเหนี่ยวนำร่วมระหว่างสนามไฟฟ้าและสนามแม่เหล็กตั้งฉากกัน, อัตราเร็วแสง $c = 3 \\times 10^8\\text{ m/s}$, ลำดับคลื่น: วิทยุ ไมโครเวฟ อินฟราเรด แสงที่ตามองเห็น ยูวี รังสีเอกซ์ แกมมา"
@@ -1023,7 +1023,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t19_s1",
           "topicId": "phys_s_t19",
           "level": 1,
-          "name": "19.1 รังสีวัตถุดำ ทฤษฎีควอนตัมของพลังค์ และโฟตอน ($E = hf = \\frac{hc}{\\lambda}$)",
+          "name": "รังสีวัตถุดำ ทฤษฎีควอนตัมของพลังค์ และโฟตอน ($E = hf = \\frac{hc}{\\lambda}$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ค่าคงที่พลังค์ $h = 6.63 \\times 10^{-34}\\text{ J}\\cdot\\text{s}$, ค่าพลังงานในหน่วยอิเล็กตรอนโวลต์ ($1\\text{ eV} = 1.6 \\times 10^{-19}\\text{ J}$), สูตรลัด $E(\\text{eV}) = \\frac{1240}{\\lambda(\\text{nm})}$"
@@ -1081,7 +1081,7 @@ export const COURSE_PHYS_SENIOR: Course = {
           "id": "phys_s_t20_s1",
           "topicId": "phys_s_t20",
           "level": 1,
-          "name": "20.1 แรงนิวเคลียร์ ส่วนพร่องมวล ($\\Delta m$) และพลังงานยึดเหนี่ยว ($BE = \\Delta m c^2$)",
+          "name": "แรงนิวเคลียร์ ส่วนพร่องมวล ($\\Delta m$) และพลังงานยึดเหนี่ยว ($BE = \\Delta m c^2$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "หน่วยมวลอะตอม $1\\text{ u} = 931.5\\text{ MeV}$, พลังงานยึดเหนี่ยวต่อนิวคลีออน $\\frac{BE}{A}$, ความเสถียรสูงสุดบริเวณนิวเคลียสของเหล็ก ($^{56}\\text{Fe}$)"

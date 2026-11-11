@@ -20,7 +20,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t1_s1",
           "topicId": "math_s_t1",
           "level": 1,
-          "name": "1.1 ความรู้เบื้องต้นและสัญลักษณ์พื้นฐานเกี่ยวกับเซต",
+          "name": "ความรู้เบื้องต้นและสัญลักษณ์พื้นฐานเกี่ยวกับเซต",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การเขียนเซตแบบแจกแจงสมาชิกและแบบบอกเงื่อนไข สมาชิก $\\in$, $\\notin$, เซตจำกัด เซตอนันต์ และเซตว่าง $\\emptyset$"
@@ -59,7 +59,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t1_s2",
           "topicId": "math_s_t1",
           "level": 1,
-          "name": "1.2 การดำเนินการของเซตและแผนภาพเวนน์ (Venn Diagrams)",
+          "name": "การดำเนินการของเซตและแผนภาพเวนน์ (Venn Diagrams)",
           "sortOrder": 5,
           "difficulty": "basic",
           "description": "ยูเนียน ($A \\cup B$), อินเตอร์เซกชัน ($A \\cap B$), คอมพลีเมนต์ ($A'$), และผลต่าง ($A - B$)"
@@ -107,7 +107,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t2_s1",
           "topicId": "math_s_t2",
           "level": 1,
-          "name": "2.1 ประพจน์และตัวเชื่อมประพจน์ (Logical Connectives)",
+          "name": "ประพจน์และตัวเชื่อมประพจน์ (Logical Connectives)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "นิยามประพจน์ ค่าความจริงจริง ($T$) เท็จ ($F$) ตัวเชื่อม $\\land, \\lor, \\to, \\leftrightarrow, \\sim$"
@@ -146,7 +146,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t2_s2",
           "topicId": "math_s_t2",
           "level": 1,
-          "name": "2.2 การอ้างเหตุผลและตัวบ่งปริมาณ (Quantifiers)",
+          "name": "การอ้างเหตุผลและตัวบ่งปริมาณ (Quantifiers)",
           "sortOrder": 5,
           "difficulty": "intermediate",
           "description": "การตรวจสอบความสมเหตุสมผลของการอ้างเหตุผล ประโยคเปิด และตัวบ่งปริมาณ $\\forall, \\exists$"
@@ -194,7 +194,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t3_s1",
           "topicId": "math_s_t3",
           "level": 1,
-          "name": "3.1 ระบบจำนวนจริงและทฤษฎีบทเศษเหลือ-ตัวประกอบ",
+          "name": "ระบบจำนวนจริงและทฤษฎีบทเศษเหลือ-ตัวประกอบ",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "สมบัติทางพีชคณิต ทฤษฎีบทเศษเหลือ (Remainder Theorem) และทฤษฎีบทตัวประกอบ (Factor Theorem)"
@@ -223,7 +223,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t3_s2",
           "topicId": "math_s_t3",
           "level": 1,
-          "name": "3.2 สมการและอสมการเศษส่วนพหุนาม (Rational Inequalities)",
+          "name": "สมการและอสมการเศษส่วนพหุนาม (Rational Inequalities)",
           "sortOrder": 4,
           "difficulty": "intermediate",
           "description": "การจัดรูป $\\frac{P(x)}{Q(x)} \\ge 0$ การคูณด้วย $Q(x)^2$ และเงื่อนไขตัวส่วนห้ามเป็นศูนย์ ($Q(x) \\neq 0$)"
@@ -261,7 +261,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t4_s1",
           "topicId": "math_s_t4",
           "level": 1,
-          "name": "4.1 ผลคูณคาร์ทีเซียน ความสัมพันธ์ โดเมน และเรนจ์",
+          "name": "ผลคูณคาร์ทีเซียน ความสัมพันธ์ โดเมน และเรนจ์",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "คู่อันดับ $(a, b)$, $A \\times B$, ความสัมพันธ์ $r \\subset A \\times B$, โดเมน $D_r$ และเรนจ์ $R_r$"
@@ -290,7 +290,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t4_s2",
           "topicId": "math_s_t4",
           "level": 1,
-          "name": "4.2 พีชคณิตของฟังก์ชัน ฟังก์ชันประกอบ (Composite) และฟังก์ชันผกผัน (Inverse)",
+          "name": "พีชคณิตของฟังก์ชัน ฟังก์ชันประกอบ (Composite) และฟังก์ชันผกผัน (Inverse)",
           "sortOrder": 4,
           "difficulty": "intermediate",
           "description": "การบวก ลบ คูณ หารฟังก์ชัน, โดเมน $D_{f \\pm g}$, ฟังก์ชันประกอบ $(g \\circ f)(x) = g(f(x))$"
@@ -328,7 +328,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t5_s1",
           "topicId": "math_s_t5",
           "level": 1,
-          "name": "5.1 เลขยกกำลังและฟังก์ชันเอกซ์โพเนนเชียล ($y = a^x$)",
+          "name": "เลขยกกำลังและฟังก์ชันเอกซ์โพเนนเชียล ($y = a^x$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "สมบัติเลขยกกำลัง กรณฑ์ กราฟเอกซ์โพเนนเชียล: ฟังก์ชันเพิ่ม ($a > 1$) vs ฟังก์ชันลด ($0 < a < 1$)"
@@ -347,7 +347,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t5_s2",
           "topicId": "math_s_t5",
           "level": 1,
-          "name": "5.2 ฟังก์ชันลอการิทึม ($y = \\log_a x$) และสมบัติของลอการิทึม",
+          "name": "ฟังก์ชันลอการิทึม ($y = \\log_a x$) และสมบัติของลอการิทึม",
           "sortOrder": 3,
           "difficulty": "basic",
           "description": "นิยามลอการิทึมในฐานะอินเวอร์สของเอกซ์โพเนนเชียล $\\log_a x = y \\iff a^y = x$, ข้อกำหนดหลังล็อก $x > 0$ และฐาน $a > 0, a \\neq 1$"
@@ -395,7 +395,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t6_s1",
           "topicId": "math_s_t6",
           "level": 1,
-          "name": "6.1 เรขาคณิตวิเคราะห์บนระนาบพิกัดฉาก",
+          "name": "เรขาคณิตวิเคราะห์บนระนาบพิกัดฉาก",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ระยะห่างระหว่างจุด $d = \\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}$, จุดกึ่งกลาง, จุดตัดตามอัตราส่วน, ความชัน $m = \\frac{y_2-y_1}{x_2-x_1}$"
@@ -414,7 +414,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t6_s2",
           "topicId": "math_s_t6",
           "level": 1,
-          "name": "6.2 ภาคตัดกรวย: วงกลมและพาราโบลา",
+          "name": "ภาคตัดกรวย: วงกลมและพาราโบลา",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "สมการมาตรฐานและทั่วไปของวงกลม $(x-h)^2 + (y-k)^2 = r^2$, พาราโบลา $(y-k)^2 = 4c(x-h)$ จุดยอด โฟกัส และไดเรกตริกซ์"
@@ -462,7 +462,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t7_s1",
           "topicId": "math_s_t7",
           "level": 1,
-          "name": "7.1 วงกลมหนึ่งหน่วยและการวัดมุม (เรเดียน vs องศา)",
+          "name": "วงกลมหนึ่งหน่วยและการวัดมุม (เรเดียน vs องศา)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "การแปลง $\\pi \\text{ rad} = 180^\\circ$, พิกัด $(\\cos \\theta, \\sin \\theta)$ บนวงกลมหนึ่งหน่วย $x^2 + y^2 = 1$, จตุภาค 1-4"
@@ -491,7 +491,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t7_s2",
           "topicId": "math_s_t7",
           "level": 1,
-          "name": "7.2 กราฟตรีโกณมิติและฟังก์ชันตรีโกณมิติผกผัน (Inverse Trig)",
+          "name": "กราฟตรีโกณมิติและฟังก์ชันตรีโกณมิติผกผัน (Inverse Trig)",
           "sortOrder": 4,
           "difficulty": "intermediate",
           "description": "คาบ แอมพลิจูด ของฟังก์ชันคลื่น, โดเมนและเรนจ์ของ $\\arcsin x, \\arccos x, \\arctan x$"
@@ -529,7 +529,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t8_s1",
           "topicId": "math_s_t8",
           "level": 1,
-          "name": "8.1 ความรู้เบื้องต้นและการดำเนินการบนเมทริกซ์",
+          "name": "ความรู้เบื้องต้นและการดำเนินการบนเมทริกซ์",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "มิติ $m \\times n$, เมทริกซ์แถว หลัก จัตุรัส เอกลักษณ์, การบวก ลบ การคูณด้วยสเกลาร์ และทรานสโพส ($A^t$)"
@@ -548,7 +548,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t8_s2",
           "topicId": "math_s_t8",
           "level": 1,
-          "name": "8.2 ดีเทอร์มิแนนต์ (Determinant: $\\det(A)$) และอินเวิร์สการคูณ ($A^{-1}$)",
+          "name": "ดีเทอร์มิแนนต์ (Determinant: $\\det(A)$) และอินเวิร์สการคูณ ($A^{-1}$)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "การหาดีเทอร์มิแนนต์ขนาด $2 \\times 2$ และ $3 \\times 3$, ไมเนอร์ $M_{ij}$, โคแฟกเตอร์ $C_{ij}$, และเมทริกซ์ผูกพัน $\\operatorname{adj}(A)$"
@@ -596,7 +596,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t9_s1",
           "topicId": "math_s_t9",
           "level": 1,
-          "name": "9.1 ระบบพิกัดฉากสามมิติและเวกเตอร์เบื้องต้น",
+          "name": "ระบบพิกัดฉากสามมิติและเวกเตอร์เบื้องต้น",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "แกน $X, Y, Z$, อัฐภาค (Octants), การเขียนเวกเตอร์ในรูป $\\begin{bmatrix} a \\\\ b \\\\ c \\end{bmatrix}$ หรือ $a\\hat{i} + b\\hat{j} + c\\hat{k}$"
@@ -615,7 +615,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t9_s2",
           "topicId": "math_s_t9",
           "level": 1,
-          "name": "9.2 ผลคูณเชิงสเกลาร์ (Dot Product: $\\vec{u} \\cdot \\vec{v}$)",
+          "name": "ผลคูณเชิงสเกลาร์ (Dot Product: $\\vec{u} \\cdot \\vec{v}$)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "นิยาม $\\vec{u} \\cdot \\vec{v} = u_1 v_1 + u_2 v_2 + u_3 v_3 = |\\vec{u}||\\vec{v}| \\cos \\theta$, การตรวจสอบเวกเตอร์ตั้งฉาก ($\\vec{u} \\cdot \\vec{v} = 0$)"
@@ -653,7 +653,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t10_s1",
           "topicId": "math_s_t10",
           "level": 1,
-          "name": "10.1 พีชคณิตของจำนวนเชิงซ้อนและสังยุค (Conjugate)",
+          "name": "พีชคณิตของจำนวนเชิงซ้อนและสังยุค (Conjugate)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "หน่วยจินตภาพ $i = \\sqrt{-1}, i^2 = -1, i^3 = -i, i^4 = 1$, รูปมาตรฐาน $z = a + bi$, สังยุค $\\bar{z} = a - bi$, ค่าสัมบูรณ์ $|z| = \\sqrt{a^2 + b^2}$"
@@ -672,7 +672,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t10_s2",
           "topicId": "math_s_t10",
           "level": 1,
-          "name": "10.2 รูปเชิงขั้ว (Polar Form) และทฤษฎีบทของเดอมัวฟ์ (De Moivre's Theorem)",
+          "name": "รูปเชิงขั้ว (Polar Form) และทฤษฎีบทของเดอมัวฟ์ (De Moivre's Theorem)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "การแปลง $z = r(\\cos \\theta + i\\sin \\theta) = r\\operatorname{cis}\\theta$, ทฤษฎีเดอมัวฟ์ $z^n = r^n(\\cos n\\theta + i\\sin n\\theta)$"
@@ -720,7 +720,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t11_s1",
           "topicId": "math_s_t11",
           "level": 1,
-          "name": "11.1 กฎการนับเบื้องต้นและการเรียงสับเปลี่ยน (Permutations: $P_{n, r}$)",
+          "name": "กฎการนับเบื้องต้นและการเรียงสับเปลี่ยน (Permutations: $P_{n, r}$)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "หลักการบวก หลักการคูณ แฟกทอเรียล $n!$, การเรียงสับเปลี่ยนสิ่งของแตกต่างกันทั้งหมด $P_{n, r} = \\frac{n!}{(n-r)!}$"
@@ -749,7 +749,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t11_s2",
           "topicId": "math_s_t11",
           "level": 1,
-          "name": "11.2 ความน่าจะเป็นของเหตุการณ์ (Probability: $P(E)$)",
+          "name": "ความน่าจะเป็นของเหตุการณ์ (Probability: $P(E)$)",
           "sortOrder": 4,
           "difficulty": "basic",
           "description": "การทดลองสุ่ม ปริภูมิตัวอย่าง ($S$) เหตุการณ์ ($E$) สูตรพื้นฐาน $P(E) = \\frac{n(E)}{n(S)}$, กฎ $0 \\le P(E) \\le 1$"
@@ -787,7 +787,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t12_s1",
           "topicId": "math_s_t12",
           "level": 1,
-          "name": "12.1 ลำดับเลขคณิตและลำดับเรขาคณิต (Arithmetic & Geometric Sequences)",
+          "name": "ลำดับเลขคณิตและลำดับเรขาคณิต (Arithmetic & Geometric Sequences)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "พจน์ทั่วไปลำดับเลขคณิต $a_n = a_1 + (n-1)d$, ลำดับเรขาคณิต $a_n = a_1 r^{n-1}$, พจน์กลางเลขคณิต/เรขาคณิต"
@@ -806,7 +806,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t12_s2",
           "topicId": "math_s_t12",
           "level": 1,
-          "name": "12.2 อนุกรมจำกัดและอนุกรมอนันต์ (Series & Telescopic Sum)",
+          "name": "อนุกรมจำกัดและอนุกรมอนันต์ (Series & Telescopic Sum)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "สัญลักษณ์ $\\sum$, ผลบวก $n$ พจน์แรก $S_n = \\frac{n}{2}(a_1 + a_n)$, $S_n = \\frac{a_1(1-r^n)}{1-r}$, ผลบวกอนุกรมอนันต์เรขาคณิต $S_\\infty = \\frac{a_1}{1-r}$ ($|r| < 1$)"
@@ -854,7 +854,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t13_s1",
           "topicId": "math_s_t13",
           "level": 1,
-          "name": "13.1 ลิมิตและความต่อเนื่องของฟังก์ชัน (Limits & Continuity)",
+          "name": "ลิมิตและความต่อเนื่องของฟังก์ชัน (Limits & Continuity)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ลิมิตซ้าย $\\lim_{x \\to a^-} f(x)$, ลิมิตขวา $\\lim_{x \\to a^+} f(x)$, รูปแบบยังไม่กำหนด $\\frac{0}{0}$, ความต่อเนื่อง 3 เงื่อนไข"
@@ -873,7 +873,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t13_s2",
           "topicId": "math_s_t13",
           "level": 1,
-          "name": "13.2 อนุพันธ์ของฟังก์ชัน (Differential Calculus: $f'(x)$)",
+          "name": "อนุพันธ์ของฟังก์ชัน (Differential Calculus: $f'(x)$)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "นิยามอนุพันธ์ $f'(x) = \\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}$, กฎผลคูณ $(uv)'$, กฎผลหาร $(u/v)'$, และกฎลูกโซ่ (Chain Rule)"
@@ -892,7 +892,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t13_s3",
           "topicId": "math_s_t13",
           "level": 1,
-          "name": "13.3 ปริพันธ์ของฟังก์ชัน (Integral Calculus: $\\int f(x) dx$)",
+          "name": "ปริพันธ์ของฟังก์ชัน (Integral Calculus: $\\int f(x) dx$)",
           "sortOrder": 5,
           "difficulty": "intermediate",
           "description": "ปฏิยานุพันธ์และปริพันธ์ไม่จำกัดเขต $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$, ปริพันธ์จำกัดเขต $\\int_a^b f(x) dx = F(b) - F(a)$"
@@ -930,7 +930,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t14_s1",
           "topicId": "math_s_t14",
           "level": 1,
-          "name": "14.1 ข้อมูลและการนำเสนอข้อมูล (Data Presentation)",
+          "name": "ข้อมูลและการนำเสนอข้อมูล (Data Presentation)",
           "sortOrder": 1,
           "difficulty": "basic",
           "description": "ประเภทข้อมูล (เชิงปริมาณ vs เชิงคุณภาพ), ประชากร vs กลุ่มตัวอย่าง, ตารางความถี่ ฮิสโทแกรม แผนภาพลำต้นและใบ และแผนภาพกล่อง (Box Plot)"
@@ -949,7 +949,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t14_s2",
           "topicId": "math_s_t14",
           "level": 1,
-          "name": "14.2 ค่าวัดแนวโน้มเข้าสู่ส่วนกลาง (Central Tendency)",
+          "name": "ค่าวัดแนวโน้มเข้าสู่ส่วนกลาง (Central Tendency)",
           "sortOrder": 3,
           "difficulty": "basic",
           "description": "ค่าเฉลี่ยเลขคณิต ($\\bar{x}$), มัธยฐาน ($Med$), ฐานนิยม ($Mode$), ค่าเฉลี่ยถ่วงน้ำหนัก, และการเลือกใช้ค่ากลางที่เหมาะสมกับลักษณะข้อมูล"
@@ -997,7 +997,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t15_s1",
           "topicId": "math_s_t15",
           "level": 1,
-          "name": "15.1 ตัวแปรสุ่มไม่ต่อเนื่องและการแจกแจงทวินาม (Binomial Distribution)",
+          "name": "ตัวแปรสุ่มไม่ต่อเนื่องและการแจกแจงทวินาม (Binomial Distribution)",
           "sortOrder": 1,
           "difficulty": "intermediate",
           "description": "นิยามตัวแปรสุ่ม, ฟังก์ชันมวลความน่าจะเป็น, ค่าคาดหมาย $\\mu = E(X) = \\sum x P(X=x)$, ความแปรปรวน $\\sigma^2$"
@@ -1016,7 +1016,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t15_s2",
           "topicId": "math_s_t15",
           "level": 1,
-          "name": "15.2 ตัวแปรสุ่มต่อเนื่องและการแจกแจงปกติ (Normal Distribution)",
+          "name": "ตัวแปรสุ่มต่อเนื่องและการแจกแจงปกติ (Normal Distribution)",
           "sortOrder": 3,
           "difficulty": "intermediate",
           "description": "ฟังก์ชันความหนาแน่นความน่าจะเป็น, โค้งความหนาแน่นรูประฆังคว่ำสมมาตรรอบค่าเฉลี่ย, พื้นที่ใต้โค้งทั้งหมดเท่ากับ 1"
@@ -1054,7 +1054,7 @@ export const COURSE_MATH_SENIOR: Course = {
           "id": "math_s_t16_s1",
           "topicId": "math_s_t16",
           "level": 1,
-          "name": "16.1 การบูรณาการข้ามบทและการสร้างแบบจำลองทางคณิตศาสตร์ (Mathematical Modeling)",
+          "name": "การบูรณาการข้ามบทและการสร้างแบบจำลองทางคณิตศาสตร์ (Mathematical Modeling)",
           "sortOrder": 1,
           "difficulty": "advanced",
           "description": "การแปลงโจทย์สถานการณ์ชีวิตจริงสู่อสมการ ฟังก์ชัน เมทริกซ์ หรือแคลคูลัส"

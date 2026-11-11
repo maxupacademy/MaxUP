@@ -19,7 +19,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t1_s1",
           "level": 1,
-          "name": "1.1 โครงสร้างจำนวนจริงและจำนวนเต็ม (สสวท. ม.1)",
+          "name": "โครงสร้างจำนวนจริงและจำนวนเต็ม (สสวท. ม.1)",
           "difficulty": "basic",
           "description": "ระบบจำนวนเต็ม การเปรียบเทียบ ค่าสัมบูรณ์ $|a|$ และการดำเนินการ บวก ลบ คูณ หาร",
           "topicId": "math_j_t1",
@@ -58,7 +58,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t1_s2",
           "level": 1,
-          "name": "1.2 ห.ร.ม. และ ค.ร.น. ขั้นสูง (GCD & LCM)",
+          "name": "ห.ร.ม. และ ค.ร.น. ขั้นสูง (GCD & LCM)",
           "difficulty": "intermediate",
           "description": "การแยกตัวประกอบเฉพาะ การตั้งหารสั้น และขั้นตอนวิธียูคลิด (Euclidean Algorithm)",
           "topicId": "math_j_t1",
@@ -107,7 +107,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t1_s3",
           "level": 1,
-          "name": "1.3 เลขคณิตมอดุโล (Modular Arithmetic) & การหารลงตัว",
+          "name": "เลขคณิตมอดุโล (Modular Arithmetic) & การหารลงตัว",
           "difficulty": "advanced",
           "description": "ความสัมพันธ์คอนกรูเอนซ์ $a \\equiv b \\pmod m$, กฎการหารลงตัว และการหาเศษเลขยกกำลังสูง",
           "topicId": "math_j_t1",
@@ -146,7 +146,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t1_s4",
           "level": 1,
-          "name": "1.4 สมการไดโอแฟนไทน์เชิงเส้น & ระบบตัวเลขฐาน (Base Numbers)",
+          "name": "สมการไดโอแฟนไทน์เชิงเส้น & ระบบตัวเลขฐาน (Base Numbers)",
           "difficulty": "advanced",
           "description": "สมการผลเฉลยจำนวนเต็ม $ax + by = c$ และการแปลงระบบตัวเลขฐาน 2, 8, 10, 16",
           "topicId": "math_j_t1",
@@ -194,7 +194,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t2_s1",
           "level": 1,
-          "name": "2.1 สมบัติเลขยกกำลังและสัญกรณ์วิทยาศาสตร์ (สสวท. ม.1 & ม.2)",
+          "name": "สมบัติเลขยกกำลังและสัญกรณ์วิทยาศาสตร์ (สสวท. ม.1 & ม.2)",
           "difficulty": "basic",
           "description": "นิยามเลขยกกำลัง $a^n = a \\times a \\times \\dots \\times a$, สมบัติผลคูณ $a^m \\cdot a^n = a^{m+n}$, $a^0 = 1$, $a^{-n} = \\frac{1}{a^n}$",
           "topicId": "math_j_t2",
@@ -233,7 +233,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t2_s2",
           "level": 1,
-          "name": "2.2 สมการเลขยกกำลัง (Exponential Equations)",
+          "name": "สมการเลขยกกำลัง (Exponential Equations)",
           "difficulty": "intermediate",
           "description": "การแก้สมการเลขยกกำลังรูปแบบฐานเท่ากัน $a^{f(x)} = a^{g(x)} \\implies f(x) = g(x)$ และการแปลงตัวแปร $u = a^x$",
           "topicId": "math_j_t2",
@@ -272,7 +272,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t2_s3",
           "level": 1,
-          "name": "2.3 รากที่สอง รากที่สาม และสมบัติของกรณฑ์ (สสวท. ม.2)",
+          "name": "รากที่สอง รากที่สาม และสมบัติของกรณฑ์ (สสวท. ม.2)",
           "difficulty": "basic",
           "description": "นิยามของรากที่ $n$, ค่าหลักของกรณฑ์, และสมบัติสำคัญ $\\sqrt{a^2} = |a|$, $\\sqrt{ab} = \\sqrt{a}\\sqrt{b}$",
           "topicId": "math_j_t2",
@@ -320,7 +320,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t3_s1",
           "level": 1,
-          "name": "3.1 อัตราส่วนและสัดส่วน (สสวท. ม.1 เล่ม 2)",
+          "name": "อัตราส่วนและสัดส่วน (สสวท. ม.1 เล่ม 2)",
           "difficulty": "basic",
           "description": "ความหมายของอัตราส่วน $a : b = \\frac{a}{b}$, อัตราส่วนที่เท่ากัน และสัดส่วนตรง-สัดส่วนผกผัน",
           "topicId": "math_j_t3",
@@ -359,7 +359,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t3_s2",
           "level": 1,
-          "name": "3.2 ร้อยละและการประยุกต์เชิงพาณิชย์ (Commercial Math)",
+          "name": "ร้อยละและการประยุกต์เชิงพาณิชย์ (Commercial Math)",
           "difficulty": "intermediate",
           "description": "ทุน ราคาขาย ราคาป้าย กำไร ขาดทุน ส่วนลด ภาษี และดอกเบี้ย",
           "topicId": "math_j_t3",
@@ -398,7 +398,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t3_s3",
           "level": 1,
-          "name": "3.3 โจทย์ปัญหาการทำงานและการผสมสาร (Work & Mixture Problems)",
+          "name": "โจทย์ปัญหาการทำงานและการผสมสาร (Work & Mixture Problems)",
           "difficulty": "advanced",
           "description": "โจทย์ปัญหาคลาสสิกที่ออกสอบแข่งขันคัดเลือกเข้า ม.4 ทุกสนาม",
           "topicId": "math_j_t3",
@@ -456,7 +456,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t4_s1",
           "level": 1,
-          "name": "4.1 สมการเชิงเส้นตัวแปรเดียวและการแก้โจทย์ปัญหา (สสวท. ม.1)",
+          "name": "สมการเชิงเส้นตัวแปรเดียวและการแก้โจทย์ปัญหา (สสวท. ม.1)",
           "difficulty": "basic",
           "description": "การเตรียมความพร้อมก่อนรู้จักสมการ การแก้สมการติดเศษส่วนและวงเล็บ สมบัติการเท่ากัน",
           "topicId": "math_j_t4",
@@ -495,7 +495,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t4_s2",
           "level": 1,
-          "name": "4.2 อสมการเชิงเส้นตัวแปรเดียว (สสวท. ม.3 เล่ม 1)",
+          "name": "อสมการเชิงเส้นตัวแปรเดียว (สสวท. ม.3 เล่ม 1)",
           "difficulty": "basic",
           "description": "ความหมายของอสมการ เครื่องหมาย $<, \\le, >, \\ge, \\neq$ และสมบัติการคูณด้วยจำนวนลบ (กลับทิศเครื่องหมาย)",
           "topicId": "math_j_t4",
@@ -534,7 +534,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t4_s3",
           "level": 1,
-          "name": "4.3 สมการและอสมการค่าสัมบูรณ์ (Absolute Value Equations)",
+          "name": "สมการและอสมการค่าสัมบูรณ์ (Absolute Value Equations)",
           "difficulty": "advanced",
           "description": "นิยามเชิงเรขาคณิตของระยะห่างบนเส้นจำนวน $|x| = \\text{dist}(x, 0)$ และการแก้สมการ $|f(x)| = g(x)$",
           "topicId": "math_j_t4",
@@ -582,7 +582,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t5_s1",
           "level": 1,
-          "name": "5.1 ระบบสมการเชิงเส้นสองตัวแปร (สสวท. ม.3 เล่ม 2)",
+          "name": "ระบบสมการเชิงเส้นสองตัวแปร (สสวท. ม.3 เล่ม 2)",
           "difficulty": "basic",
           "description": "รูปมาตรฐาน $a_1 x + b_1 y = c_1$ และ $a_2 x + b_2 y = c_2$ นิยามของคำตอบคู่ลำดับ $(x, y)$",
           "topicId": "math_j_t5",
@@ -621,7 +621,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t5_s2",
           "level": 1,
-          "name": "5.2 โจทย์ปัญหาระบบสมการเชิงเส้นสองตัวแปรประยุกต์",
+          "name": "โจทย์ปัญหาระบบสมการเชิงเส้นสองตัวแปรประยุกต์",
           "difficulty": "intermediate",
           "description": "การแปลงโจทย์ภาษาไทยให้เป็นระบบสมการสองตัวแปร",
           "topicId": "math_j_t5",
@@ -660,7 +660,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t5_s3",
           "level": 1,
-          "name": "5.3 ระบบสมการสองตัวแปรดีกรีสอง (Non-Linear Systems)",
+          "name": "ระบบสมการสองตัวแปรดีกรีสอง (Non-Linear Systems)",
           "difficulty": "advanced",
           "description": "ระบบสมการที่มีตัวแปรกำลังสอง หรือผลคูณของตัวแปร $xy$",
           "topicId": "math_j_t5",
@@ -708,7 +708,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t6_s1",
           "level": 1,
-          "name": "6.1 พหุนามและการดำเนินการ (สสวท. ม.2)",
+          "name": "พหุนามและการดำเนินการ (สสวท. ม.2)",
           "difficulty": "basic",
           "description": "เอกนาม พหุนาม ดีกรี การบวก ลบ คูณ และการหารพหุนามด้วยเอกนาม/พหุนาม",
           "topicId": "math_j_t6",
@@ -727,7 +727,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t6_s2",
           "level": 1,
-          "name": "6.2 การแยกตัวประกอบพหุนามดีกรีสอง (สสวท. ม.2 เล่ม 2)",
+          "name": "การแยกตัวประกอบพหุนามดีกรีสอง (สสวท. ม.2 เล่ม 2)",
           "difficulty": "intermediate",
           "description": "การดึงตัวคูณร่วม การแยกสองวงเล็บ กำลังสองสมบูรณ์ และผลต่างกำลังสอง",
           "topicId": "math_j_t6",
@@ -756,7 +756,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t6_s3",
           "level": 1,
-          "name": "6.3 การแยกตัวประกอบดีกรีสูงกว่าสอง & เทคนิคพิเศษ (สสวท. ม.3 เล่ม 1)",
+          "name": "การแยกตัวประกอบดีกรีสูงกว่าสอง & เทคนิคพิเศษ (สสวท. ม.3 เล่ม 1)",
           "difficulty": "advanced",
           "description": "ผลบวก-ผลต่างกำลังสาม การจัดกลุ่มตัวแปร และการบวกเข้า-หักออก",
           "topicId": "math_j_t6",
@@ -795,7 +795,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t6_s4",
           "level": 1,
-          "name": "6.4 ทฤษฎีบทเศษเหลือและการหารสังเคราะห์ (Remainder Theorem & Synthetic Division)",
+          "name": "ทฤษฎีบทเศษเหลือและการหารสังเคราะห์ (Remainder Theorem & Synthetic Division)",
           "difficulty": "advanced",
           "description": "ทฤษฎีบทเศษเหลือ $P(c)$, ทฤษฎีบทตัวประกอบ และการหารสังเคราะห์ลดทอนดีกรี",
           "topicId": "math_j_t6",
@@ -834,7 +834,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t6_s5",
           "level": 1,
-          "name": "6.5 ผลบวกและผลคูณของรากพหุนาม: สูตรของเวียตา (Vieta’s Formulas for Polynomials)",
+          "name": "ผลบวกและผลคูณของรากพหุนาม: สูตรของเวียตา (Vieta’s Formulas for Polynomials)",
           "difficulty": "advanced",
           "description": "ความสัมพันธ์ระหว่างรากของสมการพหุนามดีกรี $n$ กับสัมประสิทธิ์ของพหุนาม",
           "topicId": "math_j_t6",
@@ -892,7 +892,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t7_s1",
           "level": 1,
-          "name": "7.1 สมการกำลังสองตัวแปรเดียวและการหาคำตอบ (สสวท. ม.3 เล่ม 1)",
+          "name": "สมการกำลังสองตัวแปรเดียวและการหาคำตอบ (สสวท. ม.3 เล่ม 1)",
           "difficulty": "basic",
           "description": "รูปทั่วไป $ax^2 + bx + c = 0$ ($a \\neq 0$) วิธีแยกตัวประกอบ และวิธีกำลังสองสมบูรณ์",
           "topicId": "math_j_t7",
@@ -921,7 +921,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t7_s2",
           "level": 1,
-          "name": "7.2 การประยุกต์สูตรของเวียตากับสมการกำลังสอง ($x_1 + x_2 = -\\frac{b}{a}, x_1 x_2 = \\frac{c}{a}$)",
+          "name": "การประยุกต์สูตรของเวียตากับสมการกำลังสอง ($x_1 + x_2 = -\\frac{b}{a}, x_1 x_2 = \\frac{c}{a}$)",
           "difficulty": "intermediate",
           "description": "การหาค่า $x_1^2 + x_2^2 = (x_1+x_2)^2 - 2x_1x_2$, $\\frac{1}{x_1} + \\frac{1}{x_2} = \\frac{x_1+x_2}{x_1x_2}$ และ $|x_1 - x_2| = \\frac{\\sqrt{b^2-4ac}}{|a|}$",
           "topicId": "math_j_t7",
@@ -950,7 +950,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t7_s3",
           "level": 1,
-          "name": "7.3 โจทย์ปัญหาและสมการติดกรณฑ์/สมการแปลงรูป",
+          "name": "โจทย์ปัญหาและสมการติดกรณฑ์/สมการแปลงรูป",
           "difficulty": "advanced",
           "description": "โจทย์ปัญหาพื้นที่ ผลคูณจำนวนเรียงติดกัน และสมการที่แก้ด้วยการยกกำลังสอง",
           "topicId": "math_j_t7",
@@ -988,7 +988,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t8_s1",
           "level": 1,
-          "name": "8.1 กราฟของฟังก์ชันกำลังสองและรูปแบบมาตรฐาน (สสวท. ม.3 เล่ม 1)",
+          "name": "กราฟของฟังก์ชันกำลังสองและรูปแบบมาตรฐาน (สสวท. ม.3 เล่ม 1)",
           "difficulty": "basic",
           "description": "รูปมาตรฐาน $y = a(x - h)^2 + k$ กราฟพาราโบลาหงายและคว่ำ",
           "topicId": "math_j_t8",
@@ -1017,7 +1017,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t8_s2",
           "level": 1,
-          "name": "8.2 ความสัมพันธ์เชิงเรขาคณิตและการตัดแกนของพาราโบลา",
+          "name": "ความสัมพันธ์เชิงเรขาคณิตและการตัดแกนของพาราโบลา",
           "difficulty": "intermediate",
           "description": "ระยะตัดแกน X, แกนสมมาตรแบ่งครึ่งคอร์ดแนวนอน, และจุดตัดระหว่างเส้นตรงกับพาราโบลา",
           "topicId": "math_j_t8",
@@ -1065,7 +1065,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t9_s1",
           "level": 1,
-          "name": "9.1 ลำดับเลขคณิตและลำดับเรขาคณิต (Arithmetic & Geometric Sequences)",
+          "name": "ลำดับเลขคณิตและลำดับเรขาคณิต (Arithmetic & Geometric Sequences)",
           "difficulty": "basic",
           "description": "นิยามพจน์ ผลต่างร่วม ($d$) อัตราส่วนร่วม ($r$) และสูตรพจน์ทั่วไป $a_n$",
           "topicId": "math_j_t9",
@@ -1094,7 +1094,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t9_s2",
           "level": 1,
-          "name": "9.2 อนุกรมและผลบวก $S_n$ (Series & Summation)",
+          "name": "อนุกรมและผลบวก $S_n$ (Series & Summation)",
           "difficulty": "intermediate",
           "description": "ผลบวก $n$ พจน์แรกของอนุกรมเลขคณิตและอนุกรมเรขาคณิต",
           "topicId": "math_j_t9",
@@ -1123,7 +1123,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t9_s3",
           "level": 1,
-          "name": "9.3 อนุกรมเศษส่วนเทเลสโคปิก (Telescoping Series)",
+          "name": "อนุกรมเศษส่วนเทเลสโคปิก (Telescoping Series)",
           "difficulty": "advanced",
           "description": "อนุกรมเศษส่วนย่อยที่พจน์กลางหักล้างกันจนเหลือเฉพาะหัวและท้าย",
           "topicId": "math_j_t9",
@@ -1171,7 +1171,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t10_s1",
           "level": 1,
-          "name": "10.1 เส้นขนานและมุม (สสวท. ม.2 เล่ม 2)",
+          "name": "เส้นขนานและมุม (สสวท. ม.2 เล่ม 2)",
           "difficulty": "basic",
           "description": "มุมแย้ง มุมภายในบนข้างเดียวกันของเส้นตัด และมุมภายนอกกับมุมภายใน",
           "topicId": "math_j_t10",
@@ -1200,7 +1200,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t10_s2",
           "level": 1,
-          "name": "10.2 ทฤษฎีบทพีทาโกรัสและบทกลับ (สสวท. ม.2 เล่ม 1)",
+          "name": "ทฤษฎีบทพีทาโกรัสและบทกลับ (สสวท. ม.2 เล่ม 1)",
           "difficulty": "basic",
           "description": "ความสัมพันธ์ $a^2 + b^2 = c^2$ และการตรวจสอบชนิดของรูปสามเหลี่ยม",
           "topicId": "math_j_t10",
@@ -1229,7 +1229,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t10_s3",
           "level": 1,
-          "name": "10.3 ทฤษฎีบทเรขาคณิตสามเหลี่ยมขั้นสูง & การหาพื้นที่",
+          "name": "ทฤษฎีบทเรขาคณิตสามเหลี่ยมขั้นสูง & การหาพื้นที่",
           "difficulty": "advanced",
           "description": "ทฤษฎีบทของสจ๊วต เมเนลอส เซวา และสูตรของเฮรอน",
           "topicId": "math_j_t10",
@@ -1277,7 +1277,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t11_s1",
           "level": 1,
-          "name": "11.1 ความเท่ากันทุกประการของรูปสามเหลี่ยม (สสวท. ม.2 เล่ม 2)",
+          "name": "ความเท่ากันทุกประการของรูปสามเหลี่ยม (สสวท. ม.2 เล่ม 2)",
           "difficulty": "basic",
           "description": "เงื่อนไขความเท่ากันทุกประการ: ด.ม.ด., ม.ด.ม., ด.ด.ด., ม.ม.ด., ฉ.ด.ด.",
           "topicId": "math_j_t11",
@@ -1296,7 +1296,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t11_s2",
           "level": 1,
-          "name": "11.2 รูปสามเหลี่ยมที่คล้ายกัน (สสวท. ม.3 เล่ม 1)",
+          "name": "รูปสามเหลี่ยมที่คล้ายกัน (สสวท. ม.3 เล่ม 1)",
           "difficulty": "basic",
           "description": "นิยามรูปเรขาคณิตที่คล้ายกัน อัตราส่วนของด้านคู่ที่สมนัยกันเท่ากัน $\\frac{a_1}{a_2} = \\frac{b_1}{b_2} = \\frac{c_1}{c_2}$",
           "topicId": "math_j_t11",
@@ -1344,7 +1344,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t12_s1",
           "level": 1,
-          "name": "12.1 ทฤษฎีบทมุมและส่วนโค้งของวงกลม (สสวท. ม.3 เล่ม 2)",
+          "name": "ทฤษฎีบทมุมและส่วนโค้งของวงกลม (สสวท. ม.3 เล่ม 2)",
           "difficulty": "basic",
           "description": "มุมที่จุดศูนย์กลาง มุมในส่วนโค้งของวงกลม และมุมในครึ่งวงกลม",
           "topicId": "math_j_t12",
@@ -1373,7 +1373,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t12_s2",
           "level": 1,
-          "name": "12.2 คอร์ดและเส้นสัมผัสวงกลม (Chords & Tangents)",
+          "name": "คอร์ดและเส้นสัมผัสวงกลม (Chords & Tangents)",
           "difficulty": "intermediate",
           "description": "สมบัติเส้นตั้งฉากแบ่งครึ่งคอร์ด และเส้นสัมผัสตั้งฉากกับรัศมีที่จุดสัมผัส",
           "topicId": "math_j_t12",
@@ -1402,7 +1402,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t12_s3",
           "level": 1,
-          "name": "12.3 รูปสี่เหลี่ยมแนบในวงกลม (Cyclic Quadrilateral) & ปโตเลมี",
+          "name": "รูปสี่เหลี่ยมแนบในวงกลม (Cyclic Quadrilateral) & ปโตเลมี",
           "difficulty": "advanced",
           "description": "ผลบวกมุมตรงข้าม $180^\\circ$, ทฤษฎีบทปโตเลมี, และสูตรของพรหมคุปต์",
           "topicId": "math_j_t12",
@@ -1450,7 +1450,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t13_s1",
           "level": 1,
-          "name": "13.1 ปริซึมและทรงกระบอก (สสวท. ม.2 เล่ม 1)",
+          "name": "ปริซึมและทรงกระบอก (สสวท. ม.2 เล่ม 1)",
           "difficulty": "basic",
           "description": "พื้นที่ผิวข้าง พื้นที่ผิวทั้งหมด และปริมาตรของรูปทรงหน้าตัดสม่ำเสมอ",
           "topicId": "math_j_t13",
@@ -1479,7 +1479,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t13_s2",
           "level": 1,
-          "name": "13.2 พีระมิด กรวย และทรงกลม (สสวท. ม.3 เล่ม 2)",
+          "name": "พีระมิด กรวย และทรงกลม (สสวท. ม.3 เล่ม 2)",
           "difficulty": "intermediate",
           "description": "รูปทรงยอดแหลมและทรงกลม พื้นที่ผิวและปริมาตร",
           "topicId": "math_j_t13",
@@ -1518,7 +1518,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t13_s3",
           "level": 1,
-          "name": "13.3 รูปทรงตัดยอด (Frustum) และโจทย์ประยุกต์เชิงแข่งขัน",
+          "name": "รูปทรงตัดยอด (Frustum) และโจทย์ประยุกต์เชิงแข่งขัน",
           "difficulty": "advanced",
           "description": "พีระมิดยอดตัด กรวยยอดตัด และโจทย์หลอมละลายเปลี่ยนรูปทรง",
           "topicId": "math_j_t13",
@@ -1556,7 +1556,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t14_s1",
           "level": 1,
-          "name": "14.1 การสร้างทางเรขาคณิตแบบยุคลิด (สสวท. ม.1 เล่ม 1)",
+          "name": "การสร้างทางเรขาคณิตแบบยุคลิด (สสวท. ม.1 เล่ม 1)",
           "difficulty": "basic",
           "description": "การใช้วงเวียนและสันตรง: สร้างส่วนของเส้นตรง แบ่งครึ่งมุม สร้างเส้นตั้งฉาก",
           "topicId": "math_j_t14",
@@ -1575,7 +1575,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t14_s2",
           "level": 1,
-          "name": "14.2 การแปลงทางเรขาคณิต (สสวท. ม.2 เล่ม 1)",
+          "name": "การแปลงทางเรขาคณิต (สสวท. ม.2 เล่ม 1)",
           "difficulty": "intermediate",
           "description": "การเลื่อนขนาน (Translation) การสะท้อน (Reflection) และการหมุน (Rotation)",
           "topicId": "math_j_t14",
@@ -1614,7 +1614,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t14_s3",
           "level": 1,
-          "name": "14.3 มิติสัมพันธ์และการมองภาพสามมิติ (สสวท. ม.1 เล่ม 1)",
+          "name": "มิติสัมพันธ์และการมองภาพสามมิติ (สสวท. ม.1 เล่ม 1)",
           "difficulty": "intermediate",
           "description": "ภาพหน้าตัด (Cross-section) และการมองภาพสามมิติจากมุมมองต่าง ๆ",
           "topicId": "math_j_t14",
@@ -1662,7 +1662,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t15_s1",
           "level": 1,
-          "name": "15.1 อัตราส่วนตรีโกณมิติของมุมแหลม (สสวท. ม.3 เล่ม 2)",
+          "name": "อัตราส่วนตรีโกณมิติของมุมแหลม (สสวท. ม.3 เล่ม 2)",
           "difficulty": "basic",
           "description": "$\\sin = \\frac{\\text{ข้าม}}{\\text{ฉาก}}$, $\\cos = \\frac{\\text{ชิด}}{\\text{ฉาก}}$, $\\tan = \\frac{\\text{ข้าม}}{\\text{ชิด}}$, $\\operatorname{cosec}, \\sec, \\cot$",
           "topicId": "math_j_t15",
@@ -1691,7 +1691,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t15_s2",
           "level": 1,
-          "name": "15.2 การนำตรีโกณมิติไปใช้ในชีวิตจริง (มุมก้มและมุมเงย)",
+          "name": "การนำตรีโกณมิติไปใช้ในชีวิตจริง (มุมก้มและมุมเงย)",
           "difficulty": "intermediate",
           "description": "Angle of Elevation, Angle of Depression และการวัดระยะทางที่ไม่สามารถเข้าถึงได้",
           "topicId": "math_j_t15",
@@ -1710,7 +1710,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t15_s3",
           "level": 1,
-          "name": "15.3 กฎของไซน์และโคไซน์ในข้อสอบคัดเลือกเข้า ม.4 (Law of Sines & Cosines)",
+          "name": "กฎของไซน์และโคไซน์ในข้อสอบคัดเลือกเข้า ม.4 (Law of Sines & Cosines)",
           "difficulty": "advanced",
           "description": "การแก้รูปสามเหลี่ยมใด ๆ ที่ไม่ใช่มุมฉาก",
           "topicId": "math_j_t15",
@@ -1758,7 +1758,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t16_s1",
           "level": 1,
-          "name": "16.1 การนำเสนอข้อมูลและแผนภาพสถิติ (สสวท. ม.1 & ม.2)",
+          "name": "การนำเสนอข้อมูลและแผนภาพสถิติ (สสวท. ม.1 & ม.2)",
           "difficulty": "basic",
           "description": "คำถามทางสถิติ แผนภาพจุด (Dot Plot) แผนภาพต้น-ใบ (Stem-and-Leaf) ฮิสโทแกรม",
           "topicId": "math_j_t16",
@@ -1777,7 +1777,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t16_s2",
           "level": 1,
-          "name": "16.2 ค่ากลางของข้อมูล (Measures of Central Tendency)",
+          "name": "ค่ากลางของข้อมูล (Measures of Central Tendency)",
           "difficulty": "basic",
           "description": "ค่าเฉลี่ยเลขคณิต (Mean $\\bar{x} = \\frac{\\sum x}{n}$), มัธยฐาน (Median), ฐานนิยม (Mode)",
           "topicId": "math_j_t16",
@@ -1806,7 +1806,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t16_s3",
           "level": 1,
-          "name": "16.3 แผนภาพกล่องและการวัดตำแหน่งข้อมูล (สสวท. ม.3 เล่ม 1)",
+          "name": "แผนภาพกล่องและการวัดตำแหน่งข้อมูล (สสวท. ม.3 เล่ม 1)",
           "difficulty": "intermediate",
           "description": "แผนภาพกล่อง (Box Plot) ควอร์ไทล์ $Q_1, Q_2, Q_3$ และการวิเคราะห์การกระจาย",
           "topicId": "math_j_t16",
@@ -1854,7 +1854,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t17_s1",
           "level": 1,
-          "name": "17.1 กฎการนับเบื้องต้นและการทดลองสุ่ม (สสวท. ม.3 เล่ม 2)",
+          "name": "กฎการนับเบื้องต้นและการทดลองสุ่ม (สสวท. ม.3 เล่ม 2)",
           "difficulty": "basic",
           "description": "กฎการบวก กฎการคูณ การทดลองสุ่ม แซมเปิลสเปซ ($S$) และเหตุการณ์ ($E$)",
           "topicId": "math_j_t17",
@@ -1883,7 +1883,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t17_s2",
           "level": 1,
-          "name": "17.2 วิธีเรียงสับเปลี่ยนและการจัดหมู่ (Permutations & Combinations)",
+          "name": "วิธีเรียงสับเปลี่ยนและการจัดหมู่ (Permutations & Combinations)",
           "difficulty": "advanced",
           "description": "ก้าวข้ามแผนภาพต้นไม้สู่การใช้แฟกทอเรียล $n!$, สูตร $P(n, r)$ และ $C(n, r)$",
           "topicId": "math_j_t17",
@@ -1922,7 +1922,7 @@ export const COURSE_MATH_JUNIOR: Course = {
         {
           "id": "math_j_t17_s3",
           "level": 1,
-          "name": "17.3 คอมบินาทอริกส์ขั้นสูง & ทฤษฎีเกมสไตล์ MWIT และ สอวน.",
+          "name": "คอมบินาทอริกส์ขั้นสูง & ทฤษฎีเกมสไตล์ MWIT และ สอวน.",
           "difficulty": "advanced",
           "description": "เทคนิคดาวและแท่ง (Stars and Bars), หลักการรังนกพิราบ, และแบบรูปการแข่งขัน",
           "topicId": "math_j_t17",

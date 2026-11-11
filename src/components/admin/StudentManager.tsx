@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UserProfile } from '../../types';
-import { Users, UserPlus, GraduationCap, School, Target, Clock, Trash2, User, Lock } from 'lucide-react';
+import { Users, UserPlus, GraduationCap, School, Target, Clock, Trash2, User, Lock, Bookmark, Plus, Check, Edit2, X } from 'lucide-react';
+import { StudyGroup } from '../../types';
 
 export const StudentManager: React.FC = () => {
   const {
@@ -14,6 +15,10 @@ export const StudentManager: React.FC = () => {
     lessons,
     progressMap,
     activeSubject,
+    studyGroups,
+    addStudyGroup,
+    updateStudyGroup,
+    deleteStudyGroup,
   } = useApp();
   const { tx } = useLanguage();
 
@@ -29,6 +34,67 @@ export const StudentManager: React.FC = () => {
   const [school, setSchool] = useState('');
   const [targetExam, setTargetExam] = useState('A-Level 68');
   const [targetFaculty, setTargetFaculty] = useState('');
+
+
+  const [managerTab, setManagerTab] = useState<'students' | 'groups'>('students');
+
+  // Study Group Form State
+  const [isAddingGroup, setIsAddingGroup] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<StudyGroup | null>(null);
+  const [groupName, setGroupName] = useState('');
+  const [groupStudentIds, setGroupStudentIds] = useState<string[]>([]);
+  const [groupCourseId, setGroupCourseId] = useState(activeSubject?.id || '');
+  const [groupError, setGroupError] = useState('');
+
+  const handleOpenAddGroup = () => {
+    setEditingGroup(null);
+    setGroupName('');
+    setGroupStudentIds([]);
+    setGroupCourseId(activeSubject?.id || courses[0]?.id || '');
+    setGroupError('');
+    setIsAddingGroup(true);
+  };
+
+  const handleOpenEditGroup = (grp: StudyGroup) => {
+    setEditingGroup(grp);
+    setGroupName(grp.name);
+    setGroupStudentIds(grp.studentIds || []);
+    setGroupCourseId(grp.courseId || activeSubject?.id || '');
+    setGroupError('');
+    setIsAddingGroup(true);
+  };
+
+  const handleSaveGroupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupName.trim()) {
+      setGroupError('กรุณากรอกชื่อกลุ่มเรียน');
+      return;
+    }
+    if (groupStudentIds.length === 0) {
+      setGroupError('กรุณาเลือกนักเรียนในกลุ่มอย่างน้อย 1 คน');
+      return;
+    }
+
+    if (editingGroup) {
+      updateStudyGroup({
+        ...editingGroup,
+        name: groupName.trim(),
+        studentIds: groupStudentIds,
+        courseId: groupCourseId || undefined,
+      });
+    } else {
+      addStudyGroup({
+        name: groupName.trim(),
+        studentIds: groupStudentIds,
+        courseId: groupCourseId || undefined,
+      });
+    }
+
+    setIsAddingGroup(false);
+    setEditingGroup(null);
+    setGroupName('');
+    setGroupStudentIds([]);
+  };
 
   const totalSubtopics =
     activeSubject?.topics?.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0) || 0;
@@ -121,6 +187,34 @@ export const StudentManager: React.FC = () => {
         >
           <UserPlus className="w-4 h-4 text-amber-300" />
           <span>{tx('เพิ่มนักเรียนใหม่', 'Add Student')}</span>
+        </button>
+      </div>
+
+
+      {/* Sub-Tabs: Students vs Groups */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          onClick={() => setManagerTab('students')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            managerTab === 'students'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          <span>{tx(`รายชื่อนักเรียน (${students.length})`, `Students (${students.length})`)}</span>
+        </button>
+
+        <button
+          onClick={() => setManagerTab('groups')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            managerTab === 'groups'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+          <span>{tx(`กลุ่มเรียนที่จัดไว้ (${studyGroups.length})`, `Study Groups (${studyGroups.length})`)}</span>
         </button>
       </div>
 
@@ -266,8 +360,218 @@ export const StudentManager: React.FC = () => {
         </div>
       )}
 
-      {/* Student Cards Grid */}
-      {students.length === 0 ? (
+      {/* Groups View */}
+      {managerTab === 'groups' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-white border border-amber-900/10 rounded-2xl p-4 shadow-2xs">
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                <Bookmark className="w-4 h-4 text-blue-900" />
+                <span>{tx('กลุ่มเรียนที่ตั้งค่าไว้ล่วงหน้า', 'Preset Study Groups')}</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {tx(
+                  'จัดเซ็ตกลุ่มนักเรียนที่เรียนพร้อมกันบ่อยๆ เพื่อคลิกเลือกทั้งกลุ่มในหน้าลงตารางสอนและบันทึกคาบได้ทันที',
+                  'Group students who learn together for one-click selection during scheduling and logging.'
+                )}
+              </p>
+            </div>
+            <button
+              onClick={handleOpenAddGroup}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-amber-300" />
+              <span>{tx('สร้างกลุ่มใหม่', 'New Group')}</span>
+            </button>
+          </div>
+
+          {/* Group Add/Edit Modal */}
+          {isAddingGroup && (
+            <div className="bg-[#FFFDF7] border border-blue-200 rounded-2xl p-5 shadow-md animate-in fade-in duration-200 space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                <h3 className="text-sm font-bold text-slate-900">
+                  {editingGroup ? tx('แก้ไขกลุ่มเรียน', 'Edit Study Group') : tx('สร้างกลุ่มเรียนใหม่', 'Create New Study Group')}
+                </h3>
+                <button
+                  onClick={() => setIsAddingGroup(false)}
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveGroupSubmit} className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {tx('ชื่อกลุ่มเรียน *', 'Group Name *')}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={tx('เช่น กลุ่มสอวน. ฟิสิกส์ หรือ กลุ่ม ม.5 เตรียมหมอ', 'Group Name')}
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {tx('คอร์สหลักที่เรียนด้วยกัน', 'Default Course')}
+                    </label>
+                    <select
+                      value={groupCourseId}
+                      onChange={(e) => setGroupCourseId(e.target.value)}
+                      className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 shadow-2xs cursor-pointer"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {tx('เลือกนักเรียนในกลุ่มนี้ * (คลิกเพื่อเลือก/ถอน)', 'Select Students *')}
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-white p-3 rounded-xl border border-slate-200 max-h-48 overflow-y-auto">
+                    {students.map((st) => {
+                      const isChecked = groupStudentIds.includes(st.id);
+                      return (
+                        <button
+                          key={st.id}
+                          type="button"
+                          onClick={() => {
+                            setGroupStudentIds((prev) =>
+                              prev.includes(st.id) ? prev.filter((id) => id !== st.id) : [...prev, st.id]
+                            );
+                          }}
+                          className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                            isChecked
+                              ? 'bg-blue-50/90 border-blue-500/80 text-blue-950 font-bold'
+                              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 ${
+                              isChecked ? 'bg-blue-900 text-white border-blue-900' : 'border-slate-300'
+                            }`}
+                          >
+                            {isChecked && <Check className="w-3 h-3 stroke-3" />}
+                          </div>
+                          <span className="text-xs truncate">{st.nickname}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {groupError && <div className="text-xs text-red-600 font-semibold">{groupError}</div>}
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-amber-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingGroup(false)}
+                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
+                  >
+                    {tx('ยกเลิก', 'Cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 rounded-xl shadow-xs cursor-pointer"
+                  >
+                    {editingGroup ? tx('บันทึกการแก้ไข', 'Save Changes') : tx('บันทึกกลุ่มเรียน', 'Create Group')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Groups Grid */}
+          {studyGroups.length === 0 ? (
+            <div className="bg-white border border-dashed border-amber-300 rounded-2xl p-10 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                <Bookmark className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-800">{tx('ยังไม่มีกลุ่มเรียนที่จัดไว้', 'No study groups created yet')}</h3>
+              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                {tx(
+                  'กดปุ่ม "+ สร้างกลุ่มใหม่" ด้านบนเพื่อตั้งค่ากลุ่มนักเรียนที่เรียนด้วยกันบ่อยๆ',
+                  'Click "+ New Group" above to create reusable groups of students.'
+                )}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {studyGroups.map((grp) => {
+                const groupStudents = students.filter((s) => (grp.studentIds || []).includes(s.id));
+                const course = courses.find((c) => c.id === grp.courseId);
+
+                return (
+                  <div
+                    key={grp.id}
+                    className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs space-y-3 hover:border-blue-400 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                          {course?.code || 'กลุ่มเรียน'}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900 mt-1">{grp.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleOpenEditGroup(grp)}
+                          className="p-1.5 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                          title="แก้ไขกลุ่ม"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`ยืนยันการลบกลุ่ม "${grp.name}" หรือไม่?`)) {
+                              deleteStudyGroup(grp.id);
+                            }
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="ลบกลุ่ม"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-500 block">
+                        สมาชิก ({groupStudents.length} คน):
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {groupStudents.map((st) => (
+                          <span
+                            key={st.id}
+                            className="bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded-md font-medium"
+                          >
+                            {st.nickname}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Student Cards Grid (Only visible when managerTab === 'students') */}
+      {managerTab === 'students' && (
+        <>
+          {students.length === 0 ? (
         <div className="bg-white border border-dashed border-amber-300 rounded-2xl p-10 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
             <Users className="w-6 h-6" />
@@ -397,6 +701,8 @@ export const StudentManager: React.FC = () => {
         })}
       </div>
     )}
+        </>
+      )}
   </div>
 );
 };

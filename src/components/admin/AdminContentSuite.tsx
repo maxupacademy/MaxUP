@@ -26,6 +26,7 @@ import {
   RotateCcw,
   ExternalLink,
 } from 'lucide-react';
+import { MathText } from '../ui/MathText';
 
 export const AdminContentSuite: React.FC = () => {
   const {
@@ -573,7 +574,7 @@ export const AdminContentSuite: React.FC = () => {
                           ) : (
                             <span className="text-slate-400 font-mono text-[10px]">{tIdx + 1}.{sIdx + 1}</span>
                           )}
-                          <span>{sub.name}</span>
+                          <span><MathText text={sub.name.replace(/^\d+(\.\d+)+\s*/, '')} /></span>
                           <span
                             className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
                               isLv3

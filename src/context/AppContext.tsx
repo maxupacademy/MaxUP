@@ -553,6 +553,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
   }, [lessons, students]);
 
+  // Two-Way Backfill: Synchronize past/standalone lessons into schedulePlans so they appear on the calendar
+  useEffect(() => {
+    if (lessons.length === 0) return;
+    setSchedulePlans((prevPlans) => {
+      let changed = false;
+      const updated = [...prevPlans];
+
+      lessons.forEach((les) => {
+        const existing = updated.find(
+          (p) =>
+            p.lessonId === les.id ||
+            (les.schedulePlanId && p.id === les.schedulePlanId) ||
+            (p.date === les.lessonDate &&
+              p.studentId === les.studentId &&
+              p.courseId === les.subjectId)
+        );
+
+        if (!existing) {
+          changed = true;
+          const planId = les.schedulePlanId || `sch_les_${les.id}`;
+          const durationHours =
+            les.durationMinutes > 0
+              ? parseFloat((les.durationMinutes / 60).toFixed(1))
+              : 2.0;
+          const newPlan: StudySchedulePlan = {
+            id: planId,
+            courseId: les.subjectId,
+            studentId: les.studentId || 'all',
+            title:
+              (les.contentDetail || '').split('\n')[0].slice(0, 50) ||
+              'คาบเรียนที่บันทึกแล้ว',
+            date: les.lessonDate,
+            startTime: les.startTime || '17:00',
+            endTime: les.endTime || '19:00',
+            durationHours,
+            plannedSubtopicIds: les.subtopicIds || [],
+            plannedContentDescription: les.contentDetail || '',
+            googleDriveUrl: les.googleDriveUrl,
+            handwrittenSolutionUrl: les.handwrittenSolutionUrl,
+            score: les.score,
+            scoreScale: les.scoreScale,
+            homework: les.homework,
+            status: 'completed',
+            lessonId: les.id,
+            createdAt: les.createdAt || new Date().toISOString(),
+          };
+          updated.push(newPlan);
+          safeSetDoc(doc(db, 'schedules', planId), newPlan);
+        } else if (!existing.lessonId) {
+          existing.lessonId = les.id;
+          existing.status = 'completed';
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        safeSetLocalStorage(
+          `${STORAGE_KEY_PREFIX}schedules`,
+          JSON.stringify(updated)
+        );
+        return updated;
+      }
+      return prevPlans;
+    });
+  }, [lessons]);
+
   // Realtime background sync with Firestore for all collections (Lessons, Progress, Schedules, Users, Courses, Homeworks, Materials, Settings)
   useEffect(() => {
     // 1. Realtime Lessons Listener (Auto updates student & teacher dashboards instantly)
@@ -1187,9 +1253,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Lessons - Instant local state without layout jumping
   const addLesson = (lessonData: Omit<Lesson, 'id' | 'createdAt'>) => {
     const newId = `les_${Date.now()}`;
+    const planId = lessonData.schedulePlanId || `sch_${newId}`;
     const newLesson: Lesson = {
       ...lessonData,
       id: newId,
+      schedulePlanId: planId,
       subtopicIds: lessonData.subtopicIds || [],
       contentDetail: lessonData.contentDetail || '',
       durationMinutes: lessonData.durationMinutes || 0,
@@ -1206,11 +1274,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
       safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
+
+    // Two-Way Sync: บันทึกลงตารางสอน (StudySchedulePlan) ด้วยทันที เพื่อให้แสดงบนปฏิทินตารางสอนครบทุกคาบ
+    const durationHours =
+      newLesson.durationMinutes > 0
+        ? parseFloat((newLesson.durationMinutes / 60).toFixed(1))
+        : 2.0;
+
+    const linkedPlan: StudySchedulePlan = {
+      id: planId,
+      courseId: newLesson.subjectId,
+      studentId: newLesson.studentId || 'all',
+      title:
+        (newLesson.contentDetail || '').split('\n')[0].slice(0, 50) ||
+        'คาบเรียนที่บันทึกแล้ว',
+      date: newLesson.lessonDate,
+      startTime: newLesson.startTime || '17:00',
+      endTime: newLesson.endTime || '19:00',
+      durationHours,
+      plannedSubtopicIds: newLesson.subtopicIds || [],
+      plannedContentDescription: newLesson.contentDetail || '',
+      googleDriveUrl: newLesson.googleDriveUrl,
+      handwrittenSolutionUrl: newLesson.handwrittenSolutionUrl,
+      score: newLesson.score,
+      scoreScale: newLesson.scoreScale,
+      homework: newLesson.homework,
+      status: 'completed',
+      lessonId: newId,
+      createdAt: newLesson.createdAt,
+    };
+
+    setSchedulePlans((prev) => {
+      const exists = prev.some((p) => p.id === planId || p.lessonId === newId);
+      if (exists) {
+        return prev.map((p) => (p.id === planId || p.lessonId === newId ? linkedPlan : p));
+      }
+      return [linkedPlan, ...prev];
+    });
+    safeSetDoc(doc(db, 'schedules', planId), linkedPlan);
   };
 
   const updateLesson = (lesson: Lesson) => {
+    const planId = lesson.schedulePlanId || `sch_${lesson.id}`;
     const safeLesson: Lesson = {
       ...lesson,
+      schedulePlanId: planId,
       subtopicIds: lesson.subtopicIds || [],
       contentDetail: lesson.contentDetail || '',
       durationMinutes: lesson.durationMinutes || 0,
@@ -1226,6 +1334,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
       safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
+
+    // Two-Way Sync: อัปเดตข้อมูลตารางสอน (StudySchedulePlan) ที่เชื่อมโยงกัน
+    const durationHours =
+      safeLesson.durationMinutes > 0
+        ? parseFloat((safeLesson.durationMinutes / 60).toFixed(1))
+        : 2.0;
+
+    setSchedulePlans((prev) => {
+      const matchingIdx = prev.findIndex(
+        (p) =>
+          p.lessonId === safeLesson.id ||
+          p.id === safeLesson.schedulePlanId ||
+          p.id === planId
+      );
+
+      if (matchingIdx >= 0) {
+        const existingPlan = prev[matchingIdx];
+        const updatedPlan: StudySchedulePlan = {
+          ...existingPlan,
+          date: safeLesson.lessonDate,
+          startTime: safeLesson.startTime,
+          endTime: safeLesson.endTime,
+          durationHours,
+          courseId: safeLesson.subjectId,
+          studentId: safeLesson.studentId,
+          plannedSubtopicIds: safeLesson.subtopicIds,
+          plannedContentDescription: safeLesson.contentDetail,
+          googleDriveUrl: safeLesson.googleDriveUrl,
+          handwrittenSolutionUrl: safeLesson.handwrittenSolutionUrl,
+          score: safeLesson.score,
+          scoreScale: safeLesson.scoreScale,
+          homework: safeLesson.homework,
+          status: 'completed',
+          lessonId: safeLesson.id,
+        };
+        safeSetDoc(doc(db, 'schedules', existingPlan.id), updatedPlan);
+        const copy = [...prev];
+        copy[matchingIdx] = updatedPlan;
+        return copy;
+      } else {
+        const newPlan: StudySchedulePlan = {
+          id: planId,
+          courseId: safeLesson.subjectId,
+          studentId: safeLesson.studentId || 'all',
+          title: (safeLesson.contentDetail || '').split('\n')[0].slice(0, 50) || 'คาบเรียน',
+          date: safeLesson.lessonDate,
+          startTime: safeLesson.startTime || '17:00',
+          endTime: safeLesson.endTime || '19:00',
+          durationHours,
+          plannedSubtopicIds: safeLesson.subtopicIds,
+          plannedContentDescription: safeLesson.contentDetail,
+          googleDriveUrl: safeLesson.googleDriveUrl,
+          handwrittenSolutionUrl: safeLesson.handwrittenSolutionUrl,
+          score: safeLesson.score,
+          scoreScale: safeLesson.scoreScale,
+          homework: safeLesson.homework,
+          status: 'completed',
+          lessonId: safeLesson.id,
+          createdAt: safeLesson.createdAt || new Date().toISOString(),
+        };
+        safeSetDoc(doc(db, 'schedules', planId), newPlan);
+        return [newPlan, ...prev];
+      }
+    });
   };
 
   const deleteLesson = (lessonId: string) => {
@@ -1240,6 +1412,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProgressMap((prev) => ({ ...prev, [studentId]: updatedProgress }));
       safeSetDoc(doc(db, 'progress', studentId), { progress: updatedProgress });
     }
+
+    // Two-Way Sync: ลบ SchedulePlan ที่ผูกกัน
+    setSchedulePlans((prev) => {
+      const planToDelete = prev.find(
+        (p) =>
+          p.lessonId === lessonId ||
+          (lessonToDelete?.schedulePlanId && p.id === lessonToDelete.schedulePlanId)
+      );
+      if (planToDelete) {
+        safeDeleteDoc(doc(db, 'schedules', planToDelete.id));
+        return prev.filter((p) => p.id !== planToDelete.id);
+      }
+      return prev;
+    });
   };
 
   // Progress Tracking: บันทึกสถานะเรียนแล้ว และนับจำนวนครั้งที่เรียนซ้ำ
@@ -1507,15 +1693,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     safeSetDoc(doc(db, 'schedules', plan.id), plan);
 
     if (plan.status === 'completed') {
-      setTimeout(() => {
+      const existingLesson = lessons.find(
+        (l) => l.id === plan.lessonId || l.schedulePlanId === plan.id
+      );
+      if (existingLesson) {
+        updateLesson({
+          ...existingLesson,
+          lessonDate: plan.date,
+          startTime: plan.startTime,
+          endTime: plan.endTime,
+          durationMinutes: Math.round((plan.durationHours || 2) * 60),
+          studentId: plan.studentId !== 'all' ? plan.studentId : existingLesson.studentId,
+          subjectId: plan.courseId,
+          subtopicIds: plan.plannedSubtopicIds || existingLesson.subtopicIds,
+          contentDetail: plan.plannedContentDescription || existingLesson.contentDetail,
+          googleDriveUrl: plan.googleDriveUrl || existingLesson.googleDriveUrl,
+          handwrittenSolutionUrl: plan.handwrittenSolutionUrl || existingLesson.handwrittenSolutionUrl,
+          score: plan.score !== undefined ? plan.score : existingLesson.score,
+          scoreScale: plan.scoreScale || existingLesson.scoreScale,
+          homework: plan.homework || existingLesson.homework,
+          schedulePlanId: plan.id,
+        });
+      } else {
         completeSchedulePlanAndLogLesson(plan.id);
-      }, 50);
+      }
+    } else if (plan.status === 'upcoming') {
+      const linkedLesson = lessons.find(
+        (l) => l.id === plan.lessonId || l.schedulePlanId === plan.id
+      );
+      if (linkedLesson) {
+        deleteLesson(linkedLesson.id);
+      }
     }
   };
 
   const deleteSchedulePlan = (planId: string) => {
+    const plan = schedulePlans.find((p) => p.id === planId);
     setSchedulePlans((prev) => prev.filter((p) => p.id !== planId));
     safeDeleteDoc(doc(db, 'schedules', planId));
+
+    if (plan) {
+      const linkedLesson = lessons.find(
+        (l) => l.id === plan.lessonId || l.schedulePlanId === plan.id
+      );
+      if (linkedLesson) {
+        const nextLessons = lessons.filter((l) => l.id !== linkedLesson.id);
+        setLessons(nextLessons);
+        safeDeleteDoc(doc(db, 'lessons', linkedLesson.id));
+        if (linkedLesson.studentId) {
+          const updatedProgress = computeStudentProgressFromLessons(
+            linkedLesson.studentId,
+            nextLessons
+          );
+          setProgressMap((prev) => ({ ...prev, [linkedLesson.studentId]: updatedProgress }));
+        }
+      }
+    }
   };
 
   const completeSchedulePlanAndLogLesson = (
@@ -1525,14 +1758,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const plan = schedulePlans.find((p) => p.id === planId);
     if (!plan) return;
 
-    // 1. Mark schedule plan as completed in state and Firestore
-    const updatedPlan: StudySchedulePlan = { ...plan, status: 'completed' };
-    setSchedulePlans((prev) =>
-      prev.map((p) => (p.id === planId ? updatedPlan : p))
-    );
-    safeSetDoc(doc(db, 'schedules', planId), updatedPlan);
-
-    // 2. Identify target students
+    // 1. Identify target students
     let targetStudentIds: string[] = [];
     if (plan.studentId && plan.studentId !== 'all') {
       targetStudentIds = [plan.studentId];
@@ -1547,18 +1773,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    // 3. For each target student, create or sync lesson and update topic progress
+    // 2. For each target student, create or sync lesson and update topic progress
     const subIds = plan.plannedSubtopicIds || [];
+    let updatedPlanLessonId = plan.lessonId;
+
     targetStudentIds.forEach((stId) => {
       const existingLesson = lessons.find(
         (l) =>
-          l.studentId === stId &&
-          l.lessonDate === plan.date &&
-          (l.startTime === plan.startTime || (l.teacherNote && l.teacherNote.includes(planId)))
+          l.id === plan.lessonId ||
+          l.schedulePlanId === planId ||
+          (l.studentId === stId &&
+            l.lessonDate === plan.date &&
+            (l.startTime === plan.startTime || (l.teacherNote && l.teacherNote.includes(planId))))
       );
 
       if (!existingLesson) {
         const newLessonId = `les_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        updatedPlanLessonId = newLessonId;
         const durationMin = Math.round((plan.durationHours || 2) * 60);
         const newLesson: Lesson = {
           id: newLessonId,
@@ -1570,10 +1801,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           durationMinutes: durationMin,
           subtopicIds: subIds,
           contentDetail: plan.plannedContentDescription || plan.title,
-          score: 5,
-          scoreScale: '1-5',
-          teacherNote: `บันทึกคาบเรียนจากตารางแผนการสอน [${planId}]`,
+          score: plan.score !== undefined ? plan.score : 5,
+          scoreScale: plan.scoreScale || '1-5',
+          teacherNote: plan.plannedContentDescription || `บันทึกคาบเรียนจากตารางแผนการสอน [${planId}]`,
           googleDriveUrl: plan.googleDriveUrl,
+          handwrittenSolutionUrl: plan.handwrittenSolutionUrl,
+          homework: plan.homework,
+          schedulePlanId: planId,
           createdAt: new Date().toISOString(),
           ...customData,
         };
@@ -1586,26 +1820,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const updatedProgress = computeStudentProgressFromLessons(stId, nextLessons);
         setProgressMap((prev) => ({ ...prev, [stId]: updatedProgress }));
         safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
+      } else {
+        updatedPlanLessonId = existingLesson.id;
       }
     });
+
+    // 3. Mark schedule plan as completed and attach lessonId
+    const updatedPlan: StudySchedulePlan = {
+      ...plan,
+      status: 'completed',
+      lessonId: updatedPlanLessonId || plan.lessonId,
+    };
+    setSchedulePlans((prev) =>
+      prev.map((p) => (p.id === planId ? updatedPlan : p))
+    );
+    safeSetDoc(doc(db, 'schedules', planId), updatedPlan);
   };
 
   const toggleSchedulePlanStatus = (
     planId: string,
     status: 'upcoming' | 'completed' | 'cancelled'
   ) => {
+    const existing = schedulePlans.find((p) => p.id === planId);
+    if (!existing) return;
+
     if (status === 'completed') {
       completeSchedulePlanAndLogLesson(planId);
       return;
     }
 
-    setSchedulePlans((prev) =>
-      prev.map((p) => (p.id === planId ? { ...p, status } : p))
-    );
-    const existing = schedulePlans.find((p) => p.id === planId);
-    if (existing) {
-      safeSetDoc(doc(db, 'schedules', planId), { ...existing, status });
+    if (status === 'upcoming') {
+      const linkedLesson = lessons.find(
+        (l) => l.id === existing.lessonId || l.schedulePlanId === planId
+      );
+      if (linkedLesson) {
+        deleteLesson(linkedLesson.id);
+      }
     }
+
+    const updatedPlan: StudySchedulePlan = { ...existing, status, lessonId: undefined };
+    setSchedulePlans((prev) =>
+      prev.map((p) => (p.id === planId ? updatedPlan : p))
+    );
+    safeSetDoc(doc(db, 'schedules', planId), updatedPlan);
   };
 
   const submitSchedulePaymentSlip = (

@@ -124,6 +124,7 @@ export interface Lesson {
   attachments?: LessonAttachment[];
   googleDriveUrl?: string;
   handwrittenSolutionUrl?: string; // ลิงก์เฉลยจากการเขียนลายมือครู Max
+  schedulePlanId?: string; // เชื่อมโยงกับตารางสอน (StudySchedulePlan)
   createdAt: string;
 }
 
@@ -175,6 +176,11 @@ export interface StudySchedulePlan {
   preparationNote?: string; // ข้อความเตรียมตัวก่อนเรียน / เอกสารที่ต้องเตรียม
   googleDriveUrl?: string; // ลิงก์ Google Drive เอกสารประจำคาบนี้
   status: 'upcoming' | 'completed' | 'cancelled';
+  lessonId?: string; // เชื่อมโยงกับคาบเรียนที่บันทึกแล้ว (Lesson)
+  score?: number;
+  scoreScale?: '1-5' | '0-100';
+  handwrittenSolutionUrl?: string;
+  homework?: Homework;
   createdAt: string;
 
   // ระบบชำระเงินสำหรับคาบเรียน (PromptPay Payment & Slip Verification)

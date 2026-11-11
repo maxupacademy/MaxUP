@@ -112,8 +112,64 @@ export const SchedulePlannerView: React.FC = () => {
 
   const selectedCourse = courses.find((c) => c.id === formCourseId) || courses[0] || activeCourse;
 
+  // Combine schedulePlans with any recorded lessons (Two-Way Sync Fallback & Completeness)
+  const unifiedSchedulePlans = React.useMemo(() => {
+    const plansMap = new Map<string, StudySchedulePlan>();
+    schedulePlans.forEach((p) => {
+      plansMap.set(p.id, p);
+      if (p.lessonId) plansMap.set(p.lessonId, p);
+    });
+
+    const list = [...schedulePlans];
+
+    lessons.forEach((les) => {
+      const exists =
+        (les.schedulePlanId && plansMap.has(les.schedulePlanId)) ||
+        plansMap.has(les.id) ||
+        list.some(
+          (p) =>
+            p.lessonId === les.id ||
+            p.id === les.schedulePlanId ||
+            (p.date === les.lessonDate &&
+              p.studentId === les.studentId &&
+              p.courseId === les.subjectId)
+        );
+
+      if (!exists) {
+        const durationHours =
+          les.durationMinutes > 0
+            ? parseFloat((les.durationMinutes / 60).toFixed(1))
+            : 2.0;
+        list.push({
+          id: les.schedulePlanId || `sch_les_${les.id}`,
+          courseId: les.subjectId,
+          studentId: les.studentId || 'all',
+          title:
+            (les.contentDetail || '').split('\n')[0].slice(0, 50) ||
+            'คาบเรียนที่บันทึกแล้ว',
+          date: les.lessonDate,
+          startTime: les.startTime || '17:00',
+          endTime: les.endTime || '19:00',
+          durationHours,
+          plannedSubtopicIds: les.subtopicIds || [],
+          plannedContentDescription: les.contentDetail || '',
+          googleDriveUrl: les.googleDriveUrl,
+          handwrittenSolutionUrl: les.handwrittenSolutionUrl,
+          score: les.score,
+          scoreScale: les.scoreScale,
+          homework: les.homework,
+          status: 'completed',
+          lessonId: les.id,
+          createdAt: les.createdAt,
+        });
+      }
+    });
+
+    return list;
+  }, [schedulePlans, lessons]);
+
   // Filter plans based on role and active filters
-  const visiblePlans = schedulePlans.filter((plan) => {
+  const visiblePlans = unifiedSchedulePlans.filter((plan) => {
     // If student, only show plans where studentId is 'all' or matches current user
     if (currentUserRole === 'student') {
       const isForMe = plan.studentId === 'all' || plan.studentId === currentUser?.id;
@@ -153,8 +209,8 @@ export const SchedulePlannerView: React.FC = () => {
     .reduce((sum, p) => sum + (p.durationHours || 0), 0)
     .toFixed(1);
 
-  const pendingSlipsCount = schedulePlans.filter((p) => p.paymentStatus === 'slip_uploaded').length;
-  const totalPaidAmount = schedulePlans
+  const pendingSlipsCount = unifiedSchedulePlans.filter((p) => p.paymentStatus === 'slip_uploaded').length;
+  const totalPaidAmount = unifiedSchedulePlans
     .filter((p) => p.paymentStatus === 'paid')
     .reduce((sum, p) => sum + (p.priceAmount || 0), 0);
 

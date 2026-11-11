@@ -37,9 +37,11 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     addCourse,
     schedulePlans,
     toggleSchedulePlanStatus,
+    addSchedulePlan,
   } = useApp();
   const { tx } = useLanguage();
 
+  const [sessionType, setSessionType] = useState<'completed' | 'upcoming'>('completed');
   const [studentId, setStudentId] = useState<string>('');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [lessonDate, setLessonDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -264,7 +266,22 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
 
     const finalNote = contentDetail.trim();
 
-    if (editLesson) {
+    if (sessionType === 'upcoming' && !editLesson) {
+      const durationHours = durationMinutes > 0 ? parseFloat((durationMinutes / 60).toFixed(1)) : 2.0;
+      addSchedulePlan({
+        courseId: finalCourseId,
+        studentId: finalStudentId,
+        title: finalNote.split('\n')[0].slice(0, 50) || `คาบเรียน ${lessonDate}`,
+        date: lessonDate,
+        startTime,
+        endTime,
+        durationHours,
+        plannedSubtopicIds: selectedSubtopicIds,
+        plannedContentDescription: finalNote,
+        googleDriveUrl: googleDriveUrl.trim() || undefined,
+        status: 'upcoming',
+      });
+    } else if (editLesson) {
       updateLesson({
         ...editLesson,
         studentId: finalStudentId,
@@ -298,6 +315,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         googleDriveUrl: googleDriveUrl.trim() || undefined,
         handwrittenSolutionUrl: handwrittenSolutionUrl.trim() || undefined,
         homework: homeworkData,
+        schedulePlanId: selectedSchedulePlanId || undefined,
       });
     }
 
@@ -336,6 +354,35 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* Segmented Control: Completed Lesson vs Upcoming Schedule */}
+          {!editLesson && (
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-3">
+              <button
+                type="button"
+                onClick={() => setSessionType('completed')}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  sessionType === 'completed'
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>{tx('✅ บันทึกคาบที่สอนแล้ว (Completed)', 'Recorded Lesson')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSessionType('upcoming')}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  sessionType === 'upcoming'
+                    ? 'bg-blue-900 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                <span>{tx('📅 ลงตารางสอนล่วงหน้า (Upcoming)', 'Advance Schedule')}</span>
+              </button>
+            </div>
+          )}
           {/* Quick Import from Schedule Plan */}
           {!editLesson && schedulePlans && schedulePlans.length > 0 && (
             <div className="p-3.5 bg-gradient-to-r from-blue-50/90 to-amber-50/80 border border-blue-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
@@ -728,9 +775,15 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
+              className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98 ${
+                sessionType === 'completed' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-900 hover:bg-blue-800'
+              }`}
             >
-              {editLesson ? tx('บันทึกการเปลี่ยนแปลง', 'Save Changes') : tx('บันทึกคาบเรียน', 'Save Lesson Log')}
+              {editLesson
+                ? tx('บันทึกการเปลี่ยนแปลง', 'Save Changes')
+                : sessionType === 'upcoming'
+                ? tx('📅 ลงตารางสอนล่วงหน้า', 'Schedule Class')
+                : tx('✅ บันทึกคาบ & ขึ้นปฏิทินทันที', 'Save Lesson & Add to Schedule')}
             </button>
           </div>
         </form>

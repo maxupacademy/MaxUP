@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Lesson, Homework } from '../../types';
 import { StudentGroupSelector } from '../common/StudentGroupSelector';
+import { HierarchicalTopicSelector } from '../common/HierarchicalTopicSelector';
 import {
   X,
   Clock,
@@ -696,69 +697,24 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
           </div>
 
           {/* Row 3: Course Syllabus Selection */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
+          {/* Topic & Subtopic Selector in Full Syllabus Hierarchy */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-blue-900" />
-                <span>{tx('หัวข้อที่เรียนในคาบนี้:', 'Syllabus Topics Covered:')}</span>
+                <span>{tx('หัวข้อที่เรียนในคาบนี้ (ตามลำดับขั้นสารบัญ):', 'Syllabus Topics Covered (Hierarchical):')}</span>
               </label>
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="text-xs text-blue-900 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                 {tx(`เลือกแล้ว ${selectedSubtopicIds.length} หัวข้อ`, `${selectedSubtopicIds.length} selected`)}
               </span>
             </div>
 
-            <div className="max-h-52 overflow-y-auto border border-amber-200 bg-white rounded-xl p-3 space-y-3">
-              {currentCourse?.topics.length === 0 ? (
-                <div className="text-center py-6 text-xs text-slate-400 space-y-1">
-                  <p>{tx('คอร์สนี้ยังไม่มีการใส่สารบัญบทเรียน', 'No syllabus topics defined for this course yet.')}</p>
-                </div>
-              ) : (
-                (currentCourse?.topics || []).map((top) => {
-                  const subs = top.subtopics || [];
-                  return (
-                    <div key={top.id} className="text-xs border-b border-slate-100 pb-2 last:border-b-0 last:pb-0">
-                      <div className="font-bold text-slate-800 mb-1.5 flex items-center justify-between">
-                        <span>{top.sortOrder}. <MathText text={top.name} /></span>
-                        <span className="text-[10px] text-slate-400 font-normal">
-                          {subs.length} {tx('ข้อย่อย', 'subtopics')}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-2">
-                        {subs.map((sub) => {
-                        const isSelected = selectedSubtopicIds.includes(sub.id);
-                        return (
-                          <button
-                            type="button"
-                            key={sub.id}
-                            onClick={() => toggleSubtopic(sub.id, sub.name)}
-                            className={`text-left p-2 rounded-lg border transition-all flex items-start gap-2 cursor-pointer ${
-                              isSelected
-                                ? 'bg-blue-50 border-blue-400 text-blue-900 font-medium'
-                                : 'bg-[#FFFDF7] border-amber-100 text-slate-700 hover:border-amber-300'
-                            }`}
-                          >
-                            <div
-                              className={`w-4 h-4 rounded mt-0.5 flex-shrink-0 flex items-center justify-center border ${
-                                isSelected
-                                  ? 'bg-blue-900 border-blue-900 text-white'
-                                  : 'border-slate-300 bg-white'
-                              }`}
-                            >
-                              {isSelected && <Check className="w-3 h-3" />}
-                            </div>
-                            <span className="leading-snug text-xs">
-                              <MathText text={sub.name.replace(/^\d+(\.\d+)+\s*/, '')} />
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })
-              )}
-            </div>
+            <HierarchicalTopicSelector
+              course={currentCourse}
+              selectedSubtopicIds={selectedSubtopicIds}
+              onChange={setSelectedSubtopicIds}
+              maxHeight="max-h-60"
+            />
           </div>
 
           {/* Row 4: Detailed Content & Teacher Note (Unified) */}

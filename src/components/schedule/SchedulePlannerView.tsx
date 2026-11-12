@@ -5,6 +5,7 @@ import { SpotlightCard } from '../ui/SpotlightCard';
 import { NumberTicker } from '../ui/NumberTicker';
 import { StudySchedulePlan } from '../../types';
 import { StudentGroupSelector } from '../common/StudentGroupSelector';
+import { HierarchicalTopicSelector } from '../common/HierarchicalTopicSelector';
 import {
   Calendar,
   Clock,
@@ -1591,194 +1592,30 @@ export const SchedulePlannerView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Course Syllabus Topics Picker */}
-              <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              {/* Course Syllabus Topics Picker (Hierarchical Tree) */}
+              <div className="space-y-1.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1">
                   <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-blue-900" />
-                    <span>เลือกหัวข้อใน Syllabus ที่จะสอนในคาบนี้ ({selectedCourse?.name || 'คอร์สปัจจุบัน'}):</span>
+                    <span>หัวข้อในหลักสูตรที่จะสอนในคาบนี้ ({selectedCourse?.name || 'คอร์สปัจจุบัน'}):</span>
                   </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-blue-900 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
-                      เลือกแล้ว {formSelectedSubtopicIds.length} หัวข้อ
-                    </span>
-                    {formSelectedSubtopicIds.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setFormSelectedSubtopicIds([])}
-                        className="text-[10px] text-red-600 hover:text-red-700 underline cursor-pointer"
-                      >
-                        ล้างทั้งหมด
-                      </button>
-                    )}
-                  </div>
+                  <span className="text-[11px] font-semibold text-blue-900 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                    เลือกแล้ว {formSelectedSubtopicIds.length} หัวข้อ
+                  </span>
                 </div>
 
-                {/* Topic Search Input */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหาชื่อบท หรือหัวข้อย่อยใน Syllabus..."
-                    value={syllabusSearch}
-                    onChange={(e) => setSyllabusSearch(e.target.value)}
-                    className="w-full bg-white border border-amber-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
-                  />
-                  {syllabusSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setSyllabusSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-
-                {/* Topics & Subtopics List */}
-                <div className="max-h-56 overflow-y-auto border border-amber-200 bg-white rounded-xl p-3 space-y-3 shadow-2xs divide-y divide-slate-100">
-                  {(!selectedCourse?.topics || selectedCourse.topics.length === 0) ? (
-                    <div className="text-center py-5 text-xs text-slate-400 space-y-1">
-                      <p>คอร์สนี้ยังไม่มีหัวข้อในหลักสูตร (Syllabus)</p>
-                      <p className="text-[11px]">คุณครู Max สามารถพิมพ์ระบุเนื้อหาในช่องรายละเอียดด้านล่างได้ทันที</p>
-                    </div>
-                  ) : (
-                    (() => {
-                      const query = syllabusSearch.trim().toLowerCase();
-                      const matchedTopics = (selectedCourse.topics || []).filter((top) => {
-                        if (!query) return true;
-                        const topMatches = top.name.toLowerCase().includes(query);
-                        const subMatches = (top.subtopics || []).some(
-                          (sub) =>
-                            sub.name.toLowerCase().includes(query) ||
-                            sub.description?.toLowerCase().includes(query) ||
-                            sub.keyPoints?.some((kp) => kp.toLowerCase().includes(query))
-                        );
-                        return topMatches || subMatches;
-                      });
-
-                      if (matchedTopics.length === 0) {
-                        return (
-                          <div className="text-center py-4 text-xs text-slate-400">
-                            ไม่พบหัวข้อที่ตรงกับคำค้นหา "{syllabusSearch}"
-                          </div>
-                        );
-                      }
-
-                      return matchedTopics.map((top) => {
-                        const subtopics = query
-                          ? (top.subtopics || []).filter(
-                              (sub) =>
-                                top.name.toLowerCase().includes(query) ||
-                                sub.name.toLowerCase().includes(query) ||
-                                sub.description?.toLowerCase().includes(query) ||
-                                sub.keyPoints?.some((kp) => kp.toLowerCase().includes(query))
-                            )
-                          : top.subtopics || [];
-
-                        const allSubsSelected =
-                          subtopics.length > 0 &&
-                          subtopics.every((s) => formSelectedSubtopicIds.includes(s.id));
-
-                        return (
-                          <div key={top.id} className="pt-2.5 first:pt-0 space-y-2">
-                            {/* Chapter / Topic Header */}
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center justify-center shrink-0">
-                                  {top.sortOrder}
-                                </span>
-                                <span><MathText text={top.name} /></span>
-                              </div>
-
-                              {subtopics.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => toggleChapterSelect({ id: top.id, name: top.name, subtopics })}
-                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
-                                    allSubsSelected
-                                      ? 'bg-blue-900 text-white border-blue-900'
-                                      : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-900 border-slate-200'
-                                  }`}
-                                >
-                                  {allSubsSelected ? '✓ เลือกทั้งบทแล้ว' : '+ เลือกทั้งบท'}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Subtopics Checklist */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pl-2">
-                              {subtopics.map((sub) => {
-                                const isSelected = formSelectedSubtopicIds.includes(sub.id);
-                                return (
-                                  <button
-                                    type="button"
-                                    key={sub.id}
-                                    onClick={() => toggleSubtopicSelect(sub.id, sub.name)}
-                                    className={`text-left p-2 rounded-xl border transition-all flex items-start gap-2 cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-blue-50/80 border-blue-400 text-blue-950 shadow-2xs ring-1 ring-blue-300'
-                                        : 'bg-white border-slate-200 text-slate-700 hover:border-amber-300 hover:bg-slate-50/50'
-                                    }`}
-                                  >
-                                    <div
-                                      className={`w-4 h-4 rounded-md mt-0.5 flex-shrink-0 flex items-center justify-center border transition-colors ${
-                                        isSelected
-                                          ? 'bg-blue-900 border-blue-900 text-white'
-                                          : 'border-slate-300 bg-white'
-                                      }`}
-                                    >
-                                      {isSelected && <Check className="w-3 h-3" />}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-xs font-semibold leading-tight line-clamp-2">
-                                        <MathText text={sub.name.replace(/^\d+(\.\d+)+\s*/, '')} />
-                                      </div>
-
-                                      {/* Tags: Difficulty & Resources */}
-                                      <div className="flex items-center gap-1.5 mt-1 flex-wrap text-[9px]">
-                                        {sub.difficulty && (
-                                          <span
-                                            className={`px-1.5 py-0.2 rounded font-medium ${
-                                              sub.difficulty === 'basic'
-                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                : sub.difficulty === 'advanced'
-                                                ? 'bg-red-50 text-red-700 border border-red-200'
-                                                : 'bg-amber-50 text-amber-800 border border-amber-200'
-                                            }`}
-                                          >
-                                            {sub.difficulty === 'basic'
-                                              ? 'ระดับพื้นฐาน'
-                                              : sub.difficulty === 'advanced'
-                                              ? 'ระดับประยุกต์เข้มข้น'
-                                              : 'ระดับปานกลาง'}
-                                          </span>
-                                        )}
-
-                                        {sub.googleDriveUrl && (
-                                          <span className="text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200 font-medium">
-                                            📂 มีชีท
-                                          </span>
-                                        )}
-
-                                        {sub.handwrittenSolutionUrl && (
-                                          <span className="text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200 font-medium">
-                                            ✍️ เฉลยลายมือ
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()
-                  )}
-                </div>
+                <HierarchicalTopicSelector
+                  course={selectedCourse}
+                  selectedSubtopicIds={formSelectedSubtopicIds}
+                  onChange={(ids) => {
+                    setFormSelectedSubtopicIds(ids);
+                    if (!formDescription && ids.length > 0) {
+                      const firstSub = selectedCourse?.topics.flatMap((t) => t.subtopics || []).find((s) => s.id === ids[0]);
+                      if (firstSub) setFormDescription(`เรียนหัวข้อ: ${firstSub.name}`);
+                    }
+                  }}
+                  maxHeight="max-h-64"
+                />
               </div>
 
               {/* Planned Content Description */}

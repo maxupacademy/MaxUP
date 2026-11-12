@@ -542,23 +542,30 @@ export const SyllabusManager: React.FC = () => {
               <span className="text-xs font-semibold text-slate-500 whitespace-nowrap mr-1">
                 {tx('เลือกวิชา:', 'Subject:')}
               </span>
-              {visibleSubjects.map((subj) => (
-                <button
-                  key={subj.id}
-                  onClick={() => {
-                    setActiveSubjectId(subj.id);
-                    setExpandedTopicIds([]);
-                    setExpandedSubtopicIds([]);
-                  }}
-                  className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
-                    activeSubjectId === subj.id
-                      ? 'bg-blue-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-                  }`}
-                >
-                  {subj.name} ({subj.topics.length})
-                </button>
-              ))}
+              {visibleSubjects.map((subj) => {
+                const isUserEnrolled = currentUserRole === 'admin' || (currentUser?.enrolledCourseIds || []).includes(subj.id);
+                return (
+                  <button
+                    key={subj.id}
+                    onClick={() => {
+                      if (!isUserEnrolled && currentUserRole === 'student') return;
+                      setActiveSubjectId(subj.id);
+                      setExpandedTopicIds([]);
+                      setExpandedSubtopicIds([]);
+                    }}
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-all ${
+                      activeSubjectId === subj.id
+                        ? 'bg-blue-900 text-white shadow-xs'
+                        : isUserEnrolled
+                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                        : 'bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200'
+                    }`}
+                  >
+                    {subj.name} ({subj.topics.length})
+                    {!isUserEnrolled && currentUserRole === 'student' && ' 🔒'}
+                  </button>
+                );
+              })}
             </div>
           );
         })()}

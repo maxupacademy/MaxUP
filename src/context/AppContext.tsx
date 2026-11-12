@@ -196,6 +196,7 @@ interface AppContextType {
 
   // Study Schedule & Planning (ตารางเรียน & แผนสอนล่วงหน้า)
   schedulePlans: StudySchedulePlan[];
+  pendingSchedulePlans: StudySchedulePlan[];
   addSchedulePlan: (plan: Omit<StudySchedulePlan, 'id' | 'createdAt'>) => void;
   updateSchedulePlan: (plan: StudySchedulePlan) => void;
   deleteSchedulePlan: (planId: string) => void;
@@ -445,6 +446,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     safeSetLocalStorage(`${STORAGE_KEY_PREFIX}schedules`, JSON.stringify(schedulePlans));
+  }, [schedulePlans]);
+
+  // คาบที่ลงตารางสอนไว้แล้วแต่เลยเวลาสิ้นสุดไปแล้ว และสถานะยังคงเป็น 'upcoming'
+  // รอให้คุณครูกดยืนยัน (Smart Pending Review / 1-Click Confirm)
+  const pendingSchedulePlans = React.useMemo(() => {
+    const now = new Date();
+    return schedulePlans
+      .filter((p) => {
+        if (p.status !== 'upcoming') return false;
+        try {
+          const [year, month, day] = p.date.split('-').map(Number);
+          const [hour, min] = (p.endTime || p.startTime || '23:59').split(':').map(Number);
+          if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(min)) return false;
+          const planEnd = new Date(year, month - 1, day, hour, min);
+          return planEnd.getTime() <= now.getTime();
+        } catch {
+          return false;
+        }
+      })
+      .sort((a, b) => (b.date + (b.startTime || '')).localeCompare(a.date + (a.startTime || '')));
   }, [schedulePlans]);
 
   // Teacher PromptPay Settings
@@ -1930,6 +1951,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 2. For each target student, create or sync lesson and update topic progress
     const subIds = plan.plannedSubtopicIds || [];
     let updatedPlanLessonId = plan.lessonId;
+    const newLessonsToInsert: Lesson[] = [];
 
     targetStudentIds.forEach((stId) => {
       const existingLesson = lessons.find(
@@ -1943,11 +1965,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (!existingLesson) {
         const newLessonId = `les_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-        updatedPlanLessonId = newLessonId;
+        if (!updatedPlanLessonId) updatedPlanLessonId = newLessonId;
         const durationMin = Math.round((plan.durationHours || 2) * 60);
         const newLesson: Lesson = {
           id: newLessonId,
           studentId: stId,
+          studentIds: targetStudentIds,
+          groupId: plan.groupId,
           subjectId: plan.courseId,
           lessonDate: plan.date,
           startTime: plan.startTime,
@@ -1966,18 +1990,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...customData,
         };
 
-        const nextLessons = [newLesson, ...lessons];
-        setLessons(nextLessons);
+        newLessonsToInsert.push(newLesson);
         safeSetDoc(doc(db, 'lessons', newLessonId), newLesson);
+      } else {
+        if (!updatedPlanLessonId) updatedPlanLessonId = existingLesson.id;
+      }
+    });
 
-        // Update student topic progress accurately from active lessons
+    if (newLessonsToInsert.length > 0) {
+      const nextLessons = [...newLessonsToInsert, ...lessons];
+      setLessons(nextLessons);
+
+      targetStudentIds.forEach((stId) => {
         const updatedProgress = computeStudentProgressFromLessons(stId, nextLessons);
         setProgressMap((prev) => ({ ...prev, [stId]: updatedProgress }));
         safeSetDoc(doc(db, 'progress', stId), { progress: updatedProgress });
-      } else {
-        updatedPlanLessonId = existingLesson.id;
-      }
-    });
+      });
+    }
 
     // 3. Mark schedule plan as completed and attach lessonId
     const updatedPlan: StudySchedulePlan = {
@@ -2242,6 +2271,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleVideoWatched,
 
         schedulePlans,
+        pendingSchedulePlans,
         addSchedulePlan,
         updateSchedulePlan,
         deleteSchedulePlan,

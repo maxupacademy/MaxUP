@@ -37,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     courses,
     activeCourseId,
     setActiveCourseId,
+    pendingSchedulePlans,
   } = useApp();
 
   const { tx } = useLanguage();
@@ -125,7 +126,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                     isActive ? 'text-amber-400' : 'text-slate-500'
                   }`}
                 />
-                <span className="relative z-10">{tab.label}</span>
+                <span className="relative z-10 flex items-center gap-1">
+                  {tab.label}
+                  {tab.id === 'schedule' && currentUserRole === 'admin' && pendingSchedulePlans && pendingSchedulePlans.length > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" />
+                  )}
+                </span>
               </button>
             );
           })}
@@ -159,15 +165,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             );
           })()}
 
-          {/* Record Lesson button for Admin */}
+          {/* Unified Schedule Ahead & Log Lesson button for Admin */}
           {currentUserRole === 'admin' && (
             <button
               onClick={onOpenLessonModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-98 transition-all rounded-xl shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
-              title={tx('บันทึกคาบเรียน', 'Log Lesson')}
+              className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-98 transition-all rounded-xl shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
+              title={tx('ลงตารางสอนล่วงหน้า หรือ บันทึกคาบที่สอนแล้ว', 'Schedule Ahead or Log Lesson')}
             >
               <PlusCircle className="w-3.5 h-3.5 text-slate-950" />
-              <span className="hidden sm:inline">{tx('บันทึกคาบ', 'Log Lesson')}</span>
+              <span>{tx('+ คาบสอน', '+ Session')}</span>
+              {pendingSchedulePlans && pendingSchedulePlans.length > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse"
+                  title={tx(`${pendingSchedulePlans.length} คาบรอคุณครูกดยืนยัน`, `${pendingSchedulePlans.length} completed sessions awaiting confirmation`)}
+                >
+                  {pendingSchedulePlans.length}
+                </span>
+              )}
             </button>
           )}
 

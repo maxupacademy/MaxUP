@@ -21,12 +21,16 @@ interface LessonLoggerModalProps {
   isOpen: boolean;
   onClose: () => void;
   editLesson?: Lesson | null;
+  initialPlanId?: string | null;
+  initialSessionType?: 'completed' | 'upcoming';
 }
 
 export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   isOpen,
   onClose,
   editLesson,
+  initialPlanId,
+  initialSessionType,
 }) => {
   const {
     students,
@@ -118,6 +122,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       if (editLesson) {
+        setSessionType('completed');
         setStudentId(editLesson.studentId);
         setSelectedStudentIds(editLesson.studentIds && editLesson.studentIds.length > 0 ? editLesson.studentIds : [editLesson.studentId]);
         setSelectedGroupId(editLesson.groupId);
@@ -147,15 +152,19 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         } else {
           setHasHomework(false);
         }
+      } else if (initialPlanId) {
+        setSessionType(initialSessionType || 'completed');
+        handleSelectSchedulePlan(initialPlanId);
       } else {
-        // Default new lesson
+        // Default new session (Unified Smart Schedule & Log)
         if (students.length > 0 && (!selectedStudentIds || selectedStudentIds.length === 0)) {
           setStudentId(students[0].id);
           setSelectedStudentIds([students[0].id]);
         }
         const defaultCourseId = activeSubjectId || courses[0]?.id || '';
         setSelectedSubjectId(defaultCourseId);
-        setLessonDate(new Date().toISOString().split('T')[0]);
+        const todayStr = new Date().toISOString().split('T')[0];
+        setLessonDate(todayStr);
         setStartTime('17:00');
         setEndTime('19:00');
         setSelectedSubtopicIds([]);
@@ -171,10 +180,23 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         const nextWeek = new Date();
         nextWeek.setDate(nextWeek.getDate() + 5);
         setHwDueDate(nextWeek.toISOString().split('T')[0]);
+
+        // Smart context-aware default: if user passes initialSessionType use it,
+        // otherwise check whether default date+time (today 17:00) is past or future!
+        if (initialSessionType) {
+          setSessionType(initialSessionType);
+        } else {
+          try {
+            const planTime = new Date(`${todayStr}T17:00:00`);
+            setSessionType(planTime.getTime() > Date.now() ? 'upcoming' : 'completed');
+          } catch {
+            setSessionType('completed');
+          }
+        }
       }
       setErrorMessage('');
     }
-  }, [isOpen, editLesson, students, courses, activeSubjectId]);
+  }, [isOpen, editLesson, initialPlanId, initialSessionType, students, courses, activeSubjectId]);
 
   if (!isOpen) return null;
 
@@ -422,6 +444,37 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
                 <Calendar className="w-3.5 h-3.5 text-amber-300" />
                 <span>{tx('📅 ลงตารางสอนล่วงหน้า (Upcoming)', 'Advance Schedule')}</span>
               </button>
+            </div>
+          )}
+
+          {/* Context Explainer Banner for Mode */}
+          {!editLesson && (
+            <div className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 transition-all ${
+              sessionType === 'completed'
+                ? 'bg-emerald-50/80 border-emerald-200/80 text-emerald-900'
+                : 'bg-blue-50/80 border-blue-200/80 text-blue-950'
+            }`}>
+              {sessionType === 'completed' ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    {tx(
+                      'โหมดสอนแล้ว: บันทึกผลการสอนจริง เช็คเนื้อหาที่เรียน ให้คะแนน สั่งการบ้าน และอัปเดตสารบัญนักเรียนทันที',
+                      'Completed Mode: Logs real lesson results, checks topics, assigns homework, and updates student syllabus.'
+                    )}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-4 h-4 text-blue-700 shrink-0" />
+                  <span>
+                    {tx(
+                      'โหมดลงตารางล่วงหน้า: นัดหมายวันเวลาและเตรียมหัวข้อล่วงหน้า จะแสดงบนปฏิทินของนักเรียน',
+                      'Upcoming Mode: Schedules date/time and planned topics to show on student calendar.'
+                    )}
+                  </span>
+                </>
+              )}
             </div>
           )}
           {/* Quick Import from Schedule Plan */}

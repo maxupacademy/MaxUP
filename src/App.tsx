@@ -35,6 +35,8 @@ const MainContent: React.FC = () => {
   });
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [selectedPlanIdForModal, setSelectedPlanIdForModal] = useState<string | null>(null);
+  const [initialSessionTypeForModal, setInitialSessionTypeForModal] = useState<'completed' | 'upcoming' | undefined>(undefined);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Sync default dashboard tab whenever role changes or user logs in
@@ -74,14 +76,25 @@ const MainContent: React.FC = () => {
     );
   }
 
-  const handleOpenAddLesson = () => {
+  const handleOpenAddLesson = (planId?: string, sessionType?: 'completed' | 'upcoming') => {
     setEditingLesson(null);
+    setSelectedPlanIdForModal(planId || null);
+    setInitialSessionTypeForModal(sessionType);
     setIsLessonModalOpen(true);
   };
 
   const handleOpenEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson);
+    setSelectedPlanIdForModal(null);
+    setInitialSessionTypeForModal(undefined);
     setIsLessonModalOpen(true);
+  };
+
+  const handleCloseLessonModal = () => {
+    setIsLessonModalOpen(false);
+    setEditingLesson(null);
+    setSelectedPlanIdForModal(null);
+    setInitialSessionTypeForModal(undefined);
   };
 
   return (
@@ -130,8 +143,10 @@ const MainContent: React.FC = () => {
       {/* Lesson Logger / Editor Modal */}
       <LessonLoggerModal
         isOpen={isLessonModalOpen}
-        onClose={() => setIsLessonModalOpen(false)}
+        onClose={handleCloseLessonModal}
         editLesson={editingLesson}
+        initialPlanId={selectedPlanIdForModal}
+        initialSessionType={initialSessionTypeForModal}
       />
 
       {/* Footer */}

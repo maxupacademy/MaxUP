@@ -21,11 +21,13 @@ import {
   ArrowUpRight,
   GraduationCap,
   Sparkles,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { MathText } from '../ui/MathText';
 
 interface AdminDashboardProps {
-  onOpenLessonModal: () => void;
+  onOpenLessonModal: (planId?: string) => void;
   onEditLesson: (lesson: Lesson) => void;
   onNavigateToSyllabus: () => void;
   onNavigateToStudents: () => void;
@@ -46,6 +48,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     progressMap,
     deleteLesson,
     adminProfile,
+    pendingSchedulePlans,
+    completeSchedulePlanAndLogLesson,
+    toggleSchedulePlanStatus,
+    studyGroups,
+    courses,
   } = useApp();
 
   const { tx } = useLanguage();
@@ -129,11 +136,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {/* Right: High-Fitts Primary CTA & Compact Tools */}
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap pt-2 md:pt-0 border-t border-white/10 md:border-none">
             <button
-              onClick={onOpenLessonModal}
+              onClick={() => onOpenLessonModal()}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-black text-white bg-[#FF7A00] hover:bg-[#E66E00] active:scale-97 transition-all rounded-xl shadow-md min-h-[44px] cursor-pointer"
+              title={tx('ลงตารางสอนล่วงหน้า หรือ บันทึกคาบที่สอนแล้ว', 'Schedule Ahead or Log Lesson')}
             >
               <PlusCircle className="w-4 h-4" />
-              <span>{tx('บันทึกการสอนใหม่', 'New Lesson Log')}</span>
+              <span>{tx('+ จัดการคาบสอน', '+ Session')}</span>
             </button>
 
             <button
@@ -155,6 +163,115 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Smart Quick-Confirm Pending Sessions Banner (Option C: 1-Click Confirm) */}
+      {pendingSchedulePlans && pendingSchedulePlans.length > 0 && (
+        <section className="bg-gradient-to-r from-amber-500/10 via-amber-50/70 to-emerald-500/10 border-2 border-amber-400/80 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/70">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+              </span>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <span>{tx('🔔 คาบเรียนที่ถึงเวลาแล้ว (รอคุณครูกดยืนยัน)', 'Completed Sessions Pending Confirmation')}</span>
+                  <span className="px-2 py-0.5 bg-amber-500 text-white text-[11px] font-bold rounded-full">
+                    {pendingSchedulePlans.length} {tx('คาบ', 'sessions')}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {tx(
+                    'ระบบตรวจพบคาบที่เลยเวลาแล้ว สามารถกด "ยืนยันว่าสอนแล้ว" ได้ใน 1 คลิก เพื่อบันทึกเป็นคาบจริงและอัปเดตสารบัญทันที',
+                    'Past scheduled sessions detected. Confirm with 1 click to convert to real lessons and update syllabus.'
+                  )}
+                </p>
+              </div>
+            </div>
+            {onNavigateToSchedule && (
+              <button
+                onClick={onNavigateToSchedule}
+                className="text-xs font-bold text-amber-900 hover:text-amber-950 underline flex items-center gap-1 cursor-pointer"
+              >
+                {tx('ดูในตารางสอนทั้งหมด →', 'View all on calendar →')}
+              </button>
+            )}
+          </div>
+
+          <div className="divide-y divide-amber-200/60 mt-2">
+            {pendingSchedulePlans.map((plan) => {
+              const course = courses.find((c) => c.id === plan.courseId) || activeSubject;
+              const targetStudents = students.filter(
+                (s) =>
+                  (plan.studentIds && plan.studentIds.includes(s.id)) ||
+                  plan.studentId === s.id
+              );
+              const group = studyGroups.find((g) => g.id === plan.groupId);
+              const studentNames = group
+                ? `${group.name} (${targetStudents.map((s) => s.nickname).join(', ')})`
+                : targetStudents.length > 0
+                ? targetStudents.map((s) => s.nickname).join(', ')
+                : tx('นักเรียนทุกคน', 'All Students');
+
+              return (
+                <div
+                  key={plan.id}
+                  className="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-slate-900 text-sm">{studentNames}</span>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-900 rounded-md font-bold text-[11px]">
+                        {course.name}
+                      </span>
+                      <span className="text-slate-500 font-mono text-[11px] flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        {plan.date} ({plan.startTime || '17:00'} - {plan.endTime || '19:00'})
+                      </span>
+                    </div>
+                    {(plan.plannedContentDescription || plan.title) && (
+                      <p className="text-slate-700 text-xs">
+                        <strong className="text-slate-900">{tx('หัวข้อที่เตรียมสอน:', 'Planned:')}</strong>{' '}
+                        {plan.plannedContentDescription || plan.title}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions for this pending session */}
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <button
+                      onClick={() => completeSchedulePlanAndLogLesson(plan.id)}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                      title={tx('ยืนยันว่าสอนแล้ว และแปลงเป็นคาบจริงทันที', 'Confirm taught and convert to lesson')}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{tx('✅ ยืนยันว่าสอนแล้ว (1-Click)', 'Confirm Taught')}</span>
+                    </button>
+
+                    <button
+                      onClick={() => onOpenLessonModal(plan.id)}
+                      className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 transition-all"
+                      title={tx('เปิดหน้าบันทึกเพื่อปรับแก้เนื้อหา ให้คะแนน หรือใส่การบ้าน', 'Edit details, homework or score')}
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{tx('✏️ ใส่การบ้าน/ปรับแก้', 'Edit/Homework')}</span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleSchedulePlanStatus(plan.id, 'cancelled')}
+                      className="px-2.5 py-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors cursor-pointer"
+                      title={tx('นักเรียนลา หรือยกเลิกคาบนี้', 'Student absent or cancel')}
+                    >
+                      <XCircle className="w-3.5 h-3.5 inline mr-1" />
+                      <span>{tx('นักเรียนลา/ยกเลิก', 'Cancel')}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* 21st.dev Metric Bento Strip - Crisp Tabular Numbers, Zero Fluff */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">

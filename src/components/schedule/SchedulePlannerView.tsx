@@ -44,6 +44,7 @@ export const SchedulePlannerView: React.FC = () => {
     setActiveCourseId,
     activeCourse,
     schedulePlans,
+    pendingSchedulePlans,
     addSchedulePlan,
     updateSchedulePlan,
     deleteSchedulePlan,
@@ -570,6 +571,59 @@ export const SchedulePlannerView: React.FC = () => {
             </span>
           </SpotlightCard>
         </div>
+
+        {/* Pending Session Confirmations for Admin */}
+        {currentUserRole === 'admin' && pendingSchedulePlans && pendingSchedulePlans.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-50/70 to-emerald-500/10 border-2 border-amber-400/80 rounded-2xl p-4 shadow-xs print:hidden">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                <h4 className="text-xs font-black text-slate-900">
+                  {tx('🔔 คาบเรียนที่เลยเวลาแล้ว (รอคุณครูกดยืนยันว่าสอนแล้ว)', 'Sessions awaiting confirmation')} ({pendingSchedulePlans.length})
+                </h4>
+              </div>
+            </div>
+            <div className="divide-y divide-amber-200/60">
+              {pendingSchedulePlans.map((plan) => {
+                const targetStudents = students.filter(
+                  (s) => (plan.studentIds && plan.studentIds.includes(s.id)) || plan.studentId === s.id
+                );
+                const studentNames = targetStudents.length > 0
+                  ? targetStudents.map((s) => s.nickname).join(', ')
+                  : tx('นักเรียนทุกคน', 'All Students');
+
+                return (
+                  <div key={plan.id} className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900">{studentNames}</span>
+                      <span className="text-slate-500 font-mono text-[11px] ml-2">
+                        {plan.date} ({plan.startTime} - {plan.endTime})
+                      </span>
+                      {plan.plannedContentDescription && (
+                        <span className="text-slate-600 ml-2">· {plan.plannedContentDescription}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleMarkAsCompletedAndLog(plan)}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>{tx('✅ ยืนยันว่าสอนแล้ว (1-Click)', 'Confirm Taught')}</span>
+                      </button>
+                      <button
+                        onClick={() => toggleSchedulePlanStatus(plan.id, 'cancelled')}
+                        className="px-2 py-1 text-slate-500 hover:text-red-600 text-xs rounded-lg cursor-pointer"
+                      >
+                        {tx('นักเรียนลา/ยกเลิก', 'Cancel')}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 pt-2 text-xs print:hidden">

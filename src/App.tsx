@@ -76,10 +76,12 @@ const MainContent: React.FC = () => {
     );
   }
 
-  const handleOpenAddLesson = (planId?: string, sessionType?: 'completed' | 'upcoming') => {
+  const handleOpenAddLesson = (planId?: string | unknown, sessionType?: 'completed' | 'upcoming') => {
+    const cleanPlanId = typeof planId === 'string' ? planId : null;
+    const cleanSessionType = sessionType === 'completed' || sessionType === 'upcoming' ? sessionType : undefined;
     setEditingLesson(null);
-    setSelectedPlanIdForModal(planId || null);
-    setInitialSessionTypeForModal(sessionType);
+    setSelectedPlanIdForModal(cleanPlanId);
+    setInitialSessionTypeForModal(cleanSessionType);
     setIsLessonModalOpen(true);
   };
 

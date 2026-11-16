@@ -151,6 +151,7 @@ interface HierarchicalTopicSelectorProps {
   selectedSubtopicIds: string[];
   onChange: (selectedIds: string[]) => void;
   maxHeight?: string;
+  className?: string;
 }
 
 export const HierarchicalTopicSelector: React.FC<HierarchicalTopicSelectorProps> = ({
@@ -158,6 +159,7 @@ export const HierarchicalTopicSelector: React.FC<HierarchicalTopicSelectorProps>
   selectedSubtopicIds,
   onChange,
   maxHeight = 'max-h-72',
+  className = '',
 }) => {
   const { tx } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
@@ -273,9 +275,9 @@ export const HierarchicalTopicSelector: React.FC<HierarchicalTopicSelectorProps>
   }, [topics, searchQuery]);
 
   return (
-    <div className="space-y-2 text-xs">
+    <div className={`space-y-2 text-xs ${className}`}>
       {/* Top Controls: Search & Quick Actions */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <div className="relative flex-1 min-w-[160px]">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input

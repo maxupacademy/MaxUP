@@ -15,6 +15,9 @@ import {
   Plus,
   AlertCircle,
   FileText,
+  Users,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { MathText } from '../ui/MathText';
 
@@ -70,6 +73,17 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   const [hwDueDate, setHwDueDate] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedSchedulePlanId, setSelectedSchedulePlanId] = useState<string>('');
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleSelectSchedulePlan = (planId: string) => {
     setSelectedSchedulePlanId(planId);
@@ -182,8 +196,6 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
         nextWeek.setDate(nextWeek.getDate() + 5);
         setHwDueDate(nextWeek.toISOString().split('T')[0]);
 
-        // Smart context-aware default: if user passes initialSessionType use it,
-        // otherwise check whether default date+time (today 17:00) is past or future!
         if (initialSessionType) {
           setSessionType(initialSessionType);
         } else {
@@ -227,14 +239,6 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   const durationMinutes = calculateDuration(startTime, endTime);
   const durationHours = (durationMinutes / 60).toFixed(1);
 
-  // Toggle subtopic selection from course syllabus (silently tracks IDs without appending text)
-  const toggleSubtopic = (id: string, name: string) => {
-    setSelectedSubtopicIds((prev) => {
-      const exists = prev.includes(id);
-      return exists ? prev.filter((item) => item !== id) : [...prev, id];
-    });
-  };
-
   const handleQuickCreateStudent = () => {
     if (!quickStudentNickname.trim()) return;
     const newId = `std_${Date.now()}`;
@@ -251,6 +255,7 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
     };
     addStudent(newStd);
     setStudentId(newId);
+    setSelectedStudentIds([newId]);
     setShowQuickAddStudent(false);
     setQuickStudentNickname('');
     setQuickStudentFullName('');
@@ -391,443 +396,581 @@ export const LessonLoggerModal: React.FC<LessonLoggerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-[#FFFDF7] w-full max-w-3xl rounded-2xl shadow-2xl border border-amber-900/15 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-6 py-4 bg-white border-b border-amber-100 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              {editLesson
-                ? tx('แก้ไขบันทึกคาบเรียน', 'Edit Lesson Log')
-                : tx('บันทึกคาบเรียนใหม่', 'New Lesson Log')}
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {tx(
-                'เลือกหัวข้อที่เรียนตามสารบัญ คำนวณชั่วโมงอัตโนมัติ และแนบลิงก์ Google Drive',
-                'Select syllabus topics, auto-calculate hours, and attach Google Drive links.'
-              )}
-            </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-5 bg-slate-900/75 backdrop-blur-xs overflow-hidden animate-in fade-in duration-200">
+      <div className="bg-[#FFFDF7] w-full h-[96vh] max-w-[1600px] rounded-2xl md:rounded-3xl shadow-2xl border border-amber-900/20 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Studio Top Header Bar */}
+        <div className="px-5 py-3.5 bg-white border-b border-amber-100 flex items-center justify-between gap-4 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20 text-lg shrink-0">
+              M
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                  {editLesson
+                    ? tx('แก้ไขบันทึกคาบเรียน', 'Edit Lesson Log')
+                    : tx('MaxUp Lesson Studio', 'MaxUp Lesson Studio')}
+                </h2>
+                <span
+                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    editLesson
+                      ? 'bg-amber-100 text-amber-900 border-amber-300'
+                      : sessionType === 'completed'
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                      : 'bg-blue-100 text-blue-900 border-blue-300'
+                  }`}
+                >
+                  {editLesson
+                    ? tx('โหมดแก้ไข', 'Editing')
+                    : sessionType === 'completed'
+                    ? tx('โหมดสอนแล้ว (Completed)', 'Completed Mode')
+                    : tx('โหมดลงตารางล่วงหน้า (Upcoming)', 'Upcoming Mode')}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 truncate hidden sm:block">
+                {tx(
+                  'บันทึกผลการสอนจริงหรือลงตารางสอนล่วงหน้า พร้อมเลือกหัวข้อสารบัญและคำนวณชั่วโมงอัตโนมัติ',
+                  'Record lesson results or advance schedule with interactive syllabus & auto-duration.'
+                )}
+              </p>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          {/* Segmented Control: Completed Lesson vs Upcoming Schedule */}
+          {/* Segmented Control in Top Bar (when not editing) */}
           {!editLesson && (
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-3">
+            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
               <button
                 type="button"
                 onClick={() => setSessionType('completed')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-1.5 px-3.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   sessionType === 'completed'
                     ? 'bg-emerald-600 text-white shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>{tx('✅ บันทึกคาบที่สอนแล้ว (Completed)', 'Recorded Lesson')}</span>
+                <span>{tx('✅ บันทึกคาบที่สอนแล้ว', 'Recorded Lesson')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSessionType('upcoming')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-1.5 px-3.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   sessionType === 'upcoming'
                     ? 'bg-blue-900 text-white shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 text-amber-300" />
-                <span>{tx('📅 ลงตารางสอนล่วงหน้า (Upcoming)', 'Advance Schedule')}</span>
+                <span>{tx('📅 ลงตารางสอนล่วงหน้า', 'Advance Schedule')}</span>
               </button>
             </div>
           )}
 
-          {/* Context Explainer Banner for Mode */}
-          {!editLesson && (
-            <div className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 transition-all ${
-              sessionType === 'completed'
-                ? 'bg-emerald-50/80 border-emerald-200/80 text-emerald-900'
-                : 'bg-blue-50/80 border-blue-200/80 text-blue-950'
-            }`}>
-              {sessionType === 'completed' ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>
-                    {tx(
-                      'โหมดสอนแล้ว: บันทึกผลการสอนจริง เช็คเนื้อหาที่เรียน ให้คะแนน สั่งการบ้าน และอัปเดตสารบัญนักเรียนทันที',
-                      'Completed Mode: Logs real lesson results, checks topics, assigns homework, and updates student syllabus.'
-                    )}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Calendar className="w-4 h-4 text-blue-700 shrink-0" />
-                  <span>
-                    {tx(
-                      'โหมดลงตารางล่วงหน้า: นัดหมายวันเวลาและเตรียมหัวข้อล่วงหน้า จะแสดงบนปฏิทินของนักเรียน',
-                      'Upcoming Mode: Schedules date/time and planned topics to show on student calendar.'
-                    )}
-                  </span>
-                </>
-              )}
-            </div>
-          )}
-          {/* Quick Import from Schedule Plan */}
-          {!editLesson && schedulePlans && schedulePlans.length > 0 && (
-            <div className="p-3.5 bg-gradient-to-r from-blue-50/90 to-amber-50/80 border border-blue-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-slate-900 text-xs block">
-                    📅 {tx('ดึงข้อมูลจากตารางเรียน', 'Import from Schedule')}
-                  </span>
-                  <span className="text-[11px] text-slate-600 block">
-                    {tx(
-                      'เลือกคาบเพื่อกรอกนักเรียน วิชา เวลา และหัวข้อให้อัตโนมัติ',
-                      'Select a planned slot to auto-fill student, course, time, and syllabus topics.'
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              <select
-                value={selectedSchedulePlanId}
-                onChange={(e) => handleSelectSchedulePlan(e.target.value)}
-                className="bg-white border border-blue-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs cursor-pointer max-w-sm"
-              >
-                <option value="">{tx('-- เลือกคาบจากตารางเรียน --', '-- Select from schedule --')}</option>
-                {schedulePlans
-                  .slice()
-                  .sort((a, b) => b.date.localeCompare(a.date))
-                  .map((p) => {
-                    const st = students.find((s) => s.id === p.studentId);
-                    const stName = st ? st.nickname : p.studentId === 'all' ? tx('ทุกคน', 'All') : tx('นักเรียน', 'Student');
-                    const isDone = p.status === 'completed';
-                    return (
-                      <option key={p.id} value={p.id}>
-                        {isDone ? '✓ ' : ''}{p.date} ({p.startTime}–{p.endTime}) • {stName} • {p.title}
-                      </option>
-                    );
-                  })}
-              </select>
-            </div>
-          )}
-
-          {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Row 1: Student & Course */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">
-                  {tx('นักเรียน *', 'Student *')}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowQuickAddStudent(!showQuickAddStudent)}
-                  className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <UserPlus className="w-3 h-3" />
-                  <span>+ {tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</span>
-                </button>
-              </div>
-
-              {showQuickAddStudent && (
-                <div className="mb-2 p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
-                  <div className="text-[11px] font-bold text-blue-900">{tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder={tx('ชื่อเล่น เช่น น้องภูมิ', 'Nickname')}
-                      value={quickStudentNickname}
-                      onChange={(e) => setQuickStudentNickname(e.target.value)}
-                      className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder={tx('ชื่อ-นามสกุลจริง', 'Full Name')}
-                      value={quickStudentFullName}
-                      onChange={(e) => setQuickStudentFullName(e.target.value)}
-                      className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleQuickCreateStudent}
-                    className="w-full py-1 bg-blue-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
-                  >
-                    {tx('ยืนยันเพิ่มนักเรียน', 'Confirm Student')}
-                  </button>
-                </div>
-              )}
-
-              <StudentGroupSelector
-                selectedStudentIds={selectedStudentIds}
-                onChangeSelected={(ids, grpId) => {
-                  setSelectedStudentIds(ids);
-                  if (ids.length > 0) setStudentId(ids[0]);
-                  setSelectedGroupId(grpId);
-                }}
-                courseId={selectedSubjectId}
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">
-                  {tx('คอร์สเรียน *', 'Course *')}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowQuickAddCourse(!showQuickAddCourse)}
-                  className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="w-3 h-3" />
-                  <span>+ {tx('เพิ่มคอร์สด่วน', 'Quick Add Course')}</span>
-                </button>
-              </div>
-
-              {showQuickAddCourse && (
-                <div className="mb-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-                  <input
-                    type="text"
-                    placeholder={tx('ชื่อคอร์ส เช่น เคมี ม.5 เล่ม 3', 'Course Name')}
-                    value={quickCourseName}
-                    onChange={(e) => setQuickCourseName(e.target.value)}
-                    className="w-full bg-white border border-amber-200 rounded-lg px-2 py-1 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleQuickCreateCourse}
-                    className="w-full py-1 bg-amber-600 text-white rounded-lg text-xs font-semibold cursor-pointer"
-                  >
-                    {tx('ยืนยันสร้างคอร์ส', 'Create Course')}
-                  </button>
-                </div>
-              )}
-
-              {courses.length === 0 ? (
-                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-                  <span>{tx('ยังไม่มีคอร์สเรียนในระบบ กรุณากดปุ่มเพิ่มคอร์สด่วนด้านบน', 'No courses yet. Use Quick Add Course above.')}</span>
-                </div>
-              ) : (
-                <select
-                  value={selectedSubjectId || courses[0]?.id || ''}
-                  onChange={(e) => {
-                    setSelectedSubjectId(e.target.value);
-                    setSelectedSubtopicIds([]);
-                  }}
-                  required
-                  className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </div>
-
-          {/* Row 2: Date & Time */}
-          <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200/60">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {tx('วันที่เรียน *', 'Lesson Date *')}
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={lessonDate}
-                    onChange={(e) => setLessonDate(e.target.value)}
-                    required
-                    className="w-full bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-xs text-slate-800"
-                  />
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {tx('เวลาเริ่ม', 'Start Time')}
-                </label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-xs text-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {tx('เวลาสิ้นสุด', 'End Time')}
-                </label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-white border border-amber-200 rounded-lg px-3 py-1.5 text-xs text-slate-800"
-                />
-              </div>
-            </div>
-
-            <div className="mt-2 pt-2 border-t border-amber-200/40 flex items-center justify-between text-xs">
-              <span className="text-slate-500">{tx('ระยะเวลาเรียน:', 'Duration:')}</span>
-              <span className="inline-flex items-center gap-1.5 font-bold text-amber-900">
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
-                {durationHours} {tx('ชม.', 'hrs')} ({durationMinutes} {tx('นาที', 'mins')})
-              </span>
-            </div>
-          </div>
-
-          {/* Row 3: Course Syllabus Selection */}
-          {/* Topic & Subtopic Selector in Full Syllabus Hierarchy */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-blue-900" />
-                <span>{tx('หัวข้อที่เรียนในคาบนี้ (ตามลำดับขั้นสารบัญ):', 'Syllabus Topics Covered (Hierarchical):')}</span>
-              </label>
-              <span className="text-xs text-blue-900 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                {tx(`เลือกแล้ว ${selectedSubtopicIds.length} หัวข้อ`, `${selectedSubtopicIds.length} selected`)}
-              </span>
-            </div>
-
-            <HierarchicalTopicSelector
-              course={currentCourse}
-              selectedSubtopicIds={selectedSubtopicIds}
-              onChange={setSelectedSubtopicIds}
-              maxHeight="max-h-60"
-            />
-          </div>
-
-          {/* Row 4: Detailed Content & Teacher Note (Unified) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {tx('สรุปเนื้อหาและคำแนะนำจากครู *', 'Lesson Summary & Teacher Feedback *')}
-            </label>
-            <textarea
-              rows={4}
-              value={contentDetail}
-              onChange={(e) => {
-                setContentDetail(e.target.value);
-                setTeacherNote(e.target.value);
-              }}
-              placeholder={tx('บันทึกสรุปเนื้อหาที่สอน เทคนิค หรือคำแนะนำถึงนักเรียนและผู้ปกครอง...', 'Summarize topics covered, study tips, and feedback for student/parent...')}
-              required
-              className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs leading-relaxed"
-            />
-          </div>
-
-          {/* Row 5: Google Drive Link */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{tx('ลิงก์ชีทเรียน Google Drive:', 'Google Drive Sheet Link:')}</span>
-              </label>
-              <input
-                type="url"
-                value={googleDriveUrl}
-                onChange={(e) => setGoogleDriveUrl(e.target.value)}
-                placeholder="https://drive.google.com/file/d/..."
-                className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-              />
-            </div>
-
-            {/* Handwritten Solution File Link */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <span className="text-amber-600 font-bold">✍️</span>
-                <span>{tx('ลิงก์เฉลยลายมือครู Max:', 'Handwritten Notes Link:')}</span>
-              </label>
-              <input
-                type="url"
-                value={handwrittenSolutionUrl}
-                onChange={(e) => setHandwrittenSolutionUrl(e.target.value)}
-                placeholder="https://drive.google.com/..."
-                className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-              />
-            </div>
-          </div>
-
-          {/* Row 7: Homework Toggle */}
-          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
-              <input
-                type="checkbox"
-                checked={hasHomework}
-                onChange={(e) => setHasHomework(e.target.checked)}
-                className="rounded text-blue-900 focus:ring-blue-900"
-              />
-              <span>{tx('สั่งการบ้านในคาบนี้', 'Assign Homework')}</span>
-            </label>
-
-            {hasHomework && (
-              <div className="space-y-2 pt-1 border-t border-slate-200 animate-in fade-in">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder={tx('หัวข้อการบ้าน เช่น แบบฝึกหัดท้ายบทข้อ 1-10', 'Homework title')}
-                    value={hwTitle}
-                    onChange={(e) => setHwTitle(e.target.value)}
-                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
-                  />
-                  <input
-                    type="date"
-                    value={hwDueDate}
-                    onChange={(e) => setHwDueDate(e.target.value)}
-                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
-                  />
-                </div>
-                <textarea
-                  rows={2}
-                  placeholder={tx('คำอธิบายรายละเอียดการบ้าน หรือข้อที่ต้องทำส่ง', 'Homework instructions')}
-                  value={hwDescription}
-                  onChange={(e) => setHwDescription(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Form Submit & Cancel */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+              title="Close (Esc)"
             >
-              {tx('ยกเลิก', 'Cancel')}
+              <X className="w-5 h-5" />
             </button>
-            <button
-              type="submit"
-              className={`px-5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98 ${
-                sessionType === 'completed' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-900 hover:bg-blue-800'
-              }`}
-            >
-              {editLesson
-                ? tx('บันทึกการเปลี่ยนแปลง', 'Save Changes')
-                : sessionType === 'upcoming'
-                ? tx('📅 ลงตารางสอนล่วงหน้า', 'Schedule Class')
-                : tx('✅ บันทึกคาบ & ขึ้นปฏิทินทันที', 'Save Lesson & Add to Schedule')}
-            </button>
+          </div>
+        </div>
+
+        {/* Main Split Studio Area */}
+        <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+            {/* Left Column (5 of 12 cols): Form Fields, Inputs, Notes */}
+            <div className="lg:col-span-5 h-full overflow-y-auto p-4 sm:p-5 md:p-6 space-y-4 border-b lg:border-b-0 lg:border-r border-amber-200/70 bg-[#FFFDF7]">
+              {/* Mobile Segmented Control */}
+              {!editLesson && (
+                <div className="md:hidden grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setSessionType('completed')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      sessionType === 'completed'
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{tx('✅ บันทึกคาบที่สอนแล้ว', 'Recorded Lesson')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSessionType('upcoming')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      sessionType === 'upcoming'
+                        ? 'bg-blue-900 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{tx('📅 ลงตารางสอนล่วงหน้า', 'Advance Schedule')}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Context Explainer Banner for Mode */}
+              {!editLesson && (
+                <div
+                  className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 transition-all ${
+                    sessionType === 'completed'
+                      ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                      : 'bg-blue-50/90 border-blue-200 text-blue-950'
+                  }`}
+                >
+                  {sessionType === 'completed' ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        {tx(
+                          'โหมดสอนแล้ว: บันทึกผลการสอนจริง เช็คเนื้อหาที่เรียน ให้คะแนน และอัปเดตสารบัญนักเรียนทันที',
+                          'Completed Mode: Logs real lesson results, marks topics, and updates student syllabus.'
+                        )}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Calendar className="w-4 h-4 text-blue-700 shrink-0" />
+                      <span>
+                        {tx(
+                          'โหมดลงตารางล่วงหน้า: นัดหมายวันเวลาและเตรียมหัวข้อล่วงหน้า จะแสดงบนปฏิทินของนักเรียน',
+                          'Upcoming Mode: Schedules date/time and planned topics to show on student calendar.'
+                        )}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Quick Import from Schedule Plan */}
+              {!editLesson && schedulePlans && schedulePlans.length > 0 && (
+                <div className="p-3 bg-gradient-to-r from-blue-50/90 to-amber-50/80 border border-blue-200/90 rounded-2xl flex flex-col gap-2 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-blue-900 text-white flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-900 text-xs block">
+                        {tx('ดึงข้อมูลจากตารางเรียนล่วงหน้า', 'Import from Schedule')}
+                      </span>
+                      <span className="text-[11px] text-slate-600 block">
+                        {tx(
+                          'เลือกคาบที่นัดไว้เพื่อกรอกนักเรียน เวลา และหัวข้อให้อัตโนมัติ',
+                          'Select a planned slot to auto-fill student, course, time, and topics.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <select
+                    value={selectedSchedulePlanId}
+                    onChange={(e) => handleSelectSchedulePlan(e.target.value)}
+                    className="w-full bg-white border border-blue-300 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs cursor-pointer"
+                  >
+                    <option value="">{tx('-- เลือกคาบที่นัดหมายไว้ --', '-- Select from schedule --')}</option>
+                    {schedulePlans
+                      .slice()
+                      .sort((a, b) => b.date.localeCompare(a.date))
+                      .map((p) => {
+                        const st = students.find((s) => s.id === p.studentId);
+                        const stName = st ? st.nickname : p.studentId === 'all' ? tx('ทุกคน', 'All') : tx('นักเรียน', 'Student');
+                        const isDone = p.status === 'completed';
+                        return (
+                          <option key={p.id} value={p.id}>
+                            {isDone ? '✓ ' : ''}{p.date} ({p.startTime}–{p.endTime}) • {stName} • {p.title}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {/* Row 1: Student Selection & Course Selection */}
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{tx('นักเรียน / กลุ่มเรียน *', 'Student / Group *')}</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickAddStudent(!showQuickAddStudent)}
+                      className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <UserPlus className="w-3 h-3" />
+                      <span>+ {tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</span>
+                    </button>
+                  </div>
+
+                  {showQuickAddStudent && (
+                    <div className="mb-2 p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
+                      <div className="text-[11px] font-bold text-blue-900">{tx('เพิ่มนักเรียนด่วน', 'Quick Add Student')}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder={tx('ชื่อเล่น เช่น น้องภูมิ', 'Nickname')}
+                          value={quickStudentNickname}
+                          onChange={(e) => setQuickStudentNickname(e.target.value)}
+                          className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          placeholder={tx('ชื่อ-นามสกุลจริง', 'Full Name')}
+                          value={quickStudentFullName}
+                          onChange={(e) => setQuickStudentFullName(e.target.value)}
+                          className="bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleQuickCreateStudent}
+                        className="w-full py-1 bg-blue-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
+                      >
+                        {tx('ยืนยันเพิ่มนักเรียน', 'Confirm Student')}
+                      </button>
+                    </div>
+                  )}
+
+                  <StudentGroupSelector
+                    selectedStudentIds={selectedStudentIds}
+                    onChangeSelected={(ids, grpId) => {
+                      setSelectedStudentIds(ids);
+                      if (ids.length > 0) setStudentId(ids[0]);
+                      setSelectedGroupId(grpId);
+                    }}
+                    courseId={selectedSubjectId}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{tx('คอร์สเรียน *', 'Course *')}</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickAddCourse(!showQuickAddCourse)}
+                      className="text-[11px] font-semibold text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+ {tx('เพิ่มคอร์สด่วน', 'Quick Add Course')}</span>
+                    </button>
+                  </div>
+
+                  {showQuickAddCourse && (
+                    <div className="mb-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                      <input
+                        type="text"
+                        placeholder={tx('ชื่อคอร์ส เช่น เคมี ม.5 เล่ม 3', 'Course Name')}
+                        value={quickCourseName}
+                        onChange={(e) => setQuickCourseName(e.target.value)}
+                        className="w-full bg-white border border-amber-200 rounded-lg px-2 py-1 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleQuickCreateCourse}
+                        className="w-full py-1 bg-amber-600 text-white rounded-lg text-xs font-semibold cursor-pointer"
+                      >
+                        {tx('ยืนยันสร้างคอร์ส', 'Create Course')}
+                      </button>
+                    </div>
+                  )}
+
+                  {courses.length === 0 ? (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
+                      <span>{tx('ยังไม่มีคอร์สเรียนในระบบ กรุณากดปุ่มเพิ่มคอร์สด่วนด้านบน', 'No courses yet. Use Quick Add Course above.')}</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedSubjectId || courses[0]?.id || ''}
+                      onChange={(e) => {
+                        setSelectedSubjectId(e.target.value);
+                        setSelectedSubtopicIds([]);
+                      }}
+                      required
+                      className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs font-medium"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 2: Date & Time Card */}
+              <div className="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/70 space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-center">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {tx('วันที่เรียน *', 'Lesson Date *')}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={lessonDate}
+                        onChange={(e) => setLessonDate(e.target.value)}
+                        required
+                        className="w-full bg-white border border-amber-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium"
+                      />
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {tx('เวลาเริ่ม', 'Start Time')}
+                    </label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full bg-white border border-amber-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {tx('เวลาสิ้นสุด', 'End Time')}
+                    </label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full bg-white border border-amber-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-amber-200/50 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-medium">{tx('ระยะเวลาคาบเรียน:', 'Duration:')}</span>
+                  <span className="inline-flex items-center gap-1.5 font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md border border-amber-300/60">
+                    <Clock className="w-3.5 h-3.5 text-amber-700" />
+                    {durationHours} {tx('ชม.', 'hrs')} ({durationMinutes} {tx('นาที', 'mins')})
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 3: Lesson Summary & Teacher Feedback (Unified large textarea) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-slate-500" />
+                    <span>{tx('สรุปเนื้อหาและคำแนะนำจากครู *', 'Lesson Summary & Teacher Feedback *')}</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    {tx('บันทึกคำแนะนำ หรือเทคนิคพิเศษ', 'Summary & student feedback')}
+                  </span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={contentDetail}
+                  onChange={(e) => {
+                    setContentDetail(e.target.value);
+                    setTeacherNote(e.target.value);
+                  }}
+                  placeholder={tx(
+                    'บันทึกสรุปเนื้อหาที่สอน เทคนิคการทำโจทย์ หรือคำแนะนำถึงนักเรียนและผู้ปกครอง...',
+                    'Summarize topics covered, problem-solving tips, and feedback for student/parent...'
+                  )}
+                  required
+                  className="w-full bg-white border border-amber-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs leading-relaxed"
+                />
+              </div>
+
+              {/* Row 4: Google Drive & Handwritten Solution Links */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{tx('ลิงก์ชีทเรียน Google Drive:', 'Google Drive Link:')}</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={googleDriveUrl}
+                    onChange={(e) => setGoogleDriveUrl(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/..."
+                    className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="text-amber-600 font-bold">✍️</span>
+                    <span>{tx('ลิงก์เฉลยลายมือครู Max:', 'Handwritten Notes Link:')}</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={handwrittenSolutionUrl}
+                    onChange={(e) => setHandwrittenSolutionUrl(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              {/* Row 5: Homework Section */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2.5">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={hasHomework}
+                    onChange={(e) => setHasHomework(e.target.checked)}
+                    className="rounded text-blue-900 focus:ring-blue-900 cursor-pointer"
+                  />
+                  <span>{tx('สั่งการบ้านในคาบนี้', 'Assign Homework for this lesson')}</span>
+                </label>
+
+                {hasHomework && (
+                  <div className="space-y-2 pt-2 border-t border-slate-200 animate-in fade-in">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          {tx('หัวข้อการบ้าน', 'Homework Title')}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={tx('เช่น แบบฝึกหัดท้ายบทข้อ 1-10', 'e.g. Exercises 1-10')}
+                          value={hwTitle}
+                          onChange={(e) => setHwTitle(e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          {tx('กำหนดส่ง', 'Due Date')}
+                        </label>
+                        <input
+                          type="date"
+                          value={hwDueDate}
+                          onChange={(e) => setHwDueDate(e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                        {tx('คำอธิบายรายละเอียดการบ้าน', 'Instructions')}
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder={tx('คำอธิบายรายละเอียดการบ้าน หรือโจทย์ที่ต้องฝึกทำส่ง...', 'Homework instructions...')}
+                        value={hwDescription}
+                        onChange={(e) => setHwDescription(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column (7 of 12 cols): Full-Height Interactive Syllabus */}
+            <div className="lg:col-span-7 h-full flex flex-col p-4 sm:p-5 md:p-6 bg-white overflow-hidden">
+              {/* Syllabus Header */}
+              <div className="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-100 shrink-0">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-blue-900 shrink-0" />
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {tx('หัวข้อในหลักสูตร (Interactive Syllabus Browser)', 'Interactive Course Syllabus')}
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                    {tx(
+                      `เลือกหัวข้อที่สอนจริงใน ${currentCourse.name} เพื่อติดตามความคืบหน้านักเรียน`,
+                      `Select topics taught in ${currentCourse.name} to update student syllabus.`
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-blue-900 font-bold bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    {tx(`เลือกแล้ว ${selectedSubtopicIds.length} หัวข้อ`, `${selectedSubtopicIds.length} topics selected`)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Full-Height Syllabus Hierarchy Component */}
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <HierarchicalTopicSelector
+                  course={currentCourse}
+                  selectedSubtopicIds={selectedSubtopicIds}
+                  onChange={setSelectedSubtopicIds}
+                  maxHeight="flex-1 min-h-0"
+                  className="flex-1 min-h-0 flex flex-col"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Sticky Summary & Action Bar */}
+          <div className="px-5 py-3.5 bg-white border-t border-amber-100 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
+            {/* Quick Summary Badges */}
+            <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg font-medium">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                {lessonDate} ({startTime} - {endTime})
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-lg font-bold text-amber-900">
+                <Clock className="w-3.5 h-3.5 text-amber-600" />
+                {durationHours} {tx('ชม.', 'hrs')} ({durationMinutes} {tx('นาที', 'mins')})
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-lg font-bold text-blue-900">
+                <BookOpen className="w-3.5 h-3.5 text-blue-700" />
+                {selectedSubtopicIds.length} {tx('หัวข้อที่เลือก', 'topics selected')}
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                {tx('ยกเลิก', 'Cancel')}
+              </button>
+              <button
+                type="submit"
+                className={`px-6 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer active:scale-98 flex items-center gap-2 ${
+                  sessionType === 'completed'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25'
+                    : 'bg-blue-900 hover:bg-blue-800 shadow-blue-900/25'
+                }`}
+              >
+                {editLesson ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>{tx('บันทึกการเปลี่ยนแปลง', 'Save Changes')}</span>
+                  </>
+                ) : sessionType === 'upcoming' ? (
+                  <>
+                    <Calendar className="w-4 h-4 text-amber-300" />
+                    <span>{tx('📅 ยืนยันลงตารางสอนล่วงหน้า', 'Confirm Schedule')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>{tx('✅ บันทึกคาบ & ขึ้นปฏิทินทันที', 'Save Lesson & Add to Schedule')}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

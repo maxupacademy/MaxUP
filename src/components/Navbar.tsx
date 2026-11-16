@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Unified Schedule Ahead & Log Lesson button for Admin */}
           {currentUserRole === 'admin' && (
             <button
-              onClick={onOpenLessonModal}
+              onClick={() => onOpenLessonModal()}
               className="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-98 transition-all rounded-xl shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
               title={tx('ลงตารางสอนล่วงหน้า หรือ บันทึกคาบที่สอนแล้ว', 'Schedule Ahead or Log Lesson')}
             >

@@ -51,16 +51,52 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 
-const deepCleanSanitize = (val: any): any => {
+const isDomOrEventObject = (val: any): boolean => {
+  if (!val || typeof val !== 'object') return false;
+  if (typeof Node !== 'undefined' && val instanceof Node) return true;
+  if (typeof Event !== 'undefined' && val instanceof Event) return true;
+  if (val.nodeType !== undefined || val.nativeEvent !== undefined || val._reactName !== undefined) return true;
+  return false;
+};
+
+const safeJsonStringify = (val: any, fallback = '[]'): string => {
+  try {
+    const seen = new WeakSet();
+    return JSON.stringify(val, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (isDomOrEventObject(value) || key.startsWith('__reactFiber') || key.startsWith('__reactEvents')) {
+          return undefined;
+        }
+        if (seen.has(value)) {
+          return undefined;
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch (err) {
+    console.warn('safeJsonStringify error caught:', err);
+    return fallback;
+  }
+};
+
+const deepCleanSanitize = (val: any, seen = new WeakSet()): any => {
   if (val === undefined) return null;
   if (val === null || typeof val !== 'object') return val;
+  if (isDomOrEventObject(val)) return null;
+  if (seen.has(val)) return null;
+  seen.add(val);
+
   if (Array.isArray(val)) {
-    return val.map(deepCleanSanitize);
+    return val.map((item) => deepCleanSanitize(item, seen)).filter((item) => item !== null);
   }
   const cleaned: Record<string, any> = {};
   for (const [k, v] of Object.entries(val)) {
-    if (v !== undefined) {
-      cleaned[k] = deepCleanSanitize(v);
+    if (v !== undefined && !k.startsWith('__reactFiber') && !k.startsWith('__reactEvents')) {
+      const sanitizedChild = deepCleanSanitize(v, seen);
+      if (sanitizedChild !== undefined) {
+        cleaned[k] = sanitizedChild;
+      }
     }
   }
   return cleaned;
@@ -401,8 +437,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Lessons
   const [lessons, setLessons] = useState<Lesson[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}lessons`);
-    return saved ? JSON.parse(saved) : INITIAL_LESSONS;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}lessons`);
+      if (!saved) return INITIAL_LESSONS;
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return INITIAL_LESSONS;
+      return parsed.map((l) => ({
+        ...l,
+        schedulePlanId: typeof l.schedulePlanId === 'string' ? l.schedulePlanId : undefined,
+      }));
+    } catch {
+      return INITIAL_LESSONS;
+    }
   });
 
   // Homeworks
@@ -440,12 +486,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Study Schedule Plans (ตารางเรียนและวางแผนล่วงหน้า)
   const [schedulePlans, setSchedulePlans] = useState<StudySchedulePlan[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}schedules`);
-    return saved ? JSON.parse(saved) : INITIAL_SCHEDULE_PLANS;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}schedules`);
+      if (!saved) return INITIAL_SCHEDULE_PLANS;
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return INITIAL_SCHEDULE_PLANS;
+      return parsed;
+    } catch {
+      return INITIAL_SCHEDULE_PLANS;
+    }
   });
 
   useEffect(() => {
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}schedules`, JSON.stringify(schedulePlans));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}schedules`, safeJsonStringify(schedulePlans));
   }, [schedulePlans]);
 
   // คาบที่ลงตารางสอนไว้แล้วแต่เลยเวลาสิ้นสุดไปแล้ว และสถานะยังคงเป็น 'upcoming'
@@ -559,24 +612,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncAndCleanAllProgress = () => {
     const cleanMap = recomputeAllStudentsProgress(lessons);
     setProgressMap(cleanMap);
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, safeJsonStringify(cleanMap));
   };
 
   // Persistence to localStorage (Instant, durable and completely stable without layout jitter)
   useEffect(() => {
     if (currentUser) {
-      safeSetLocalStorage(`${STORAGE_KEY_PREFIX}auth_user`, JSON.stringify(currentUser));
+      safeSetLocalStorage(`${STORAGE_KEY_PREFIX}auth_user`, safeJsonStringify(currentUser));
     } else {
       localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth_user`);
     }
   }, [currentUser]);
 
   useEffect(() => {
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}students`, JSON.stringify(students));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}students`, safeJsonStringify(students));
   }, [students]);
 
   useEffect(() => {
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}courses`, JSON.stringify(courses));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}courses`, safeJsonStringify(courses));
   }, [courses]);
 
   useEffect(() => {
@@ -584,20 +637,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [activeCourseId]);
 
   useEffect(() => {
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}lessons`, JSON.stringify(lessons));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}lessons`, safeJsonStringify(lessons));
   }, [lessons]);
 
   useEffect(() => {
     safeSetLocalStorage(
       `${STORAGE_KEY_PREFIX}materials`,
-      JSON.stringify(sanitizeForStorage(materials))
+      safeJsonStringify(sanitizeForStorage(materials))
     );
   }, [materials]);
 
   useEffect(() => {
     safeSetLocalStorage(
       `${STORAGE_KEY_PREFIX}homeworks`,
-      JSON.stringify(sanitizeForStorage(homeworks))
+      safeJsonStringify(sanitizeForStorage(homeworks))
     );
   }, [homeworks]);
 
@@ -605,10 +658,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const cleanMap = recomputeAllStudentsProgress(lessons);
     setProgressMap(cleanMap);
-    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, JSON.stringify(cleanMap));
+    safeSetLocalStorage(`${STORAGE_KEY_PREFIX}progress`, safeJsonStringify(cleanMap));
   }, [lessons, students]);
 
-  // Two-Way Backfill: Synchronize past/standalone lessons into schedulePlans so they appear on the calendar
+  // Two-Way Backfill & Deduplication: Synchronize past/standalone lessons into schedulePlans
+  // and deduplicate any overlapping duplicate items on the calendar
   useEffect(() => {
     if (lessons.length === 0) return;
     setSchedulePlans((prevPlans) => {
@@ -619,15 +673,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const existing = updated.find(
           (p) =>
             p.lessonId === les.id ||
-            (les.schedulePlanId && p.id === les.schedulePlanId) ||
+            (typeof les.schedulePlanId === 'string' && p.id === les.schedulePlanId) ||
             (p.date === les.lessonDate &&
-              p.studentId === les.studentId &&
-              p.courseId === les.subjectId)
+              (!p.courseId || p.courseId === les.subjectId) &&
+              (p.startTime === les.startTime || !p.startTime))
         );
 
         if (!existing) {
           changed = true;
-          const planId = les.schedulePlanId || `sch_les_${les.id}`;
+          const planId = typeof les.schedulePlanId === 'string' ? les.schedulePlanId : `sch_les_${les.id}`;
           const durationHours =
             les.durationMinutes > 0
               ? parseFloat((les.durationMinutes / 60).toFixed(1))
@@ -636,6 +690,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             id: planId,
             courseId: les.subjectId,
             studentId: les.studentId || 'all',
+            studentIds: les.studentIds,
+            groupId: les.groupId,
             title:
               (les.contentDetail || '').split('\n')[0].slice(0, 50) ||
               'คาบเรียนที่บันทึกแล้ว',
@@ -656,19 +712,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
           updated.push(newPlan);
           safeSetDoc(doc(db, 'schedules', planId), newPlan);
-        } else if (!existing.lessonId) {
+        } else if (!existing.lessonId || existing.status !== 'completed') {
           existing.lessonId = les.id;
           existing.status = 'completed';
+          if (!existing.title || existing.title.startsWith('คาบเรียนที่')) {
+            existing.title = (les.contentDetail || '').split('\n')[0].slice(0, 50) || existing.title;
+          }
           changed = true;
         }
       });
 
-      if (changed) {
+      // Deduplicate slots where both upcoming and completed exist on the exact same date and startTime
+      const slotMap = new Map<string, StudySchedulePlan>();
+      updated.forEach((p) => {
+        const slotKey = `${p.date}_${p.startTime || '17:00'}_${p.courseId || ''}`;
+        const existingSlot = slotMap.get(slotKey);
+        if (!existingSlot) {
+          slotMap.set(slotKey, p);
+        } else {
+          changed = true;
+          // Prefer completed item over upcoming item
+          if (p.status === 'completed' && existingSlot.status !== 'completed') {
+            slotMap.set(slotKey, { ...existingSlot, ...p });
+          } else if (p.lessonId && !existingSlot.lessonId) {
+            slotMap.set(slotKey, { ...existingSlot, ...p });
+          }
+        }
+      });
+
+      const deduplicated = Array.from(slotMap.values());
+      if (changed || deduplicated.length !== prevPlans.length) {
         safeSetLocalStorage(
           `${STORAGE_KEY_PREFIX}schedules`,
-          JSON.stringify(updated)
+          safeJsonStringify(deduplicated)
         );
-        return updated;
+        return deduplicated;
       }
       return prevPlans;
     });
@@ -1349,7 +1427,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ) => {
     if (targetStudentIds.length === 0) return;
     const baseId = `les_grp_${Date.now()}`;
-    const planId = lessonData.schedulePlanId || `sch_${baseId}`;
+
+    // Smart Match: Check if there is already an existing schedule plan on the same day/time
+    const existingPlanMatch = schedulePlans.find((p) => {
+      if (typeof lessonData.schedulePlanId === 'string' && p.id === lessonData.schedulePlanId) return true;
+      if (
+        p.date === lessonData.lessonDate &&
+        (!p.courseId || p.courseId === lessonData.subjectId) &&
+        (p.startTime === lessonData.startTime || (!p.startTime && !lessonData.startTime))
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    const planId = existingPlanMatch
+      ? existingPlanMatch.id
+      : (typeof lessonData.schedulePlanId === 'string' ? lessonData.schedulePlanId : `sch_${baseId}`);
 
     const createdLessons: Lesson[] = [];
     targetStudentIds.forEach((stId, idx) => {
@@ -1389,36 +1483,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .join(', ');
 
     const linkedPlan: StudySchedulePlan = {
+      ...(existingPlanMatch || {}),
       id: planId,
       courseId: lessonData.subjectId,
       studentId: targetStudentIds[0] || 'group',
       studentIds: targetStudentIds,
-      groupId: lessonData.groupId,
+      groupId: lessonData.groupId || existingPlanMatch?.groupId,
       title:
         (lessonData.contentDetail || '').split('\n')[0].slice(0, 50) ||
+        existingPlanMatch?.title ||
         `คาบเรียนกลุ่ม (${nicknames})`,
       date: lessonData.lessonDate,
-      startTime: lessonData.startTime || '17:00',
-      endTime: lessonData.endTime || '19:00',
+      startTime: lessonData.startTime || existingPlanMatch?.startTime || '17:00',
+      endTime: lessonData.endTime || existingPlanMatch?.endTime || '19:00',
       durationHours,
-      plannedSubtopicIds: lessonData.subtopicIds || [],
-      plannedContentDescription: lessonData.contentDetail || '',
-      googleDriveUrl: lessonData.googleDriveUrl,
-      handwrittenSolutionUrl: lessonData.handwrittenSolutionUrl,
+      plannedSubtopicIds: lessonData.subtopicIds || existingPlanMatch?.plannedSubtopicIds || [],
+      plannedContentDescription: lessonData.contentDetail || existingPlanMatch?.plannedContentDescription || '',
+      googleDriveUrl: lessonData.googleDriveUrl || existingPlanMatch?.googleDriveUrl,
+      handwrittenSolutionUrl: lessonData.handwrittenSolutionUrl || existingPlanMatch?.handwrittenSolutionUrl,
       score: lessonData.score,
       scoreScale: lessonData.scoreScale,
       homework: lessonData.homework,
       status: 'completed',
       lessonId: baseId,
-      createdAt: new Date().toISOString(),
+      createdAt: existingPlanMatch?.createdAt || new Date().toISOString(),
     };
 
     setSchedulePlans((prev) => {
-      const exists = prev.some((p) => p.id === planId);
-      if (exists) {
-        return prev.map((p) => (p.id === planId ? linkedPlan : p));
-      }
-      return [linkedPlan, ...prev];
+      // Remove any duplicate matching entries that share the same planId or date+startTime+courseId
+      const filtered = prev.filter(
+        (p) =>
+          p.id !== planId &&
+          p.lessonId !== baseId &&
+          !(
+            p.date === linkedPlan.date &&
+            p.startTime === linkedPlan.startTime &&
+            p.courseId === linkedPlan.courseId
+          )
+      );
+      return [linkedPlan, ...filtered];
     });
     safeSetDoc(doc(db, 'schedules', planId), linkedPlan);
   };
@@ -1426,7 +1529,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Lessons - Instant local state without layout jumping
   const addLesson = (lessonData: Omit<Lesson, 'id' | 'createdAt'>) => {
     const newId = `les_${Date.now()}`;
-    const planId = lessonData.schedulePlanId || `sch_${newId}`;
+
+    // Smart Match: Check if there is already an existing schedule plan on the same day/time
+    const existingPlanMatch = schedulePlans.find((p) => {
+      if (typeof lessonData.schedulePlanId === 'string' && p.id === lessonData.schedulePlanId) return true;
+      if (
+        p.date === lessonData.lessonDate &&
+        (!p.courseId || p.courseId === lessonData.subjectId) &&
+        (p.startTime === lessonData.startTime || (!p.startTime && !lessonData.startTime))
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    const planId = existingPlanMatch
+      ? existingPlanMatch.id
+      : (typeof lessonData.schedulePlanId === 'string' ? lessonData.schedulePlanId : `sch_${newId}`);
+
     const newLesson: Lesson = {
       ...lessonData,
       id: newId,
@@ -1455,34 +1575,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         : 2.0;
 
     const linkedPlan: StudySchedulePlan = {
+      ...(existingPlanMatch || {}),
       id: planId,
       courseId: newLesson.subjectId,
       studentId: newLesson.studentId || 'all',
+      studentIds: newLesson.studentIds || (newLesson.studentId ? [newLesson.studentId] : undefined),
+      groupId: newLesson.groupId || existingPlanMatch?.groupId,
       title:
         (newLesson.contentDetail || '').split('\n')[0].slice(0, 50) ||
+        existingPlanMatch?.title ||
         'คาบเรียนที่บันทึกแล้ว',
       date: newLesson.lessonDate,
-      startTime: newLesson.startTime || '17:00',
-      endTime: newLesson.endTime || '19:00',
+      startTime: newLesson.startTime || existingPlanMatch?.startTime || '17:00',
+      endTime: newLesson.endTime || existingPlanMatch?.endTime || '19:00',
       durationHours,
-      plannedSubtopicIds: newLesson.subtopicIds || [],
-      plannedContentDescription: newLesson.contentDetail || '',
-      googleDriveUrl: newLesson.googleDriveUrl,
-      handwrittenSolutionUrl: newLesson.handwrittenSolutionUrl,
+      plannedSubtopicIds: newLesson.subtopicIds || existingPlanMatch?.plannedSubtopicIds || [],
+      plannedContentDescription: newLesson.contentDetail || existingPlanMatch?.plannedContentDescription || '',
+      googleDriveUrl: newLesson.googleDriveUrl || existingPlanMatch?.googleDriveUrl,
+      handwrittenSolutionUrl: newLesson.handwrittenSolutionUrl || existingPlanMatch?.handwrittenSolutionUrl,
       score: newLesson.score,
       scoreScale: newLesson.scoreScale,
       homework: newLesson.homework,
       status: 'completed',
       lessonId: newId,
-      createdAt: newLesson.createdAt,
+      createdAt: existingPlanMatch?.createdAt || newLesson.createdAt,
     };
 
     setSchedulePlans((prev) => {
-      const exists = prev.some((p) => p.id === planId || p.lessonId === newId);
-      if (exists) {
-        return prev.map((p) => (p.id === planId || p.lessonId === newId ? linkedPlan : p));
-      }
-      return [linkedPlan, ...prev];
+      // Remove any duplicate matching entries that share the same planId or date+startTime+courseId
+      const filtered = prev.filter(
+        (p) =>
+          p.id !== planId &&
+          p.lessonId !== newId &&
+          !(
+            p.date === linkedPlan.date &&
+            p.startTime === linkedPlan.startTime &&
+            p.courseId === linkedPlan.courseId
+          )
+      );
+      return [linkedPlan, ...filtered];
     });
     safeSetDoc(doc(db, 'schedules', planId), linkedPlan);
   };

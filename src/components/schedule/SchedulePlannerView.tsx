@@ -171,7 +171,24 @@ export const SchedulePlannerView: React.FC = () => {
       }
     });
 
-    return list;
+    // Deduplicate slots so that duplicate upcoming / completed pairs on the same date/time/course appear as a single unified card
+    const slotMap = new Map<string, StudySchedulePlan>();
+    list.forEach((p) => {
+      const slotKey = `${p.date}_${p.startTime || '17:00'}_${p.courseId || ''}`;
+      const existing = slotMap.get(slotKey);
+      if (!existing) {
+        slotMap.set(slotKey, p);
+      } else {
+        // Prefer completed item over upcoming item
+        if (p.status === 'completed' && existing.status !== 'completed') {
+          slotMap.set(slotKey, { ...existing, ...p });
+        } else if (p.lessonId && !existing.lessonId) {
+          slotMap.set(slotKey, { ...existing, ...p });
+        }
+      }
+    });
+
+    return Array.from(slotMap.values());
   }, [schedulePlans, lessons]);
 
   // Filter plans based on role and active filters

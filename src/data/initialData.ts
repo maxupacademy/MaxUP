@@ -280,7 +280,7 @@ export const INITIAL_LESSONS: Lesson[] = [
     endTime: '16:00',
     durationMinutes: 120,
     subtopicIds: ['chem_s_t4_s1', 'chem_s_t4_s1_2', 'chem_s_t4_s1_3'],
-    contentDetail: 'บทที่ 4 โมลและสูตรเคมี: มวลอะตอมเฉลี่ย ($M_{\\text{avg}}$) และมวลอะตอมสัมพัทธ์ (Relative Atomic Mass)',
+    contentDetail: 'บทที่ 4 โมลและสูตรเคมี: มวลอะตอมเฉลี่ย (M_avg) และมวลอะตอมสัมพัทธ์ (Relative Atomic Mass)',
     score: 5,
     scoreScale: '1-5',
     teacherNote: 'เริ่มบทที่ 4 โมลและสูตรเคมี สอนเรื่องมวลอะตอมสัมพัทธ์ และการคำนวณมวลอะตอมเฉลี่ยจากร้อยละของไอโซโทปในธรรมชาติ พร้อมเทคนิคคานดีดคานหาม (Lever Rule)',

@@ -151,7 +151,7 @@ export const SchedulePlannerView: React.FC = () => {
           courseId: les.subjectId,
           studentId: les.studentId || 'all',
           title:
-            (les.contentDetail || '').split('\n')[0].slice(0, 50) ||
+            (les.contentDetail || '').split('\n')[0].replace(/\$([^\$\n]+?)\$/g, '$1').replace(/\\text\{([^}]+)\}/g, '$1').replace(/\\/g, '').slice(0, 80) ||
             'คาบเรียนที่บันทึกแล้ว',
           date: les.lessonDate,
           startTime: les.startTime || '17:00',

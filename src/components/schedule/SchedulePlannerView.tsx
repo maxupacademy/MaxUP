@@ -151,8 +151,20 @@ export const SchedulePlannerView: React.FC = () => {
           courseId: les.subjectId,
           studentId: les.studentId || 'all',
           title:
-            (les.contentDetail || '').split('\n')[0].replace(/\$([^\$\n]+?)\$/g, '$1').replace(/\\text\{([^}]+)\}/g, '$1').replace(/\\/g, '').slice(0, 80) ||
-            'คาบเรียนที่บันทึกแล้ว',
+            (() => {
+              const firstLine = (les.contentDetail || '').split('\n')[0].trim() || 'คาบเรียนที่บันทึกแล้ว';
+              if (firstLine.length <= 80) return firstLine;
+              // Safe truncate without cutting inside inline math $...$
+              const sliced = firstLine.slice(0, 80);
+              const dollarCount = (sliced.match(/[$]/g) || []).length;
+              if (dollarCount % 2 === 1) {
+                const nextDollar = firstLine.indexOf('$', 80);
+                if (nextDollar !== -1) {
+                  return firstLine.slice(0, nextDollar + 1);
+                }
+              }
+              return sliced;
+            })(),
           date: les.lessonDate,
           startTime: les.startTime || '17:00',
           endTime: les.endTime || '19:00',

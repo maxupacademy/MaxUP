@@ -40,10 +40,24 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '', inline
     }
   };
 
+  // Auto-repair unclosed inline math or corrupted LaTeX delimiters (e.g. from string slicing or broken tags)
+  let safeText = text;
+  // If text has an unclosed $ (e.g. "มวลอะตอมเฉลี่ย ($M_{\text{avg}}" with missing $)
+  const dollarCount = (safeText.match(/[$]/g) || []).length;
+  if (dollarCount % 2 === 1) {
+    // Check if it has an unclosed {
+    const openBraces = (safeText.match(/\{/g) || []).length;
+    const closeBraces = (safeText.match(/\}/g) || []).length;
+    if (openBraces > closeBraces) {
+      safeText += '}'.repeat(openBraces - closeBraces);
+    }
+    safeText += '$';
+  }
+
   // Split text by $$...$$ or $...$ or \(...\) or \[...\]
   // Regex pattern matching delimiters
   const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$\n]+?\$|\\\([\s\S]*?\\\))/g;
-  const parts = text.split(regex);
+  const parts = safeText.split(regex);
 
   return (
     <span className={`inline-math-wrapper ${className}`}>

@@ -357,15 +357,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {students.map((st) => {
+              const studentEnrolledCourses = courses.filter((c) =>
+                (st.enrolledCourseIds || []).includes(c.id) || (st.enrolledCourseIds || []).includes(c.code)
+              );
+              const stTotalSubtopics = studentEnrolledCourses.reduce(
+                (acc, c) => acc + (c.topics || []).reduce((tAcc, t) => tAcc + (t.subtopics?.length || 0), 0),
+                0
+              );
               const stProgress = progressMap[st.id] || [];
+              const enrolledSubtopicIdSet = new Set(
+                studentEnrolledCourses.flatMap((c) => (c.topics || []).flatMap((t) => (t.subtopics || []).map((s) => s.id)))
+              );
               const completedCount = stProgress.filter(
-                (p) => (p.status === 'completed' || p.status === 'mastered') && (p.studyCount || 0) > 0
+                (p) =>
+                  enrolledSubtopicIdSet.has(p.subtopicId) &&
+                  (p.status === 'completed' || p.status === 'mastered') &&
+                  (p.studyCount || 0) > 0
               ).length;
               const percent =
-                totalSubtopics > 0 ? Math.round((completedCount / totalSubtopics) * 100) : 0;
-              const stLessons = lessons.filter((l) => l.studentId === st.id);
+                stTotalSubtopics > 0 ? Math.round((completedCount / stTotalSubtopics) * 100) : 0;
+              const stLessons = lessons.filter(
+                (l) => l.studentId === st.id || (l.studentIds && l.studentIds.includes(st.id))
+              );
               const stHours = (
-                stLessons.reduce((acc, l) => acc + l.durationMinutes, 0) / 60
+                stLessons.reduce((acc, l) => acc + (l.durationMinutes || 0), 0) / 60
               ).toFixed(1);
 
               return (

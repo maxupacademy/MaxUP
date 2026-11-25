@@ -143,7 +143,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           {(() => {
             const visibleCourses = currentUserRole === 'admin'
               ? courses
-              : courses.filter((c) => (currentUser?.enrolledCourseIds || []).includes(c.id));
+              : courses.filter(
+                  (c) =>
+                    (currentUser?.enrolledCourseIds || []).includes(c.id) ||
+                    (currentUser?.enrolledCourseIds || []).includes(c.code)
+                );
 
             if (visibleCourses.length === 0) return null;
 

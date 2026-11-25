@@ -67,6 +67,29 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [lessonSearch, setLessonSearch] = useState('');
   const [lessonCourseFilter, setLessonCourseFilter] = useState('all');
 
+  // Student enrolled courses resolution (Guarantees only courses enrolled by this student are shown)
+  const studentEnrolledIds = React.useMemo(() => {
+    if (currentUser?.role === 'student' && currentUser.enrolledCourseIds && currentUser.enrolledCourseIds.length > 0) {
+      return currentUser.enrolledCourseIds;
+    }
+    if (activeStudent?.enrolledCourseIds && activeStudent.enrolledCourseIds.length > 0) {
+      return activeStudent.enrolledCourseIds;
+    }
+    return currentUser?.enrolledCourseIds || [];
+  }, [currentUser, activeStudent]);
+
+  const myEnrolledCourses = React.useMemo(() => {
+    if (studentEnrolledIds.length === 0) return [];
+    return courses.filter((c) => studentEnrolledIds.includes(c.id) || studentEnrolledIds.includes(c.code));
+  }, [courses, studentEnrolledIds]);
+
+  // Synchronize activeCourseId so it strictly belongs to the student's enrolled courses
+  React.useEffect(() => {
+    if (myEnrolledCourses.length > 0 && !myEnrolledCourses.some((c) => c.id === activeCourseId)) {
+      setActiveCourseId(myEnrolledCourses[0].id);
+    }
+  }, [myEnrolledCourses, activeCourseId, setActiveCourseId]);
+
   const handleEnrollPasscode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passcodeInput.trim()) return;
@@ -222,9 +245,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               className="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
             >
               <option value="all">
-                {tx(`ทุกคอร์สเรียน (${courses.length})`, `All Courses (${courses.length})`)}
+                {tx(`ทุกคอร์สที่ลงทะเบียน (${myEnrolledCourses.length})`, `All Enrolled Courses (${myEnrolledCourses.length})`)}
               </option>
-              {courses.map((c) => (
+              {myEnrolledCourses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -324,7 +347,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </span>
                           {(les.subtopicIds || []).map((subId) => {
                             let subName = subId;
-                            activeSubject?.topics?.forEach((t) => {
+                            const targetCourse = courses.find((c) => c.id === les.subjectId) || activeSubject;
+                            targetCourse?.topics?.forEach((t) => {
                               const found = (t.subtopics || []).find((s) => s.id === subId);
                               if (found) subName = found.name;
                             });
@@ -1175,22 +1199,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-blue-900" />
-                <span>{tx(`คอร์สเรียนของฉัน (${courses.length})`, `My Courses (${courses.length})`)}</span>
+                <span>{tx(`คอร์สเรียนของฉัน (${myEnrolledCourses.length})`, `My Courses (${myEnrolledCourses.length})`)}</span>
               </h3>
             </div>
 
             <div className="space-y-2">
-              {courses
-                .filter((c) => {
-                  if (!currentUser?.enrolledCourseIds || currentUser.enrolledCourseIds.length === 0) {
-                    return false;
-                  }
-                  return (
-                    currentUser.enrolledCourseIds.includes(c.id) ||
-                    currentUser.enrolledCourseIds.includes(c.code)
-                  );
-                })
-                .map((c) => {
+              {myEnrolledCourses.length === 0 ? (
+                <div className="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center space-y-1">
+                  <p className="text-xs font-semibold text-slate-600">
+                    {tx('ยังไม่มีคอร์สเรียนที่ลงทะเบียน', 'No enrolled courses yet')}
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    {tx('กรอกรหัสคอร์ส (Passcode) ด้านล่างเพื่อเพิ่มวิชาเรียน', 'Enter course passcode below to enroll.')}
+                  </p>
+                </div>
+              ) : (
+                myEnrolledCourses.map((c) => {
                   const isActive = activeCourseId === c.id;
                   return (
                     <div
@@ -1219,7 +1243,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       )}
                     </div>
                   );
-                })}
+                })
+              )}
             </div>
 
             {/* Form to enter new course passcode */}

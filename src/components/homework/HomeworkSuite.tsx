@@ -249,22 +249,30 @@ export const HomeworkSuite: React.FC = () => {
           </div>
         </div>
 
-        {/* Course Switcher Pills */}
+        {/* Course Switcher Pills (Filtered for Students) */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
           <span className="text-xs font-bold text-slate-500 whitespace-nowrap">{tx('เลือกคอร์ส:', 'Course:')}</span>
-          {courses.map((course) => (
-            <button
-              key={course.id}
-              onClick={() => setActiveCourseId(course.id)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
-                activeCourseId === course.id
-                  ? 'bg-blue-900 text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {course.name}
-            </button>
-          ))}
+          {(() => {
+            const visibleCourses = currentUserRole === 'admin'
+              ? courses
+              : courses.filter((c) => {
+                  const enrolled = currentUser?.enrolledCourseIds || [];
+                  return enrolled.includes(c.id) || enrolled.includes(c.code);
+                });
+            return visibleCourses.map((course) => (
+              <button
+                key={course.id}
+                onClick={() => setActiveCourseId(course.id)}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+                  activeCourseId === course.id
+                    ? 'bg-blue-900 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {course.name}
+              </button>
+            ));
+          })()}
         </div>
       </div>
 

@@ -76,6 +76,22 @@ export const SyllabusManager: React.FC = () => {
       ? currentUser?.id || ''
       : selectedStudentFilterId;
 
+  // Auto-switch to the selected student's enrolled course if current subject is not enrolled
+  useEffect(() => {
+    if (currentUserRole === 'admin' && selectedStudentFilterId !== 'all') {
+      const targetStudent = students.find((st) => st.id === selectedStudentFilterId);
+      const studentEnrolled = targetStudent?.enrolledCourseIds || [];
+      if (studentEnrolled.length > 0 && !studentEnrolled.includes(activeSubjectId)) {
+        const firstMatch = subjects.find(
+          (s) => studentEnrolled.includes(s.id) || studentEnrolled.includes(s.code)
+        );
+        if (firstMatch) {
+          setActiveSubjectId(firstMatch.id);
+        }
+      }
+    }
+  }, [selectedStudentFilterId, students, currentUserRole, activeSubjectId, setActiveSubjectId, subjects]);
+
   // Material reader modal
   const [selectedMaterialForReader, setSelectedMaterialForReader] = useState<CourseMaterial | null>(null);
 
@@ -529,21 +545,29 @@ export const SyllabusManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Multi-Subject Filter Tabs (Filtered for Students) */}
+        {/* Multi-Subject Filter Tabs (Filtered for Students or Selected Student Filter) */}
         {(() => {
-          const visibleSubjects = currentUserRole === 'admin'
-            ? subjects
-            : subjects.filter((s) => (currentUser?.enrolledCourseIds || []).includes(s.id));
+          const targetFilterStudent = currentUserRole === 'admin' && selectedStudentFilterId !== 'all'
+            ? students.find((st) => st.id === selectedStudentFilterId)
+            : null;
 
-          if (visibleSubjects.length <= 1) return null;
+          const filterStudentEnrolled = targetFilterStudent?.enrolledCourseIds || [];
+
+          const visibleSubjects = currentUserRole === 'admin'
+            ? (targetFilterStudent && filterStudentEnrolled.length > 0
+                ? subjects.filter((s) => filterStudentEnrolled.includes(s.id) || filterStudentEnrolled.includes(s.code))
+                : subjects)
+            : subjects.filter((s) => (currentUser?.enrolledCourseIds || []).includes(s.id) || (currentUser?.enrolledCourseIds || []).includes(s.code));
+
+          if (visibleSubjects.length <= 1 && currentUserRole === 'student') return null;
 
           return (
             <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-100">
               <span className="text-xs font-semibold text-slate-500 whitespace-nowrap mr-1">
-                {tx('เลือกวิชา:', 'Subject:')}
+                {targetFilterStudent ? tx(`วิชาของ ${targetFilterStudent.nickname}:`, `${targetFilterStudent.nickname}'s Subjects:`) : tx('เลือกวิชา:', 'Subject:')}
               </span>
               {visibleSubjects.map((subj) => {
-                const isUserEnrolled = currentUserRole === 'admin' || (currentUser?.enrolledCourseIds || []).includes(subj.id);
+                const isUserEnrolled = currentUserRole === 'admin' || (currentUser?.enrolledCourseIds || []).includes(subj.id) || (currentUser?.enrolledCourseIds || []).includes(subj.code);
                 return (
                   <button
                     key={subj.id}

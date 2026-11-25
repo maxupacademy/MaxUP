@@ -596,59 +596,104 @@ export const SyllabusManager: React.FC = () => {
       </div>
 
       {/* Student Learning Progress & Count Tracker Bar */}
-      <div className="bg-gradient-to-r from-amber-50/90 via-white to-blue-50/70 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-amber-300" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-bold text-slate-900 text-sm">
-                {tx('ติดตามสถานะการเรียนและจำนวนครั้งที่เรียน', 'Learning Progress & Study Count')}
-              </h4>
-              <span className="text-[11px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
-                {tx('ซิงค์อัตโนมัติ', 'Auto-Synced')}
-              </span>
-            </div>
-            <p className="text-slate-600 text-[11px] mt-0.5">
-              {tx(
-                'เมื่อบันทึกคาบเรียน สถานะจะอัปเดตเป็น "เรียนแล้ว" พร้อมนับจำนวนครั้งที่เรียนซ้ำให้อัตโนมัติ',
-                'Status updates automatically when a lesson log is recorded.'
-              )}
-            </p>
-          </div>
-        </div>
+      {(() => {
+        const allCourseSubtopics = (activeSubject?.topics || []).flatMap((t) => t.subtopics || []);
+        const totalSubCount = allCourseSubtopics.length;
+        const completedSubCount = allCourseSubtopics.filter((sub) => {
+          const matchingLessons = lessons.filter(
+            (l) =>
+              (l.subjectId === activeSubjectId || l.subjectId === activeSubject?.code) &&
+              (l.subtopicIds || []).includes(sub.id)
+          );
+          if (effectiveStudentId === 'all') {
+            return matchingLessons.length > 0;
+          }
+          const studentLessons = matchingLessons.filter(
+            (l) => l.studentId === effectiveStudentId || (l.studentIds && l.studentIds.includes(effectiveStudentId))
+          );
+          if (studentLessons.length > 0) return true;
+          const prog = (progressMap[effectiveStudentId] || []).find((p) => p.subtopicId === sub.id);
+          return prog && (prog.studyCount || 0) > 0;
+        }).length;
+        const courseProgressPercent =
+          totalSubCount > 0 ? Math.round((completedSubCount / totalSubCount) * 100) : 0;
 
-        {/* Student Selector (If Admin) or Student Info (If Student) */}
-        {currentUserRole === 'admin' ? (
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-white p-2 rounded-xl border border-amber-200 shadow-2xs">
-            <span className="font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1">
-              <Users className="w-3.5 h-3.5 text-blue-900" />
-              <span>{tx('นักเรียน:', 'Student:')}</span>
-            </span>
-            {students.length === 0 ? (
-              <span className="text-slate-400 italic">{tx('ยังไม่มีนักเรียน', 'No students')}</span>
-            ) : (
-              <select
-                value={effectiveStudentId}
-                onChange={(e) => setSelectedStudentFilterId(e.target.value)}
-                className="bg-amber-50/70 border border-amber-300 font-bold text-slate-900 rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
-              >
-                <option value="all">{tx('🌐 ภาพรวมทุกคน', '🌐 All Students')}</option>
-                {students.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.nickname} {st.fullName ? `— ${st.fullName}` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
+        return (
+          <div className="bg-gradient-to-r from-amber-50/90 via-white to-blue-50/70 border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-xs shadow-2xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      {tx('ติดตามสถานะการเรียนและจำนวนครั้งที่เรียน', 'Learning Progress & Study Count')}
+                    </h4>
+                    <span className="text-[11px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                      {tx('ซิงค์อัตโนมัติ', 'Auto-Synced')}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 text-[11px] mt-0.5">
+                    {tx(
+                      'เรื่องที่เรียนแล้วจะแสดงกรอบสีเขียว พร้อมนับจำนวนครั้งที่เรียนให้อัตโนมัติ (คลิกที่กล่องเพื่อเปิดดูหัวข้อย่อย)',
+                      'Completed topics are highlighted with a green border. Click any card to expand subtopics.'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Student Selector (If Admin) or Student Info (If Student) */}
+              {currentUserRole === 'admin' ? (
+                <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-white p-2 rounded-xl border border-amber-200 shadow-2xs">
+                  <span className="font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5 text-blue-900" />
+                    <span>{tx('นักเรียน:', 'Student:')}</span>
+                  </span>
+                  {students.length === 0 ? (
+                    <span className="text-slate-400 italic">{tx('ยังไม่มีนักเรียน', 'No students')}</span>
+                  ) : (
+                    <select
+                      value={effectiveStudentId}
+                      onChange={(e) => setSelectedStudentFilterId(e.target.value)}
+                      className="bg-amber-50/70 border border-amber-300 font-bold text-slate-900 rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    >
+                      <option value="all">{tx('🌐 ภาพรวมทุกคน', '🌐 All Students')}</option>
+                      {students.map((st) => (
+                        <option key={st.id} value={st.id}>
+                          {st.nickname} {st.fullName ? `— ${st.fullName}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl self-start md:self-auto shrink-0">
+                  <span>{tx('ผู้เรียน:', 'Student:')} {currentUser?.nickname || tx('นักเรียน', 'Student')}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Course Progress Bar */}
+            <div className="pt-2.5 border-t border-amber-200/70 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-700">
+                  {tx(`ความคืบหน้าคอร์ส ${activeSubject?.name || ''}`, `${activeSubject?.name || 'Course'} Progress`)}
+                </span>
+                <span className="font-mono font-bold text-emerald-700">
+                  {completedSubCount}/{totalSubCount} {tx('หัวข้อ', 'topics')} ({courseProgressPercent}%)
+                </span>
+              </div>
+              <div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full transition-all duration-500"
+                  style={{ width: `${courseProgressPercent}%` }}
+                />
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl self-start md:self-auto shrink-0">
-            <span>{tx('ผู้เรียน:', 'Student:')} {currentUser?.nickname || tx('นักเรียน', 'Student')}</span>
-          </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Add New Subject Modal */}
       {isAddingSubject && (
@@ -1072,8 +1117,21 @@ export const SyllabusManager: React.FC = () => {
                             return (
                               <div
                                 key={sub.id}
-                                className={`p-3 rounded-xl transition-all flex flex-col lg:flex-row lg:items-start justify-between gap-3 text-xs shadow-2xs ${
-                                  level === 1
+                                onClick={() => {
+                                  if (hasChildren) toggleSubtopicAccordion(sub.id);
+                                }}
+                                className={`p-3.5 rounded-xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs shadow-2xs ${
+                                  hasChildren ? 'cursor-pointer' : ''
+                                } ${
+                                  isCompleted
+                                    ? level === 1
+                                      ? 'bg-emerald-50/25 border-2 border-emerald-500 hover:border-emerald-600'
+                                      : level === 2
+                                      ? 'bg-emerald-50/25 border-2 border-emerald-500 ml-3 sm:ml-6 hover:border-emerald-600'
+                                      : level === 3
+                                      ? 'bg-emerald-50/25 border-2 border-emerald-500 ml-6 sm:ml-12 hover:border-emerald-600'
+                                      : 'bg-emerald-50/25 border-2 border-emerald-500 ml-8 sm:ml-16 hover:border-emerald-600'
+                                    : level === 1
                                     ? 'bg-white border border-slate-200 hover:border-blue-300'
                                     : level === 2
                                     ? 'bg-amber-50/25 border border-amber-200/90 ml-3 sm:ml-6 hover:border-amber-400'
@@ -1107,30 +1165,10 @@ export const SyllabusManager: React.FC = () => {
                                       <span className="font-bold text-slate-900 text-sm">
                                         {numbering} <MathText text={sub.name} />
                                       </span>
-
-                                      {/* Accordion Toggle Pill for items with children */}
                                       {hasChildren && (
-                                        <button
-                                          type="button"
-                                          onClick={() => toggleSubtopicAccordion(sub.id)}
-                                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold cursor-pointer transition-colors shadow-2xs ${
-                                            expandedSubtopicIds.includes(sub.id)
-                                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                              : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
-                                          }`}
-                                          title={expandedSubtopicIds.includes(sub.id) ? 'คลิกเพื่อยุบหัวข้อย่อย' : 'คลิกเพื่อดูหัวข้อย่อยทั้งหมด'}
-                                        >
-                                          <span>
-                                            {expandedSubtopicIds.includes(sub.id)
-                                              ? 'ยุบหัวข้อย่อย'
-                                              : `+${childCount} ข้อย่อย`}
-                                          </span>
-                                          <ChevronDown
-                                            className={`w-3 h-3 transition-transform ${
-                                              expandedSubtopicIds.includes(sub.id) ? 'rotate-180' : ''
-                                            }`}
-                                          />
-                                        </button>
+                                        <span className="text-[11px] font-medium text-slate-400">
+                                          ({childCount} {tx('หัวข้อย่อย', 'subtopics')})
+                                        </span>
                                       )}
                                     </div>
 
@@ -1152,32 +1190,12 @@ export const SyllabusManager: React.FC = () => {
                                       </span>
                                     )}
 
-                                    {/* Status and Study Count Badges */}
-                                    {isCompleted ? (
-                                      <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-md shadow-2xs">
-                                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                          <span>เรียนแล้ว</span>
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-950 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md shadow-2xs">
-                                          <Flame className="w-3 h-3 text-amber-600" />
-                                          <span>เรียน {totalStudyCount} ครั้ง {totalStudyCount > 1 ? '(เรียนซ้ำ)' : ''}</span>
-                                        </span>
-                                        {latestDate && (
-                                          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
-                                            (ล่าสุด {latestDate})
-                                          </span>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                                        <span>ยังไม่ได้เรียน</span>
-                                      </span>
-                                    )}
-
                                     {/* Teacher Quick Increment/Decrement Buttons */}
                                     {currentUserRole === 'admin' && (
-                                      <div className="inline-flex items-center gap-1.5 ml-1">
+                                      <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center gap-1.5 ml-1"
+                                      >
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -1224,8 +1242,11 @@ export const SyllabusManager: React.FC = () => {
                                   )}
                                 </div>
 
-                                {/* Action Buttons: Child Adders, Solutions, Drive, Edit, Delete */}
-                                <div className="flex items-center gap-1.5 flex-wrap self-end lg:self-center shrink-0">
+                                {/* Right Side: Action Buttons + Study Count on Far Right + Expand Chevron */}
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center gap-2 flex-wrap self-end lg:self-center shrink-0"
+                                >
                                   {/* Add Child Buttons based on Level */}
                                   {currentUserRole === 'admin' && level === 1 && (
                                     <button
@@ -1350,6 +1371,40 @@ export const SyllabusManager: React.FC = () => {
                                       </button>
                                     </div>
                                   )}
+
+                                  {/* Study Count & Expand Chevron on Far Right */}
+                                  <div className="flex items-center gap-2 ml-auto pl-2">
+                                    {isCompleted && (
+                                      <div className="flex items-center gap-1.5">
+                                        {latestDate && (
+                                          <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                                            ({latestDate})
+                                          </span>
+                                        )}
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-950 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg shadow-2xs whitespace-nowrap">
+                                          <Flame className="w-3.5 h-3.5 text-amber-600" />
+                                          <span>เรียน {totalStudyCount} ครั้ง</span>
+                                        </span>
+                                      </div>
+                                    )}
+                                    {hasChildren && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleSubtopicAccordion(sub.id);
+                                        }}
+                                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                                        title={expandedSubtopicIds.includes(sub.id) ? 'ยุบหัวข้อย่อย' : 'ขยายหัวข้อย่อย'}
+                                      >
+                                        <ChevronDown
+                                          className={`w-4 h-4 transition-transform duration-200 ${
+                                            expandedSubtopicIds.includes(sub.id) ? 'rotate-180 text-blue-900' : ''
+                                          }`}
+                                        />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             );

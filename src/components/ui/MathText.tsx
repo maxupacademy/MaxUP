@@ -25,11 +25,19 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '', inline
     return <span className={className}>{text}</span>;
   }
 
-  // Helper to render KaTeX safely
+  // Helper to render KaTeX safely (with auto-repair for control-char corrupted LaTeX)
   const renderKaTeX = (latex: string, isBlock: boolean = false) => {
     try {
-      const cleanLatex = latex.trim();
+      let cleanLatex = latex.trim();
       if (!cleanLatex) return '';
+      // Repair control characters caused by unescaped single-backslash JS strings (e.g. \t -> tab, \f -> formfeed, \b -> backspace, \r -> CR, \n -> LF)
+      cleanLatex = cleanLatex
+        .replace(/\x08(eta|ar|inom|old)/g, '\\b$1')
+        .replace(/\x09(ext|imes|heta|o\b|riangle|au)/g, '\\t$1')
+        .replace(/\x0a(u\b|eq|abla|ot)/g, '\\n$1')
+        .replace(/\x0c(rac|orall)/g, '\\f$1')
+        .replace(/\x0d(ight|ho)/g, '\\r$1')
+        .replace(/(?<![\\a-zA-Z])(alpha|beta|gamma|Delta|theta|lambda|sigma|sum|frac|left|right|times|cdot|neq|approx|rightarrow)(?![a-zA-Z])/g, '\\$1');
       return katex.renderToString(cleanLatex, {
         displayMode: isBlock,
         throwOnError: false,
@@ -56,7 +64,7 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '', inline
 
   // Split text by $$...$$ or $...$ or \(...\) or \[...\]
   // Regex pattern matching delimiters
-  const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$\n]+?\$|\\\([\s\S]*?\\\))/g;
+  const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^\$]+?\$|\\\([\s\S]*?\\\))/g;
   const parts = safeText.split(regex);
 
   return (
